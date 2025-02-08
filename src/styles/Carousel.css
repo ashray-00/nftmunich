@@ -1,0 +1,11 @@
+.carousel-image {
+    object-fit: cover;
+  }
+  
+  @media (max-width: 768px) {
+    .carousel-image {
+      object-fit: contain;
+      justify-content: center;
+      align-items: center;
+    }
+  }
