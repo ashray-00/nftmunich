@@ -1,5 +1,6 @@
 import Header from '../components/Header';
 import Carousel from '../components/Carousel';
+import ContactOptions from '../components/ContactOptions';
 
 export default function Home() {
   return (
@@ -19,8 +20,13 @@ export default function Home() {
         <section id="about" className="w-full h-screen flex items-center justify-center">
           <h2 className="text-4xl">About Us</h2>
         </section>
-        <section id="contact" className="w-full h-screen flex items-center justify-center">
-          <h2 className="text-4xl">Contact Us</h2>
+        <section id="contact" className="w-full h-screen flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center" style={{ marginTop: '30vh' }}>
+            <h2 className="text-4xl mb-8">Contact Us</h2>
+          </div>
+          <div className="flex-grow flex items-center justify-center">
+            <ContactOptions />
+          </div>
         </section>
       </main>
     </div>

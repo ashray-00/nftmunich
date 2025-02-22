@@ -1,13 +1,51 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 export default function Header() {
+  const [activeSection, setActiveSection] = useState<string>('home');
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  useEffect(() => {
+    const sections = document.querySelectorAll('section');
+    const options = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.6,
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    }, options);
+
+    sections.forEach((section) => {
+      observer.observe(section);
+    });
+
+    return () => {
+      sections.forEach((section) => {
+        observer.unobserve(section);
+      });
+    };
+  }, []);
+
+  const scrollToSection = (sectionId: string) => {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      window.scrollTo({
+        top: section.offsetTop,
+        behavior: 'smooth',
+      });
+    }
   };
 
   return (
@@ -24,13 +62,25 @@ export default function Header() {
         </button>
       </div>
       <nav className="hidden md:flex md:items-center">
-        <a href="#home" className="block mt-4 md:inline-block md:mt-0 md:ml-6">
+        <a
+          href="#home"
+          onClick={() => scrollToSection('home')}
+          className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === 'home' ? 'text-yellow-500' : ''}`}
+        >
           Home
         </a>
-        <a href="#about" className="block mt-4 md:inline-block md:mt-0 md:ml-6">
+        <a
+          href="#about"
+          onClick={() => scrollToSection('about')}
+          className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === 'about' ? 'text-yellow-500' : ''}`}
+        >
           About
         </a>
-        <a href="#contact" className="block mt-4 md:inline-block md:mt-0 md:ml-6">
+        <a
+          href="#contact"
+          onClick={() => scrollToSection('contact')}
+          className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === 'contact' ? 'text-yellow-500' : ''}`}
+        >
           Contact
         </a>
       </nav>
