@@ -1,0 +1,32 @@
+.container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #ffffff;
+    /* Bright white text */
+    /* background-color: #0070f3; */
+    /* Optional: Add a contrasting background */
+    border-radius: 10px;
+    /* Optional: Add rounded corners for better design */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* Optional: Add a subtle shadow */
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #ffffff;
+    /* Bright yellow for the title */
+}
+
+.text {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    text-align: justify;
+    color: #ffffff;
+    /* Bright white text for paragraphs */
+}
