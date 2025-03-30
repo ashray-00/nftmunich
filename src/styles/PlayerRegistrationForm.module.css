@@ -1,3 +1,16 @@
+.container {
+  padding: 20px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  background-color: var(--tw-color-bavarian-white);
+  /* White background */
+  color: var(--tw-color-bavarian-blue);
+  /* Blue text */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
 .form {
   display: grid;
   grid-template-columns: 1fr;
@@ -111,7 +124,8 @@
 .successMessage {
   text-align: center;
   font-size: 1.2rem;
-  color: var(--tw-color-bavarian-blue); /* Use the same blue color as other text */
+  color: var(--tw-color-bavarian-blue);
+  /* Use the same blue color as other text */
   margin-top: 20px;
   line-height: 1.5;
 }

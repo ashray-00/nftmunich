@@ -73,7 +73,7 @@ const PlayerRegistrationForm: React.FC = () => {
     }
   };
   return (
-    <div>
+    <div className={styles.container}>
       {isSubmitted ? ( // Conditionally render success message or form
         <div className={styles.successMessage}>
           <h2>Player Registration Successful!</h2>
