@@ -1,0 +1,49 @@
+/* filepath: src/app/privacy-policy/privacy-policy.module.css */
+.container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+}
+
+.title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.text {
+    font-size: 1rem;
+    margin-bottom: 15px;
+}
+
+.list {
+    margin-left: 20px;
+    list-style-type: disc;
+}
+
+.backButton {
+    display: block;
+    margin: 30px auto 0;
+    padding: 10px 20px;
+    font-size: 1rem;
+    color: #fff;
+    background-color: #0070f3;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.backButton:hover {
+    background-color: #005bb5;
+}

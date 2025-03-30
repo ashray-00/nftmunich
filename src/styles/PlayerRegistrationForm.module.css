@@ -93,6 +93,47 @@
   margin-top: 5px;
 }
 
+.consentCheckbox {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.consentCheckbox label {
+  margin-left: 5px;
+  font-size: 0.9rem;
+}
+
+.consentCheckbox a {
+  color: #0070f3;
+  text-decoration: underline;
+}
+
+.checkbox {
+  margin-right: 10px;
+  transform: scale(1.2);
+  /* Make the checkbox slightly larger */
+  cursor: pointer;
+}
+
+.checkboxLabel {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  display: inline-block;
+  color: #333;
+}
+
+.link {
+  color: #0070f3;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link:hover {
+  color: #005bb5;
+  text-decoration: none;
+}
+
 @media (min-width: 768px) {
   .form {
     grid-template-columns: 1fr 1fr 1fr;

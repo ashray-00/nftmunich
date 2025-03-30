@@ -14,21 +14,29 @@ const PlayerRegistrationForm: React.FC = () => {
     profession: '',
     address: '',
     position: '',
+    consent: false,
   });
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [emailError, setEmailError] = useState('');
 
   useEffect(() => {
-    const isValid = Object.values(formData).every(value => value !== '' && value !== null);
+    const isValid = Object.values(formData).every(
+      value => value !== '' && value !== null) && formData.consent;
     setIsFormValid(isValid);
   }, [formData]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-    if (name === 'email') {
-      setEmailError(''); // Clear email error when user modifies the email field
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target as HTMLInputElement;
+    const checked = type === "checkbox" ? (e.target as HTMLInputElement).checked : undefined;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value, // Handle checkbox state
+    });
+    if (name === "email") {
+      setEmailError(""); // Clear email error when user modifies the email field
     }
   };
 
@@ -160,6 +168,23 @@ const PlayerRegistrationForm: React.FC = () => {
             </div>
           </div>
           <div className={styles.formRight}>
+            <div className={styles.formGroup}>
+              <input
+                type="checkbox"
+                id="consent"
+                name="consent"
+                onChange={handleChange}
+                required
+                className={styles.checkbox}
+              />
+              <label htmlFor="consent" className={styles.checkboxLabel}>
+                I agree to the collection and processing of my personal data in
+                accordance with the{" "}
+                <a href="/privacy-policy" className={styles.link}>
+                  Privacy Policy
+                </a>.
+              </label>
+            </div>
             <button type="submit" className={styles.submitButton} disabled={!isFormValid}>Register</button>
           </div>
         </form>
