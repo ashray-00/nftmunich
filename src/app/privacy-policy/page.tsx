@@ -41,12 +41,12 @@ const PrivacyPolicy = () => {
             <ul className={styles.list}>
                 <li>The right to access your personal data.</li>
                 <li>The right to correct inaccurate or incomplete data.</li>
-                <li>The right to request the deletion of your data ("right to be forgotten").</li>
+                <li>The right to request the deletion of your data (&quot;right to be forgotten&quot;).</li>
                 <li>The right to restrict or object to the processing of your data.</li>
                 <li>The right to data portability.</li>
             </ul>
             <p className={styles.text}>
-                To exercise these rights, please contact us at <a href="mailto:your-email@example.com">your-email@example.com</a>.
+                To exercise these rights, please contact us at <a href="mailto:nftmunich@gmail.com">nftmunich@gmail.com</a>.
             </p>
             <h2 className={styles.subtitle}>Data Retention</h2>
             <p className={styles.text}>
@@ -54,7 +54,7 @@ const PrivacyPolicy = () => {
             </p>
             <h2 className={styles.subtitle}>Contact Us</h2>
             <p className={styles.text}>
-                If you have any questions about this Privacy Policy or how we handle your data, please contact us at <a href="mailto:your-email@example.com">your-email@example.com</a>.
+                If you have any questions about this Privacy Policy or how we handle your data, please contact us at <a href="mailto:nftmunich@gmail.com">nftmunich@gmail.com</a>.
             </p>
             <button className={styles.backButton} onClick={() => router.back()}>
                 Go Back
