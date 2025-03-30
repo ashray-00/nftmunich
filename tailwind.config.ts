@@ -6,9 +6,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'custom-blue': '#1e3a8a', // Example custom blue color
-        'custom-red': '#dc2626', // Example custom red color
-        'custom-black': '#000000', // Example custom black color
+        'bavarian-blue': '#0056b3', // A deep blue inspired by the Bavarian flag
+        'bavarian-white': '#ffffff', // White for the flag
       },
     },
   },

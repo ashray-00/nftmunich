@@ -4,4 +4,13 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: var(--tw-color-bavarian-white);
+  /* Set white as the background */
+  color: var(--tw-color-bavarian-blue);
+  /* Set blue as the default text color */
+}
+
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
 }

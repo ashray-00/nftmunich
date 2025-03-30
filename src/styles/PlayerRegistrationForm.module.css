@@ -20,11 +20,24 @@
   width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
+  /* Light gray border for default state */
   border-radius: 4px;
-  color: #000;
-  /* Ensure text color is visible */
-  background-color: #fff;
-  /* Ensure background color is white */
+  /* Rounded corners */
+  background-color: #ffffff;
+  /* White background */
+  color: #333;
+  /* Dark text color */
+  outline: none;
+  /* Remove default browser outline */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  /* Smooth transition for border and shadow */
+}
+
+.input:focus {
+  border-color: #0056b3;
+  /* Bavarian blue border on focus */
+  box-shadow: 0 0 5px rgba(0, 86, 179, 0.5);
+  /* Subtle blue glow on focus */
 }
 
 .photoUpload {
@@ -65,22 +78,42 @@
 
 .submitButton {
   padding: 10px 20px;
-  background-color: #0070f3;
-  color: white;
+  font-size: 1rem;
   border: none;
+  border-radius: 5px;
   cursor: pointer;
   margin-top: 20px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  /* Smooth transition */
+}
+
+.submitButton:enabled {
+  background-color: #0056b3;
+  /* Blue background when enabled */
+  color: #ffffff;
+  /* White text when enabled */
+}
+
+.submitButton:enabled:hover {
+  background-color: #003d80;
+  /* Darker blue background on hover */
 }
 
 .submitButton:disabled {
-  background-color: #ccc;
+  background-color: #e0e0e0;
+  /* Light gray background when disabled */
+  color: #0056b3;
+  /* Blue text when disabled */
   cursor: not-allowed;
+  /* Show "not allowed" cursor when disabled */
 }
 
 .successMessage {
   text-align: center;
-  color: green;
+  font-size: 1.2rem;
+  color: var(--tw-color-bavarian-blue); /* Use the same blue color as other text */
   margin-top: 20px;
+  line-height: 1.5;
 }
 
 .error {
@@ -100,8 +133,8 @@
 }
 
 .consentCheckbox label {
-  margin-left: 5px;
-  font-size: 0.9rem;
+  color: var(--tw-color-bavarian-blue);
+  /* Blue text */
 }
 
 .consentCheckbox a {
@@ -124,13 +157,14 @@
 }
 
 .link {
-  color: #0070f3;
+  color: var(--tw-color-bavarian-blue);
+  /* Blue link */
   text-decoration: underline;
-  cursor: pointer;
 }
 
 .link:hover {
-  color: #005bb5;
+  color: #003d80;
+  /* Darker blue on hover */
   text-decoration: none;
 }
 

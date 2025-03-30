@@ -6,7 +6,7 @@ import AboutUs from "../components/AboutUs";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-bavarian-white text-bavarian-blue">
       <Header />
       <main className="flex flex-col items-center">
         <section id="home" className="relative w-full h-screen flex flex-col items-center justify-center">

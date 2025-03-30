@@ -13,7 +13,7 @@ const ContactOptions: React.FC = () => {
       <a href="https://www.instagram.com/nft_munich" target="_blank" rel="noopener noreferrer" className="text-2xl">
         <FaInstagram />
       </a>
-      <a href="mailto:your-email@example.com" className="text-2xl">
+      <a href="mailto:nftmunich@gmail.com" className="text-2xl">
         <FaEnvelope />
       </a>
     </div>

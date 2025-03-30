@@ -5,6 +5,10 @@
     margin: 0 auto;
     font-family: Arial, sans-serif;
     line-height: 1.6;
+    background-color: var(--tw-color-bavarian-white);
+    /* White background */
+    color: var(--tw-color-bavarian-blue);
+    /* Blue text */
 }
 
 .title {
@@ -12,6 +16,8 @@
     font-weight: bold;
     margin-bottom: 20px;
     text-align: center;
+    color: var(--tw-color-bavarian-blue);
+    /* Blue title */
 }
 
 .subtitle {
@@ -19,11 +25,15 @@
     font-weight: bold;
     margin-top: 20px;
     margin-bottom: 10px;
+    color: var(--tw-color-bavarian-blue);
+    /* Blue subtitle */
 }
 
 .text {
     font-size: 1rem;
     margin-bottom: 15px;
+    color: var(--tw-color-bavarian-blue);
+    /* Blue text */
 }
 
 .list {
@@ -36,14 +46,17 @@
     margin: 30px auto 0;
     padding: 10px 20px;
     font-size: 1rem;
-    color: #fff;
-    background-color: #0070f3;
+    color: var(--tw-color-bavarian-white);
+    /* White text */
+    background-color: var(--tw-color-bavarian-blue);
+    /* Blue background */
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    text-align: center;
 }
 
 .backButton:hover {
-    background-color: #005bb5;
+    background-color: #003d80;
+    color: #ffffff; 
+    /* Darker blue on hover */
 }

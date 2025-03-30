@@ -4,14 +4,12 @@
     margin: 0 auto;
     font-family: Arial, sans-serif;
     line-height: 1.6;
-    color: #ffffff;
-    /* Bright white text */
-    /* background-color: #0070f3; */
-    /* Optional: Add a contrasting background */
+    background-color: var(--tw-color-bavarian-white);
+    /* White background */
+    color: var(--tw-color-bavarian-blue);
+    /* Blue text */
     border-radius: 10px;
-    /* Optional: Add rounded corners for better design */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    /* Optional: Add a subtle shadow */
 }
 
 .title {
@@ -19,14 +17,14 @@
     font-weight: bold;
     margin-bottom: 20px;
     text-align: center;
-    color: #ffffff;
-    /* Bright yellow for the title */
+    color: var(--tw-color-bavarian-blue);
+    /* Blue title */
 }
 
 .text {
     font-size: 1rem;
     margin-bottom: 15px;
     text-align: justify;
-    color: #ffffff;
-    /* Bright white text for paragraphs */
+    color: var(--tw-color-bavarian-blue);
+    /* Blue text */
 }
