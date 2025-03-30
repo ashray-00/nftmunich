@@ -37,8 +37,12 @@ export default function Carousel() {
             <Image
               src={src}
               alt={`Slide ${index + 1}`}
-              layout="fill"
-              className="carousel-image object-contain md:object-cover"
+              fill
+              style={{
+                objectFit: 'cover', // Ensures the image covers the entire container
+                objectPosition: 'center', // Center the image if it gets cropped
+              }}
+              className="carousel-image"
             />
           </div>
         </SwiperSlide>

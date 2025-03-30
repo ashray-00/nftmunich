@@ -1,6 +1,7 @@
 import Header from '../components/Header';
 import Carousel from '../components/Carousel';
 import ContactOptions from '../components/ContactOptions';
+import PlayerRegistrationForm from '../components/PlayerRegistrationForm';
 
 export default function Home() {
   return (
@@ -19,6 +20,12 @@ export default function Home() {
         </section>
         <section id="about" className="w-full h-screen flex items-center justify-center">
           <h2 className="text-4xl">About Us</h2>
+        </section>
+        <section id="player-registration" className="w-full h-screen flex flex-col items-center justify-center">
+          <h2 className="text-4xl mb-8">Player Registration</h2>
+          <div className="w-full flex justify-center mt-8">
+            <PlayerRegistrationForm />
+          </div>
         </section>
         <section id="contact" className="w-full h-screen flex flex-col items-center justify-center">
           <div className="flex flex-col items-center justify-center" style={{ marginTop: '30vh' }}>

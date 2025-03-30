@@ -1,0 +1,119 @@
+.form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px 100px;
+  padding: 20px;
+}
+
+.formLeft,
+.formRight {
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #000;
+  /* Ensure text color is visible */
+  background-color: #fff;
+  /* Ensure background color is white */
+}
+
+.photoUpload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.photoBox {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border: 2px dashed #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.photoPlaceholder {
+  font-size: 2rem;
+  color: #ccc;
+}
+
+.photoPreview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fileInput {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.submitButton {
+  padding: 10px 20px;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.submitButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.successMessage {
+  text-align: center;
+  color: green;
+  margin-top: 20px;
+}
+
+.error {
+  border: 1px solid red;
+}
+
+.errorMessage {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+@media (min-width: 768px) {
+  .form {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .formLeft {
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 100px;
+  }
+
+  .formRight {
+    grid-column: span 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .photoUpload,
+  .submitButton {
+    align-self: center;
+  }
+}

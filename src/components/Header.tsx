@@ -77,6 +77,13 @@ export default function Header() {
           About
         </a>
         <a
+          href="#player-registration"
+          onClick={() => scrollToSection('player-registration')}
+          className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === 'player-registration' ? 'text-yellow-500' : ''}`}
+        >
+          Player Registration
+        </a>
+        <a
           href="#contact"
           onClick={() => scrollToSection('contact')}
           className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === 'contact' ? 'text-yellow-500' : ''}`}
@@ -97,6 +104,9 @@ export default function Header() {
             </a>
             <a href="#about" onClick={toggleMenu} className="text-2xl text-white">
               About
+            </a>
+            <a href="#player-registration" onClick={toggleMenu} className="text-2xl text-white">
+              Player Registration
             </a>
             <a href="#contact" onClick={toggleMenu} className="text-2xl text-white">
               Contact
