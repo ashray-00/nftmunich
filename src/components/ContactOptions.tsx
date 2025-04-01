@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaFacebookMessenger, FaInstagram, FaEnvelope } from 'react-icons/fa';
+import { FaFacebookMessenger, FaInstagram, FaEnvelope, FaYoutube } from 'react-icons/fa';
 
 const ContactOptions: React.FC = () => {
   return (
@@ -15,6 +15,9 @@ const ContactOptions: React.FC = () => {
       </a>
       <a href="mailto:nftmunich@gmail.com" className="text-2xl">
         <FaEnvelope />
+      </a>
+      <a href="https://www.youtube.com/@nftmunich" target="_blank" rel="noopener noreferrer" className="text-2xl">
+        <FaYoutube />
       </a>
     </div>
   );
