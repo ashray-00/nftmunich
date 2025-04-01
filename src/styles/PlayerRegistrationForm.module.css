@@ -1,14 +1,55 @@
 .container {
-  padding: 20px;
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+.header {
+  position: sticky;
+  /* Make the header always visible */
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Space between logo and title */
+  background-color: #ffffff;
+  /* Match the background color */
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* Optional: Add a subtle shadow */
+  z-index: 1000;
+  /* Ensure it stays above other elements */
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logo {
+  height: 40px;
+  /* Adjust the size of the logo */
+  cursor: pointer;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #0070f3;
+  /* Customize the title color */
   margin: 0 auto;
-  font-family: Arial, sans-serif;
-  line-height: 1.6;
-  background-color: var(--tw-color-bavarian-white);
-  /* White background */
-  color: var(--tw-color-bavarian-blue);
-  /* Blue text */
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* Center the title */
+  position: absolute;
+  /* Center the title in the header */
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .form {
@@ -16,6 +57,31 @@
   grid-template-columns: 1fr;
   gap: 10px 100px;
   padding: 20px;
+}
+
+.iframeWrapper {
+  width: 100%;
+  /* Ensure the iframe wrapper takes up the full width */
+  height: calc(100vh - 50px);
+  /* Subtract the height of the title or any header */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  /* Remove any padding around the iframe */
+  margin: 0;
+  /* Remove any margin around the iframe */
+}
+
+.iframe {
+  width: 100%;
+  /* Make the iframe take up the full width of the wrapper */
+  height: 100%;
+  /* Make the iframe take up the full height of the wrapper */
+  border: none;
+  /* Remove the border around the iframe */
+  border-radius: 0;
+  /* Remove rounded corners for a full-screen effect */
 }
 
 .formLeft,

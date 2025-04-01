@@ -23,7 +23,7 @@ const PrivacyPolicy = () => {
                 <li>Date of birth</li>
                 <li>Profession</li>
                 <li>Address</li>
-                <li>Preferred position</li>
+                <li>Health Condition/Allergies</li>
             </ul>
             <h2 className={styles.subtitle}>Why We Collect Your Data</h2>
             <p className={styles.text}>

@@ -1,10 +1,13 @@
+"use client";
+
 import Header from '../components/Header';
 import Carousel from '../components/Carousel';
 import ContactOptions from '../components/ContactOptions';
-import PlayerRegistrationForm from '../components/PlayerRegistrationForm';
 import AboutUs from "../components/AboutUs";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-bavarian-white text-bavarian-blue">
       <Header />
@@ -25,14 +28,24 @@ export default function Home() {
           </div>
         </section>
         <section id="player-registration" className="w-full h-screen flex flex-col items-center justify-center">
-          <h2 className="text-4xl mb-8">Player Registration</h2>
-          <div className="w-full flex justify-center mt-8">
-            <PlayerRegistrationForm />
+          <div className="container mx-auto px-4">
+            <h2 className="text-4xl mb-8 font-bold title">Player Registration</h2>
+            <div className="text-center mb-6">
+              <p className="mb-4">
+                Join our football community. Click the button below to get started.
+              </p>
+              <button
+                onClick={() => router.push("/player-registration")}
+                className="bg-blue-800 text-white px-6 py-2 rounded hover:bg-blue-900 transition"
+              >
+                Register
+              </button>
+            </div>
           </div>
         </section>
         <section id="contact" className="w-full h-screen flex flex-col items-center justify-center">
           <div className="flex flex-col items-center justify-center" style={{ marginTop: '30vh' }}>
-            <h2 className="text-4xl mb-8">Contact Us</h2>
+            <h2 className="text-4xl mb-8 title">Contact Us</h2>
           </div>
           <div className="flex-grow flex items-center justify-center">
             <ContactOptions />

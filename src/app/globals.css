@@ -14,3 +14,26 @@ body {
   font-family: Arial, sans-serif;
   line-height: 1.6;
 }
+
+.container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  background-color: var(--tw-color-bavarian-white);
+  /* White background */
+  color: var(--tw-color-bavarian-blue);
+  /* Blue text */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  color: var(--tw-color-bavarian-blue);
+  /* Blue title */
+}
