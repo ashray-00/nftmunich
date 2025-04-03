@@ -41,15 +41,16 @@
 
 .title {
   font-size: 1.5rem;
-  font-weight: bold;
   color: #0070f3;
   /* Customize the title color */
   margin: 0 auto;
   /* Center the title */
-  position: absolute;
-  /* Center the title in the header */
-  left: 50%;
-  transform: translateX(-50%);
+  white-space: nowrap;
+  /* Prevent the text from wrapping */
+  overflow: hidden;
+  /* Ensure it doesn't overflow the container */
+  text-overflow: ellipsis;
+  /* Add ellipsis if the text overflows */
 }
 
 .form {
