@@ -23,12 +23,12 @@ export default function Home() {
             <Carousel />
           </div>
         </section>
-        <section id="about" className="w-full h-screen flex items-center justify-center">
+        <section id="about" className="relative w-full min-h-screen flex flex-col items-center">
           <div>
             <AboutUs />
           </div>
         </section>
-        <section id="player-registration" className="w-full h-screen flex flex-col items-center justify-center">
+        <section id="player-registration" className="w-full min-h-screen flex flex-col items-center justify-center">
           <div className="container mx-auto px-4">
             <h2 className="text-4xl mb-8 font-bold title">Player Registration</h2>
             <div className="text-center mb-6">
@@ -44,10 +44,10 @@ export default function Home() {
             </div>
           </div>
         </section>
-        <section id="shop" className="w-full h-screen flex flex-col items-center justify-center">
+        <section id="shop" className="w-full min-h-screen flex flex-col items-center justify-center">
             <Shop />
         </section>
-        <section id="contact" className="w-full h-screen flex flex-col items-center justify-center">
+        <section id="contact" className="w-full min-h-screen flex flex-col items-center justify-center">
           <div className="flex flex-col items-center justify-center" style={{ marginTop: '30vh' }}>
             <h2 className="text-4xl mb-8 title">Contact Us</h2>
           </div>

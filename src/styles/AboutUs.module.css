@@ -13,18 +13,104 @@
 }
 
 .title {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: bold;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     text-align: center;
     color: var(--tw-color-bavarian-blue);
-    /* Blue title */
+}
+
+.intro {
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 40px;
+    position: relative;
+}
+
+.left {
+    flex-direction: row;
+}
+
+.right {
+    flex-direction: row-reverse;
+}
+
+.textContainer {
+    flex: 1;
+    padding: 20px;
+}
+
+.subheader {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: var(--tw-color-bavarian-blue);
 }
 
 .text {
     font-size: 1rem;
-    margin-bottom: 15px;
-    text-align: justify;
-    color: var(--tw-color-bavarian-blue);
-    /* Blue text */
+    line-height: 1.6;
+    margin-bottom: 10px;
+    color: var(--tw-color-gray-600);
+}
+
+.bulletList {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.bulletItem {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 5px;
+    color: var(--tw-color-gray-600);
+}
+
+.imageContainer {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap; /* Allow multiple images to wrap */
+    gap: 10px; /* Add spacing between images */
+}
+
+.image {
+    width: 80%;
+    max-width: 300px;
+    border-radius: 10px;
+    transform: rotate(-3deg);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.pin {
+    width: 20px;
+    height: 20px;
+    background-color: var(--tw-color-bavarian-blue);
+    border-radius: 50%;
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+}
+
+@media (max-width: 768px) {
+    .image {
+        width: 110%; /* Increase the width of images on mobile */
+        max-width: none; /* Remove the max-width restriction */
+    }
+
+    .imageContainer {
+        justify-content: center; /* Center the images */
+    }
 }

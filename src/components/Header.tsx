@@ -74,7 +74,7 @@ export default function Header() {
           onClick={() => scrollToSection('about')}
           className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === 'about' ? 'text-yellow-700' : ''}`}
         >
-          About
+          About Us
         </a>
         <a
           href="#player-registration"
@@ -110,7 +110,7 @@ export default function Header() {
               Home
             </a>
             <a href="#about" onClick={toggleMenu} className="text-2xl text-bavarian-blue">
-              About
+              About Us
             </a>
             <a href="#player-registration" onClick={toggleMenu} className="text-2xl text-bavarian-blue">
               Player Registration
