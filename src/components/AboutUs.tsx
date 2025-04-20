@@ -1,10 +1,24 @@
 "use client";
 import React from "react";
-import aboutUsData from "../data/about-us.json"; // Import content from JSON file
+import aboutUsDataRaw from "../data/about-us.json"; // Import content from JSON file
+
+// Explicitly cast or validate the JSON data to match the expected types
+const aboutUsData = aboutUsDataRaw as {
+    title: string;
+    intro: { content: ContentItem[]; image: string | string[] };
+    sections: { subheader: string; content: ContentItem[]; images?: string[]; image?: string }[];
+};
 import styles from "../styles/AboutUs.module.css"; // Import styles for the component
 
+// Define the type for content items
+type ContentItem = {
+    type: "text" | "bullet"; // Explicitly define the allowed values for `type`
+    value?: string | string[]; // Text or array of bullet points
+    bold?: string; // Optional bold text
+};
+
 const AboutUs = () => {
-    const renderContent = (content) => {
+    const renderContent = (content: ContentItem[]) => {
         return content.map((item, idx) => {
             if (item.type === "text") {
                 return (
@@ -16,7 +30,7 @@ const AboutUs = () => {
             } else if (item.type === "bullet") {
                 return (
                     <ul key={idx} className={styles.bulletList}>
-                        {item.value.map((bullet, bulletIdx) => (
+                        {(item.value as string[]).map((bullet, bulletIdx) => (
                             <li key={bulletIdx} className={styles.bulletItem}>
                                 {bullet}
                             </li>
@@ -28,7 +42,7 @@ const AboutUs = () => {
         });
     };
 
-    const renderImages = (images) => {
+    const renderImages = (images: string | string[]) => {
         if (Array.isArray(images)) {
             return images.map((image, idx) => (
                 <img
@@ -50,7 +64,7 @@ const AboutUs = () => {
 
     return (
         <div className={styles.container}>
-            {/* Render the About Us title in its own container */}
+            {/* Render the About Us title */}
             <div className={styles.section}>
                 <div className={styles.textContainer}>
                     <h1 className={styles.title}>{aboutUsData.title}</h1>
@@ -81,7 +95,7 @@ const AboutUs = () => {
                     </div>
                     <div className={styles.imageContainer}>
                         <div className={styles.pin}></div>
-                        {renderImages(section.images || section.image)}
+                        {renderImages(section.images || section.image || "")}
                     </div>
                 </div>
             ))}
