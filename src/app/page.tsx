@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Carousel from '../components/Carousel';
 import ContactOptions from '../components/ContactOptions';
 import AboutUs from "../components/AboutUs";
+import Shop from "../components/Shop";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -42,6 +43,9 @@ export default function Home() {
               </button>
             </div>
           </div>
+        </section>
+        <section id="shop" className="w-full h-screen flex flex-col items-center justify-center">
+            <Shop />
         </section>
         <section id="contact" className="w-full h-screen flex flex-col items-center justify-center">
           <div className="flex flex-col items-center justify-center" style={{ marginTop: '30vh' }}>
