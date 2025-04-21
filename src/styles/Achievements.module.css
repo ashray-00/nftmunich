@@ -1,0 +1,79 @@
+.container {
+    padding: 50px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    margin-top: 50vh;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: var(--tw-color-bavarian-white);
+    /* White background */
+    color: var(--tw-color-bavarian-blue);
+    /* Blue text */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(88, 181, 239, 0.308);
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 30px;
+    text-align: center;
+    color: var(--tw-color-bavarian-blue);
+}
+
+.box {
+    width: 90%;
+    /* Increase width to make the box larger */
+    max-width: 1200px;
+    /* Ensure it doesn't grow too large */
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 40px;
+    /* Add padding for better spacing */
+}
+
+.tournamentName {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--tw-color-bavarian-blue);
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.3s ease;
+}
+
+.tournamentName:hover {
+    color: #0056b3;
+}
+
+/* Fix overlapping issues */
+.vertical-timeline-element-content {
+    margin-left: 120px;
+    /* Adjust to prevent overlap with the circle */
+}
+
+/* Style the timeline circle */
+.vertical-timeline-element-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #fff;
+    /* Set text color to white */
+    background-color: var(--tw-color-bavarian-blue);
+    border: 3px solid var(--tw-color-bavarian-blue);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    /* Add text shadow for better visibility */
+}
+
+/* Change the timeline line color */
+.vertical-timeline::before {
+    background: var(--tw-color-bavarian-blue);
+}
+
+@media only screen and (min-width: 1170px) {
+    .vertical-timeline.vertical-timeline--two-columns {
+        width: 100%;
+    }
+}

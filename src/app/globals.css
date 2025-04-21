@@ -19,6 +19,7 @@ body {
   padding: 20px;
   max-width: 800px;
   margin: 0 auto;
+  margin-top: 50vh;
   font-family: Arial, sans-serif;
   line-height: 1.6;
   background-color: var(--tw-color-bavarian-white);
@@ -26,7 +27,7 @@ body {
   color: var(--tw-color-bavarian-blue);
   /* Blue text */
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(88, 181, 239, 0.308);
 }
 
 .title {

@@ -2,6 +2,7 @@
     padding: 20px;
     max-width: 800px;
     margin: 0 auto;
+    margin-top: 30vh;
     font-family: Arial, sans-serif;
     line-height: 1.6;
     background-color: var(--tw-color-bavarian-white);
@@ -9,7 +10,7 @@
     color: var(--tw-color-bavarian-blue);
     /* Blue text */
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 8px rgba(88, 181, 239, 0.308);
 }
 
 .title {
@@ -91,15 +92,21 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.imageWrapper {
+    position: relative;
+    display: inline-block;
+    margin: 10px; /* Add spacing between images if needed */
+}
+
 .pin {
     width: 20px;
     height: 20px;
-    background-color: var(--tw-color-bavarian-blue);
+    background-color: #358eee;
     border-radius: 50%;
     position: absolute;
     top: -10px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 40%;
+    transform: translateX(-40%);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     z-index: 2;
 }
@@ -112,5 +119,9 @@
 
     .imageContainer {
         justify-content: center; /* Center the images */
+    }
+
+    .pin {
+        left: 55%; /* Center the pin */
     }
 }

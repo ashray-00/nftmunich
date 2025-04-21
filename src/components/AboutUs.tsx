@@ -45,20 +45,25 @@ const AboutUs = () => {
     const renderImages = (images: string | string[]) => {
         if (Array.isArray(images)) {
             return images.map((image, idx) => (
-                <img
-                    key={idx}
-                    src={image}
-                    alt={`Section Image ${idx + 1}`}
-                    className={styles.image}
-                />
+                <div key={idx} className={styles.imageWrapper}>
+                    <div className={styles.pin}></div> {/* Pin for every image */}
+                    <img
+                        src={image}
+                        alt={`Section Image ${idx + 1}`}
+                        className={styles.image}
+                    />
+                </div>
             ));
         }
         return (
-            <img
-                src={images}
-                alt="Section Image"
-                className={styles.image}
-            />
+            <div className={styles.imageWrapper}>
+                <div className={styles.pin}></div> {/* Pin for the single image */}
+                <img
+                    src={images}
+                    alt="Section Image"
+                    className={styles.image}
+                />
+            </div>
         );
     };
 
@@ -77,7 +82,6 @@ const AboutUs = () => {
                     {renderContent(aboutUsData.intro.content)}
                 </div>
                 <div className={styles.imageContainer}>
-                    <div className={styles.pin}></div>
                     {renderImages(aboutUsData.intro.image)}
                 </div>
             </div>
@@ -94,7 +98,6 @@ const AboutUs = () => {
                         {renderContent(section.content)}
                     </div>
                     <div className={styles.imageContainer}>
-                        <div className={styles.pin}></div>
                         {renderImages(section.images || section.image || "")}
                     </div>
                 </div>
