@@ -19,7 +19,7 @@ body {
   padding: 20px;
   max-width: 800px;
   margin: 0 auto;
-  margin-top: 50vh;
+  margin-top: 0vh;
   font-family: Arial, sans-serif;
   line-height: 1.6;
   background-color: var(--tw-color-bavarian-white);
@@ -37,4 +37,26 @@ body {
   text-align: center;
   color: var(--tw-color-bavarian-blue);
   /* Blue title */
+}
+
+.contact {
+  margin-top: 30vh;
+}
+
+.min-h-screen {
+  min-height: 90vh;
+}
+
+@media (max-width: 768px) {
+  .container {
+    margin-top: 10vh;
+  }
+
+  .min-h-screen {
+    min-height: 30vh;
+  }
+
+  .contact {
+    margin-top: 10vh;
+  }
 }

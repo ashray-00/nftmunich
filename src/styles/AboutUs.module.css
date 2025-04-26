@@ -2,7 +2,7 @@
     padding: 20px;
     max-width: 800px;
     margin: 0 auto;
-    margin-top: 30vh;
+    margin-top: 10vh;
     font-family: Arial, sans-serif;
     line-height: 1.6;
     background-color: var(--tw-color-bavarian-white);
@@ -80,8 +80,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-wrap: wrap; /* Allow multiple images to wrap */
-    gap: 10px; /* Add spacing between images */
+    flex-wrap: wrap;
+    /* Allow multiple images to wrap */
+    gap: 10px;
+    /* Add spacing between images */
 }
 
 .image {
@@ -95,7 +97,8 @@
 .imageWrapper {
     position: relative;
     display: inline-block;
-    margin: 10px; /* Add spacing between images if needed */
+    margin: 10px;
+    /* Add spacing between images if needed */
 }
 
 .pin {
@@ -111,17 +114,41 @@
     z-index: 2;
 }
 
+/* Mobile-specific layout */
 @media (max-width: 768px) {
-    .image {
-        width: 110%; /* Increase the width of images on mobile */
-        max-width: none; /* Remove the max-width restriction */
+    .section {
+        flex-direction: column;
+        /* Stack content vertically */
+        align-items: flex-start;
+        /* Align items to the start */
     }
 
     .imageContainer {
-        justify-content: center; /* Center the images */
+        width: 100%;
+        /* Ensure the image takes full width */
+        margin-bottom: 20px;
+        /* Add spacing below the image */
     }
 
-    .pin {
-        left: 55%; /* Center the pin */
+    .image {
+        max-width: 100%;
+        /* Ensure the image scales properly */
+        height: auto;
+        /* Maintain aspect ratio */
+        display: block;
+        margin: 0 auto;
+        /* Center the image */
     }
+
+    .textContainer {
+        width: 100%;
+        /* Ensure the text takes full width */
+        padding: 0 10px;
+        /* Add some padding for better readability */
+    }
+
+    .container {
+        margin-top: 0vh;
+    }
+
 }

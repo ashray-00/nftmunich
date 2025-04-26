@@ -2,7 +2,7 @@
     padding: 50px 20px;
     max-width: 1200px;
     margin: 0 auto;
-    margin-top: 50vh;
+    margin-top: 10vh;
     font-family: Arial, sans-serif;
     line-height: 1.6;
     background-color: var(--tw-color-bavarian-white);
@@ -38,7 +38,6 @@
     font-weight: bold;
     color: var(--tw-color-bavarian-blue);
     cursor: pointer;
-    text-decoration: underline;
     transition: color 0.3s ease;
 }
 
@@ -75,5 +74,11 @@
 @media only screen and (min-width: 1170px) {
     .vertical-timeline.vertical-timeline--two-columns {
         width: 100%;
+    }
+
+    .container{
+        margin-top: 50vh;
+        margin-bottom: 30vh;
+        /* Reset margin for larger screens */
     }
 }

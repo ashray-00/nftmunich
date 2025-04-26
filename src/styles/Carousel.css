@@ -1,4 +1,4 @@
-/* Ensure the container fills the screen height */
+/* Default styles for the carousel */
 .mySwiper {
   width: 100%;
   height: 100vh;
@@ -7,11 +7,23 @@
 .carousel-image {
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  /* Default behavior for larger screens */
+  object-position: center;
 }
 
 /* Media query for mobile */
 @media (max-width: 767px) {
   .mySwiper {
-    height: 80vh;
+    width: 100%;
+    height: 50vh;
+    /* Reduce height for mobile */
+  }
+
+  .carousel-image {
+    object-fit: contain;
+    /* Ensure the entire image fits on mobile */
+    object-position: center;
+    /* Center the image */
   }
 }

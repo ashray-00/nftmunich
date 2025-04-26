@@ -16,7 +16,7 @@ export default function Header() {
     const options = {
       root: null,
       rootMargin: '0px',
-      threshold: 0.6,
+      threshold: 0.2,
     };
 
     const observer = new IntersectionObserver((entries) => {
@@ -49,7 +49,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-bavarian-white text-bavarian-blue p-4 flex justify-between items-center fixed w-full z-10">
+    <header className="bg-bavarian-white text-bavarian-blue p-4 md:px-8 md:py-3 flex justify-between items-center fixed w-full z-10 md:z-20">
       <div className="flex items-center">
         <Image src="/logo.png" alt="NFT Munich Logo" width={50} height={50} />
         <span className="ml-2 text-xl font-bold">NFT Munich</span>

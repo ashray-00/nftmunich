@@ -18,7 +18,7 @@ const images = [
 export default function Carousel() {
   return (
     <Swiper
-      spaceBetween={30}
+      spaceBetween={10} // Reduce space between slides for mobile
       centeredSlides={true}
       autoplay={{
         delay: 2500,
@@ -38,10 +38,6 @@ export default function Carousel() {
               src={src}
               alt={`Slide ${index + 1}`}
               fill
-              style={{
-                objectFit: 'cover', // Ensures the image covers the entire container
-                objectPosition: 'center', // Center the image if it gets cropped
-              }}
               className="carousel-image"
             />
           </div>

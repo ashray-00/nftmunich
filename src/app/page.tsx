@@ -14,17 +14,17 @@ export default function Home() {
     <div className="min-h-screen bg-bavarian-white text-bavarian-blue">
       <Header />
       <main className="flex flex-col items-center">
-        <section id="home" className="relative w-full h-screen flex flex-col items-center justify-center">
+        <section id="home" className="relative w-full flex flex-col items-center justify-center">
           <div className="hidden md:block absolute top-4 left-4 text-center z-10">
             <div className="flex items-center">
               <img src="/logo.png" alt="NFT Munich Logo" width={50} height={50} />
             </div>
           </div>
-          <div className="w-full h-full">
+          <div className="w-full">
             <Carousel />
           </div>
         </section>
-        <section id="about" className="relative w-full min-h-screen flex flex-col items-center">
+        <section id="about" className="relative w-full min-h-screen flex flex-col items-center justify-center">
           <div>
             <AboutUs />
           </div>
@@ -52,7 +52,7 @@ export default function Home() {
           <Shop />
         </section>
         <section id="contact" className="w-full min-h-screen flex flex-col items-center justify-center">
-          <div className="flex flex-col items-center justify-center" style={{ marginTop: '30vh' }}>
+          <div className="flex flex-col items-center justify-center contact">
             <h2 className="text-4xl mb-8 title">Contact Us</h2>
           </div>
           <div className="flex-grow flex items-center justify-center">

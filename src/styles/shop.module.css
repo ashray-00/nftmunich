@@ -37,6 +37,9 @@
         margin: auto;
         margin-bottom: 24px;
     }
+    .container {
+        margin-top: 7vh;;
+    }
   }
 
 .buttonWrapper {
