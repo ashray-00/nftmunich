@@ -1,0 +1,317 @@
+[
+    {
+        "section": "Personal Information",
+        "fields": [
+            {
+                "id": 11,
+                "label": "Full Name",
+                "required": true,
+                "subtext": "",
+                "type": "short-text"
+            },
+            {
+                "id": 12,
+                "label": "Date of Birth (dd.mm ONLY)",
+                "required": true,
+                "subtext": "",
+                "type": "short-text"
+            },
+            {
+                "id": 13,
+                "label": "Address(ZIP code only)",
+                "required": true,
+                "subtext": "",
+                "type": "short-text"
+            },
+            {
+                "id": 14,
+                "label": "WhatsApp number",
+                "required": true,
+                "subtext": "(For Whatsapp Group)",
+                "type": "short-text"
+            },
+            {
+                "id": 15,
+                "label": "Email",
+                "required": true,
+                "type": "email",
+                "subtext": "Please enter a valid email address."
+            },
+            {
+                "id": 16,
+                "label": "Profession",
+                "required": true,
+                "subtext": "(Specify your field of study, work)",
+                "type": "short-text"
+            },
+            {
+                "id": 17,
+                "label": "Optional: Your special health condition/injury/allergy.",
+                "required": false,
+                "subtext": "(Sharing this information with us is entirely optional. It is important information for our medical team)",
+                "type": "short-text"
+            }
+        ]
+    },
+    {
+        "section": "Availability",
+        "fields": [
+            {
+                "id": 21,
+                "label": "Estimated stay in  Munich",
+                "required": true,
+                "subtext": "",
+                "type": "short-text"
+            },
+            {
+                "id": 22,
+                "label": "How long have you been with NFT Team?",
+                "required": false,
+                "subtext": "(Not applied for new members)",
+                "type": "short-text"
+            },
+            {
+                "id": 23,
+                "label": "On which day(s) of the week and at what time are you available for training?",
+                "required": true,
+                "subtext": "\n - Our weekly training is on Wednesday.\n - If the ground is available, we play on weekends too.",
+                "type": "short-text"
+            },
+            {
+                "id": 24,
+                "label": "When are you not available this year for the game and training?",
+                "required": true,
+                "subtext": "For Example, when have you tentatively planned your holidays, and when do you have your exams? We will plan upcoming events, depending on the number of available members.",
+                "type": "short-text"
+            }
+        ]
+    },
+    {
+        "section": "Sport/Passion/Fitness",
+        "fields": [
+            {
+                "id": 31,
+                "label": "Why do you play football?",
+                "required": true,
+                "subtext": "",
+                "type": "short-text"
+            },
+            {
+                "id": 32,
+                "label": "Your position in Football?",
+                "required": true,
+                "subtext": "",
+                "type": "short-text"
+            },
+            {
+                "id": 33,
+                "label": "Which particular skill/s do you want to develop?",
+                "required": true,
+                "subtext": "(We will plan your training accordingly)",
+                "type": "short-text"
+            },
+            {
+                "id": 34,
+                "label": "What other sports do you do? ",
+                "required": true,
+                "subtext": "(We are a sports group. You can find here other friends with common interests. For example: we have a cricket Group too: [https://chat.whatsapp.com/Ls8MF73QZcuDPftdTqFLNu](https://chat.whatsapp.com/Ls8MF73QZcuDPftdTqFLNu))",
+                "type": "short-text"
+            },
+            {
+                "id": 35,
+                "label": "Rate your current Fitness (1-10).",
+                "required": true,
+                "subtext": "",
+                "type": "rating",
+                "min": 1,
+                "max": 10
+            },
+            {
+                "id": 36,
+                "label": "Your Fitness Goal by the End of July.",
+                "required": true,
+                "subtext": "(Before NRNA Tournament)",
+                "type": "long-text"
+            },
+            {
+                "id": 37,
+                "label": "Will you also take part in our Fitness program?",
+                "required": true,
+                "subtext": "(to follow soon)",
+                "type": "radio",
+                "options": [
+                    {
+                        "label": "Yes",
+                        "value": "Yes"
+                    },
+                    {
+                        "label": "No",
+                        "value": "No"
+                    },
+                    {
+                        "label": "Maybe",
+                        "value": "Maybe"
+                    }
+                ]
+            },
+            {
+                "id": 38,
+                "label": "Will you be available for our 2025 Project?",
+                "required": true,
+                "subtext": "",
+                "type": "radio",
+                "options": [
+                    {
+                        "label": "Yes (For Tournament, regular commitment required)",
+                        "value": "Yes (For Tournament, regular commitment required)"
+                    },
+                    {
+                        "label": "Yes, but only for Friendlies (regular Training required)",
+                        "value": "Yes, but only for Friendlies (regular Training required)"
+                    },
+                    {
+                        "label": "No, I just want to play in my free time. No commitments.",
+                        "value": "No, I just want to play in my free time. No commitments."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "section": "Merchandise",
+        "fields": [
+            {
+                "id": 41,
+                "label": "What is your Trikot Size?",
+                "required": true,
+                "subtext": "(Important info for us to allocate Trikots in Matches)",
+                "type": "short-text"
+            },
+            {
+                "id": 42,
+                "label": "Do you have NFT Grey Tshirt? ",
+                "required": true,
+                "subtext": "Link: [Order List](https://docs.google.com/spreadsheets/d/13bXdF8odZC_8clyrEiW1NB5UnKQL_bxhAeXVQj1fHJs/edit#gid=0)\n\n(compulsory for NFT Events)\n - costs around 15 Euros (depending upon the number of orders)\n - For the quality of the T-shirt with the name and colored logo, it is very cheap. And it looks so good as the team if we and the supporters all wear it.\n\n ![](/player_registration/grey-nft.png)",
+                "type": "radio",
+                "options": [
+                    {
+                        "label": "Yes",
+                        "value": "Yes"
+                    },
+                    {
+                        "label": "No, I will order one",
+                        "value": "No, I will order one"
+                    }
+                ]
+            },
+            {
+                "id": 43,
+                "label": "Do you have NFT Beanie Bag?",
+                "required": true,
+                "subtext": "Link: [Order List](https://docs.google.com/spreadsheets/d/1npfFZxLxj143Sf83q16zewkUAdiFLuslvV945gH4ZLA/edit#gid=0)\n\n(compulsory for Tournament)\n - costs around 10 Euros (depending upon the number of orders)\n - is very practical to carry your footballing stuffs\n\n ![](/player_registration/beenie.jpg)",
+                "type": "radio",
+                "options": [
+                    {
+                        "label": "Yes",
+                        "value": "Yes"
+                    },
+                    {
+                        "label": "No, I will order one",
+                        "value": "No, I will order one"
+                    },
+                    {
+                        "label": "No, i don't need it",
+                        "value": "No, i don't need it"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "section": "Yearly Contribution",
+        "fields": [
+            {
+                "id": 51,
+                "label": "Have you paid your yearly contribution for last year? ",
+                "required": true,
+                "subtext": "",
+                "type": "radio",
+                "options": [
+                    {
+                        "label": "Yes",
+                        "value": "Yes"
+                    },
+                    {
+                        "label": "No. I will pay now.",
+                        "value": "No. I will pay now."
+                    },
+                    {
+                        "label": "I am a new joining member.",
+                        "value": "I am a new joining member."
+                    }
+                ]
+            },
+            {
+                "id": 52,
+                "label": "Compulsory for ALL TRAINING MEMBERS. Please Pay this year's contribution fee.",
+                "required": true,
+                "subtext": "- **For Students/Azubis:**  **50€ only** (i.e. less than 5€ a month)\n\n- **For Others:**  **100€**\n\n---\n\n**Payment via PayPal:**\n\n📧 [nftmunich@gmail.com](mailto:nftmunich@gmail.com)\n\n**Subject:** `NFT Yearly Contribution 2025_your name_email`\n\n---\n\n### 📌 **Note:**\nWe are a team **without sponsors or any income**. Therefore, we have to rely on **your support** to function financially.\n\nWe work as efficiently as possible. Your contributions help us cover:\n\n- Upcoming matches\n- Ground bookings\n- Programs and logistics\n- Training materials (footballs, Trikots, etc.)\n\nAt the end of the year, we will **email you the yearly balance sheet**.\n\n> ⚠️ **Please note:** Paying the contribution **does not guarantee** a spot in the squad. Squad selection will be a sporting decision.\n\n---\n\n### **Please pay the yearly contribution.**\n**Deadline: June**\n\n---\n\n### **PS:**\nThere is an option to opt out of yearly contribution (see below option 4). In that case, everybody is welcome to play and train with us. For that, you don't need to pay. But we won't be able to plan you for events/friendlies/tournaments though, where our financial resources get used. The contribution is for that purpose only.\n\n---\n\nFAZIT: PLAYING FOOTBALL WITH US DOESN'T COST MONEY 🙂",
+                "type": "radio",
+                "options": [
+                    {
+                        "label": "Ok, I will pay now.",
+                        "value": "Ok, I will pay now."
+                    },
+                    {
+                        "label": "I will pay by June (after that there is a penalty of 10\u20ac).",
+                        "value": "I will pay by June (after that there is a penalty of 10\u20ac)."
+                    },
+                    {
+                        "label": "I am not able to pay this amount. I will talk to the manager (017645691077)",
+                        "value": "I am not able to pay this amount. I will talk to the manager (017645691077)"
+                    },
+                    {
+                        "label": "No, I don't want to be a full member (Don't plan me for friendlies/tournaments).",
+                        "value": "No, I don't want to be a full member (Don't plan me for friendlies/tournaments)."
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "section": "Review, Response",
+        "fields": [
+            {
+                "id": 61,
+                "label": "Are you interested in a managerial Role in the Team? Like managing Logistics, events, team etc.",
+                "required": true,
+                "subtext": "",
+                "type": "radio",
+                "options": [
+                    {
+                        "label": "Yes",
+                        "value": "Yes"
+                    },
+                    {
+                        "label": "No",
+                        "value": "No"
+                    }
+                ]
+            },
+            {
+                "id": 62,
+                "label": "What do you find different/good/bad in our team?",
+                "required": true,
+                "subtext": "Your suggestion/Feedback regarding our Team/Training/Management.",
+                "type": "long-text"
+            },
+            {
+                "id": 63,
+                "label": "Other. If you think, anything is missing.",
+                "required": false,
+                "subtext": "",
+                "type": "short-text"
+            }
+        ]
+    }
+]

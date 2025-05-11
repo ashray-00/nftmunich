@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import RegistrationForm from "./RegistrationForm";
 import styles from "../styles/PlayerRegistrationForm.module.css";
 
 const PlayerRegistrationPage = () => {
@@ -55,17 +56,7 @@ const PlayerRegistrationPage = () => {
           )}
         </div>
       ) : (
-        // Google Form Embed
-        <div className={styles.iframeWrapper}>
-          <iframe
-            src="https://docs.google.com/forms/d/e/1FAIpQLSdXgqk137Rabuj3tgB9N7hzqgwXfgVf7Y2_s7g5F1t15SriKg/viewform?embedded=true"
-            className={styles.iframe}
-            title="Google Form"
-            allowFullScreen
-          >
-            Loading…
-          </iframe>
-        </div>
+        <RegistrationForm />
       )}
 
       {/* Back Button */}
