@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import RegistrationForm from "./RegistrationForm";
-import styles from "../styles/PlayerRegistrationForm.module.css";
 
 const PlayerRegistrationPage = () => {
   const [hasConsented, setHasConsented] = useState(false);

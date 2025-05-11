@@ -8,7 +8,8 @@ import CryptoJS from "crypto-js";
 
 const RegistrationForm = () => {
     const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
-    const [formData, setFormData] = useState<any>({});
+    type FormData = Record<number, string>; // Define a type for form data
+    const [formData, setFormData] = useState<FormData>({});
     const [formSubmitted, setFormSubmitted] = useState(false); // Track if the form is submitted
     const methods = useForm();
 
@@ -33,9 +34,8 @@ const RegistrationForm = () => {
         methods.reset(defaultValues); // Reset the form with new default values
     }, [currentSectionIndex, methods, currentSection.fields, formData]);
 
-    const handleNext = (data: any) => {
-        // Save current section data
-        setFormData((prevData: any) => ({
+    const handleNext = (data: FormData) => {
+        setFormData((prevData: FormData) => ({
             ...prevData,
             ...data, // Merge current section data with previously saved data
         }));
@@ -53,7 +53,7 @@ const RegistrationForm = () => {
         }
     };
 
-    const encryptData = (data: any) => {
+    const encryptData = (data: FormData) => {
         const keyBase64 = process.env.NEXT_PUBLIC_ENCRYPTION_KEY || ""; // Use environment variable
         const ivBase64 = process.env.NEXT_PUBLIC_ENCRYPTION_IV || ""; // Use environment variable
 
@@ -94,7 +94,7 @@ const RegistrationForm = () => {
         }
     };
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (data: Record<number, string>) => {
         // Save final section data
         const finalData = { ...formData, ...data };
 
