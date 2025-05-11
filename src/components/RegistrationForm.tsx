@@ -75,6 +75,7 @@ const RegistrationForm = () => {
 
     const sendDataToServer = async (encryptedData: string) => {
         const url = process.env.NEXT_PUBLIC_SERVER_URL || "";
+        console.log(url);
         try {
             const response = await fetch(url, {
                 method: "POST", // Use POST for sending data
@@ -86,6 +87,7 @@ const RegistrationForm = () => {
 
             if (response.ok) {
                 setFormSubmitted(true); // Mark the form as submitted
+                console.log(response);
             } else {
                 console.error("Failed to send data:", response.statusText);
             }
