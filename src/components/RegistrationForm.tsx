@@ -114,6 +114,28 @@ const RegistrationForm = () => {
             <div className={styles["thank-you-message"]}>
                 <h2>Thank you for filling out the form!</h2>
                 <p>Your response has been successfully submitted.</p>
+                <div className={styles["membership-info"]}>
+                    <h3>Please pay the membership fee</h3>
+                    <p>
+                        <strong>Membership Fee:</strong>
+                    </p>
+                    <p>
+                        For <strong>Students/Azubis</strong>: 50€<br />
+                        For <strong>Others</strong>: 100€
+                    </p>
+                    <p>
+                        <strong>PayPal Email:</strong> nftmunich2014@gmail.com
+                    </p>
+                    <p>
+                        <strong>Subject:</strong> NFT Yearly Contribution 2025_your name_email only
+                    </p>
+                    <p>
+                        <strong>Important:</strong> When making the payment, please select the "Friends and Family" option to avoid additional fees.
+                    </p>
+                    <p>
+                        Please ensure you include the correct subject when making the payment to help us track your contribution.
+                    </p>
+                </div>
             </div>
         );
     }

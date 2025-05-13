@@ -169,3 +169,31 @@
     margin: 0;
     /* Remove default margin */
 }
+
+.membership-info {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f0f8ff;
+    /* Light blue background */
+    border: 1px solid #0070f3;
+    /* Blue border */
+    border-radius: 8px;
+    text-align: left;
+}
+
+.membership-info h3 {
+    font-size: 1.5rem;
+    color: #0070f3;
+    /* Blue heading */
+    margin-bottom: 10px;
+}
+
+.membership-info p {
+    font-size: 1rem;
+    color: #333; /* Dark text */
+    margin: 5px 0;
+}
+
+.membership-info strong {
+    color: #0070f3; /* Highlight important text in blue */
+}
