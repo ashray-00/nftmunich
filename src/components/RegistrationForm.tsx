@@ -130,7 +130,7 @@ const RegistrationForm = () => {
                         <strong>Subject:</strong> NFT Yearly Contribution 2025_your name_email only
                     </p>
                     <p>
-                        <strong>Important:</strong> When making the payment, please select the "Friends and Family" option to avoid additional fees.
+                        <strong>Important:</strong> When making the payment, please select the &quot;Friends and Family&quot; option to avoid additional fees.
                     </p>
                     <p>
                         Please ensure you include the correct subject when making the payment to help us track your contribution.
