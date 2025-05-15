@@ -1,22 +1,20 @@
-import './globals.css';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-
-const inter = Inter({ subsets: ['latin'] });
-
-export const metadata: Metadata = {
-  title: 'NFT Munich',
-  description: 'Welcome to NFT Munich',
-};
+import "./globals.css"; // Import global styles
+import Header from "../components/Header"; // Import the Header component
 
 export default function RootLayout({
-  children,
+    children,
 }: {
-  children: React.ReactNode;
+    children: React.ReactNode;
 }) {
-  return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
-    </html>
-  );
+    return (
+        <html lang="en">
+            <body>
+                {/* Header */}
+                <Header />
+
+                {/* Main Content */}
+                <main style={{ paddingTop: "80px" }}>{children}</main>
+            </body>
+        </html>
+    );
 }

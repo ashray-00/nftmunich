@@ -1,25 +1,21 @@
 "use client";
 
-import Header from '../components/Header';
+// import Header from '../components/Header';
 import Carousel from '../components/Carousel';
 import ContactOptions from '../components/ContactOptions';
 import AboutUs from "../components/AboutUs";
 import Shop from "../components/Shop";
 import Achievements from '../components/Achievements';
+import News from '../components/News'; // Ensure the file exists at this path or adjust the path accordingly
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
   return (
     <div className="min-h-screen bg-bavarian-white text-bavarian-blue">
-      <Header />
+      {/* <Header /> */}
       <main className="flex flex-col items-center">
         <section id="home" className="relative w-full flex flex-col items-center justify-center">
-          <div className="hidden md:block absolute top-4 left-4 text-center z-10">
-            <div className="flex items-center">
-              <img src="/logo.png" alt="NFT Munich Logo" width={50} height={50} />
-            </div>
-          </div>
           <div className="w-full">
             <Carousel />
           </div>
@@ -27,6 +23,11 @@ export default function Home() {
         <section id="about" className="relative w-full min-h-screen flex flex-col items-center justify-center">
           <div>
             <AboutUs />
+          </div>
+        </section>
+        <section id="news" className="relative w-full min-h-screen flex flex-col items-center justify-center">
+          <div>
+            <News />
           </div>
         </section>
         <section id="achievements" className="relative w-full min-h-screen flex flex-col items-center justify-center">

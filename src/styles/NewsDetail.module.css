@@ -1,0 +1,139 @@
+.container {
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    margin-top: 10vh;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #ffffff;
+    /* White background */
+    color: #333333;
+    /* Dark gray text */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(88, 181, 239, 0.308);
+    /* Subtle shadow */
+}
+
+/* Title */
+.title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #0070f3;
+    /* Blue color for the title */
+}
+
+/* Date and Author */
+.text-gray-500 {
+    font-size: 0.9rem;
+    color: #1c81f4;
+    /* Medium gray for date and author */
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Image */
+.my-6 img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* Subtle shadow for the image */
+}
+
+/* Content */
+.prose {
+    font-size: 1rem;
+    color: #1c81f4;
+    /* Dark gray for content text */
+    margin-top: 20px;
+}
+
+.prose p {
+    margin-bottom: 16px;
+    line-height: 1.8;
+}
+
+/* Related Links */
+.mt-4 {
+    margin-top: 20px;
+}
+
+.text-xl {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #0070f3;
+    /* Blue color for the "Related Links" heading */
+    margin-bottom: 10px;
+}
+
+/* Related Links */
+.relatedLinks {
+    margin-top: 20px;
+}
+
+.relatedLinksHeading {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #0070f3;
+    /* Blue color for the "Related Links" heading */
+    margin-bottom: 10px;
+}
+
+.relatedLinksList {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+.relatedLinksItem {
+    margin-bottom: 10px;
+}
+
+.link {
+    color: #0070f3;
+    /* Blue color for links */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.link:hover {
+    text-decoration: underline;
+    color: #005bb5;
+    /* Darker blue on hover */
+}
+
+.text-blue-600 {
+    color: #0070f3;
+    /* Blue color for links */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.text-blue-600:hover {
+    text-decoration: underline;
+    color: #005bb5;
+    /* Darker blue on hover */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+        margin-top: 5vh;
+    }
+
+    .title {
+        font-size: 2rem;
+    }
+
+    .text-gray-500 {
+        font-size: 0.8rem;
+    }
+
+    .prose {
+        font-size: 0.9rem;
+    }
+}

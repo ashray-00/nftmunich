@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function Header() {
-  const [activeSection, setActiveSection] = useState<string>('home');
+  const [activeSection, setActiveSection] = useState<string>("home");
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -12,10 +13,10 @@ export default function Header() {
   };
 
   useEffect(() => {
-    const sections = document.querySelectorAll('section');
+    const sections = document.querySelectorAll("section");
     const options = {
       root: null,
-      rootMargin: '0px',
+      rootMargin: "0px",
       threshold: 0.2,
     };
 
@@ -43,7 +44,7 @@ export default function Header() {
     if (section) {
       window.scrollTo({
         top: section.offsetTop,
-        behavior: 'smooth',
+        behavior: "smooth",
       });
     }
   };
@@ -56,81 +57,80 @@ export default function Header() {
       </div>
       <div className="md:hidden">
         <button onClick={toggleMenu} className="focus:outline-none">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M4 6h16M4 12h16m-7 6h7"
+            ></path>
           </svg>
         </button>
       </div>
       <nav className="hidden md:flex md:items-center">
-        <a
-          href="#home"
-          onClick={() => scrollToSection('home')}
-          className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === 'home' ? 'text-yellow-700' : ''}`}
-        >
-          Home
-        </a>
-        <a
-          href="#about"
-          onClick={() => scrollToSection('about')}
-          className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === 'about' ? 'text-yellow-700' : ''}`}
-        >
-          About Us
-        </a>
-        <a
-          href="#achievements"
-          onClick={() => scrollToSection('achievements')}
-          className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === 'achievements' ? 'text-yellow-700' : ''}`}
-        >
-          Achievements
-        </a>
-        <a
-          href="#player-registration"
-          onClick={() => scrollToSection('player-registration')}
-          className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === 'player-registration' ? 'text-yellow-700' : ''}`}
-        >
-          Player Registration
-        </a>
-        <a
-          href="#shop"
-          onClick={() => scrollToSection('shop')}
-          className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === 'shop' ? 'text-yellow-700' : ''}`}
-        >
-          Shop
-        </a>
-        <a
-          href="#contact"
-          onClick={() => scrollToSection('contact')}
-          className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === 'contact' ? 'text-yellow-700' : ''}`}
-        >
-          Contact
-        </a>
+        {[
+          { id: "home", label: "Home" },
+          { id: "about", label: "About Us" },
+          { id: "news", label: "News" },
+          { id: "achievements", label: "Achievements" },
+          { id: "player-registration", label: "Player Registration" },
+          { id: "shop", label: "Shop" },
+          { id: "contact", label: "Contact" },
+        ].map((section) => (
+          <Link
+            key={section.id}
+            href={`/#${section.id}`}
+            onClick={() => scrollToSection(section.id)}
+            className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === section.id ? "text-yellow-700" : ""
+              }`}
+          >
+            {section.label}
+          </Link>
+        ))}
       </nav>
       {isOpen && (
         <div className="fixed inset-0 bg-bavarian-white bg-opacity-90 flex flex-col items-center justify-center z-20">
           <button onClick={toggleMenu} className="absolute top-4 right-4 focus:outline-none">
-            <svg className="w-6 h-6 text-bavarian-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+            <svg
+              className="w-6 h-6 text-bavarian-blue"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
             </svg>
           </button>
           <nav className="flex flex-col items-center space-y-6">
-            <a href="#home" onClick={toggleMenu} className="text-2xl text-bavarian-blue">
-              Home
-            </a>
-            <a href="#about" onClick={toggleMenu} className="text-2xl text-bavarian-blue">
-              About Us
-            </a>
-            <a href="#achievements" onClick={toggleMenu} className="text-2xl text-bavarian-blue">
-              Achievements
-            </a>
-            <a href="#player-registration" onClick={toggleMenu} className="text-2xl text-bavarian-blue">
-              Player Registration
-            </a>
-            <a href="#shop" onClick={toggleMenu} className="text-2xl text-bavarian-blue">
-              Shop
-            </a>
-            <a href="#contact" onClick={toggleMenu} className="text-2xl text-bavarian-blue">
-              Contact
-            </a>
+            {[
+              { id: "home", label: "Home" },
+              { id: "about", label: "About Us" },
+              { id: "news", label: "News" },
+              { id: "achievements", label: "Achievements" },
+              { id: "player-registration", label: "Player Registration" },
+              { id: "shop", label: "Shop" },
+              { id: "contact", label: "Contact" },
+            ].map((section) => (
+              <Link
+                key={section.id}
+                href={`/#${section.id}`}
+                onClick={toggleMenu}
+                className="text-2xl text-bavarian-blue"
+              >
+                {section.label}
+              </Link>
+            ))}
           </nav>
         </div>
       )}

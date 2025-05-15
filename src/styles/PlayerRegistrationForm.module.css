@@ -46,8 +46,6 @@
   margin: 0 auto;
   /* Center the title */
   white-space: nowrap;
-  /* Prevent the text from wrapping */
-  overflow: hidden;
   /* Ensure it doesn't overflow the container */
   text-overflow: ellipsis;
   /* Add ellipsis if the text overflows */
