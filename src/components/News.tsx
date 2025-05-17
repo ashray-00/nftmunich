@@ -19,7 +19,6 @@ const News = () => {
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/newses?sort[0]=date:desc&pagination[limit]=5`)
             .then((response) => response.json())
             .then((data) => {
-                console.log("API Response:", data); // Debugging the response
                 setNews(data.data || []); // Set the news data directly
             })
             .catch((error) => console.error("Error fetching news:", error));
