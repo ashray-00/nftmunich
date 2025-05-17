@@ -1,0 +1,109 @@
+{
+    "title": "About Us",
+    "intro": {
+        "content": [
+            {
+                "type": "text",
+                "bold": "Group formed around 2014 ",
+                "value": "by Nepali enthusiasts, the team is now a strong part of Germany's football community."
+            },
+            {
+                "type": "text",
+                "bold": "Goal: Sport, Physical activity, Recreation, Community Integration"
+            }
+        ],
+        "image": "/about_us_images/intro.jpg"
+    },
+    "sections": [
+        {
+            "subheader": "How It All Started",
+            "content": [
+                {
+                    "type": "text",
+                    "bold": "Team formed to play a tournament in Aarau, Switzerland:"
+                },
+                {
+                    "type": "text",
+                    "value": "This tournament played a pivotal and trailblazing role in bringing together the idea of Nepalese football team based in Munich, paving the way for the formation of NFT Munich."
+                },
+                {
+                    "type": "text",
+                    "bold": "First Tournament Success: ",
+                    "value": "NFT Munich entered the tournament with a strong passion for football and a desire to represent the Nepalese community abroad."
+                },
+                {
+                    "type": "text",
+                    "bold": "Quaterfinalist in the European Cup in the First Edition: ",
+                    "value": "NFT Munich made an incredible impact, reaching the quarterfinals of the tournament in its very first edition, setting the tone for future success."
+                }
+            ],
+            "image": "/about_us_images/how-it-started.jpg"
+        },
+        {
+            "subheader": "Our Journey and Achievements",
+            "content": [
+                {
+                    "type" : "text",
+                    "bold": "Engagment in the diaspora sports community."
+                },
+                {
+                    "type": "text",
+                    "bold": "Tournament Success and Legancy:"
+                },
+                {
+                    "type" : "bullet",
+                    "value": [
+                        "Champions in the First Edition of the NRNA-Cup",
+                        "6-time Finalist and 4-time Champions in the NRNA tournaments."
+                    ]
+                },
+                {
+                    "type": "text",
+                    "bold": "Friendly Matches: ",
+                    "value": "Regular participation in the friendly matches with both Nepali teams and teams from other backgrounds."
+                }
+            ],
+            "image": "/about_us_images/journey-and-achievements.jpg"
+        },
+        {
+            "subheader": "Team Composition",
+            "content": [
+                {
+                    "type": "text",
+                    "bold": "Diverse Team: ",
+                    "value": "The team consists of students from prestigious universities like LMU and TUM, as well as professionals."
+                },
+                {
+                    "type": "text",
+                    "bold": "Backgrounds: ",
+                    "value": "Nepalese, diffenrent age groups"
+                },
+                {
+                    "type": "text",
+                    "bold": "Shared Passion: ",
+                    "value": "Regardless of profession or background, the team shares a deep passion for football."
+                }
+            ],
+            "images": [
+                "/about_us_images/team-composition-1.jpg",
+                "/about_us_images/team-composition-2.jpg"
+            ]
+        },
+        {
+            "subheader": "Community Integration",
+            "content": [
+                {
+                    "type": "text",
+                    "bold": "Commitment to Integration: ",
+                    "value": "NFT Munich is not only about football - it's about fostering integration and well being through sports."
+                },
+                {
+                    "type": "text",
+                    "bold": "Nepali and International Unity: ",
+                    "value": "The team represents the Nepalese community in Munich, while also engaging with the local community."
+                }
+            ],
+            "image": "/about_us_images/community-integration.jpg"
+        }
+    ]
+}

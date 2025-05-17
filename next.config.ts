@@ -1,10 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true,
-  images: {
-    domains: ["api.nftmunich.club"], // Add your Strapi API domain here
-  },
+  /* config options here */
 };
 
 export default nextConfig;

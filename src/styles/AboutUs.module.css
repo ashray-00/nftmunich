@@ -87,8 +87,8 @@
 }
 
 .image {
-    width: 100%; /* Make the image take up the full width of its container */
-    max-width: 500px; /* Increase the maximum width for larger images */
+    width: 80%;
+    max-width: 300px;
     border-radius: 10px;
     transform: rotate(-3deg);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -96,9 +96,9 @@
 
 .imageWrapper {
     position: relative;
-    margin: 10px;
     display: inline-block;
-    /* Prevent overlapping */
+    margin: 10px;
+    /* Add spacing between images if needed */
 }
 
 .pin {
@@ -116,11 +116,6 @@
 
 /* Mobile-specific layout */
 @media (max-width: 768px) {
-    .intro {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
     .section {
         flex-direction: column;
         /* Stack content vertically */
