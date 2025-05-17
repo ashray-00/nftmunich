@@ -158,7 +158,6 @@ export default function AboutUs() {
                         width={500}
                         height={375}
                         className={styles.image}
-                        loading="lazy" // Lazy loading
                     />
                 </div>
             ));
@@ -172,7 +171,6 @@ export default function AboutUs() {
                     width={500}
                     height={375}
                     className={styles.image}
-                    loading="lazy" // Lazy loading
                 />
             </div>
         );
