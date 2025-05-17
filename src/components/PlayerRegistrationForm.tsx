@@ -1,69 +1,78 @@
-"use client";
-
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import RegistrationForm from "./RegistrationForm";
+import ConsentSection from "./ConsentSection";
+import RequestRegistrationForm from "./RequestRegistrationForm";
+import styles from "../styles/RequestRegistrationForm.module.css"; // Import the CSS for styling
 
-const PlayerRegistrationPage = () => {
+const PlayerRegistrationForm = () => {
   const [hasConsented, setHasConsented] = useState(false);
-  const [hasDisagreed, setHasDisagreed] = useState(false);
+  const [formStatus, setFormStatus] = useState<"success" | "error" | "already-registered" | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
   const router = useRouter();
 
-  const handleAgree = () => {
+  const handleConsent = () => {
     setHasConsented(true);
-    setHasDisagreed(false); // Reset disagreement message
   };
 
-  const handleDisagree = () => {
-    setHasDisagreed(true);
+  const handleSuccess = () => {
+    setFormStatus("success");
+  };
+
+  const handleAlreadyRegistered = () => {
+    setFormStatus("already-registered");
+  };
+
+  const handleError = (message: string) => {
+    setFormStatus("error");
+    setErrorMessage(message);
   };
 
   const handleBack = () => {
-    router.push("/#player-registration");
+    router.push("/#player-registration"); // Navigate to the #player-registration section
   };
 
   return (
-    <div className="min-h-screen bg-bavarian-white text-bavarian-blue p-8">
-      {/* Consent Section */}
-      {!hasConsented ? (
-        <div className="mt-8 text-center">
-          <p className="mb-4">
-            I agree to the collection and processing of my personal data in
-            accordance with the{" "}
-            <a href="/privacy-policy" className="text-blue-600 underline">
-              Privacy Policy
-            </a>.
-          </p>
-          <div className="flex justify-center gap-4">
-            <button
-              onClick={handleAgree}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
-            >
-              Agree
-            </button>
-            <button
-              onClick={handleDisagree}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
-            >
-              Disagree
-            </button>
-          </div>
-          {hasDisagreed && (
-            <p className="mt-4 text-red-600">
-              You need to agree to the consent to proceed with registration.
-            </p>
-          )}
+    <div>
+      {formStatus === "success" && (
+        <div className={styles["thank-you-message"]}>
+          Thank you for your response! We will contact you soon.
         </div>
-      ) : (
-        <RegistrationForm />
       )}
 
-      {/* Back Button */}
-      <div className="mt-8 text-center">
-        <button
-          onClick={handleBack}
-          className="bg-bavarian-blue text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-        >
+      {formStatus === "already-registered" && (
+        <div className={styles["thank-you-message"]}>
+          Email already registered. We will contact you via email soon.
+        </div>
+      )}
+
+      {formStatus === "error" && (
+        <p className={styles["error-text"]}>
+          {errorMessage || "An error occurred. Please try again."}
+        </p>
+      )}
+
+      {!formStatus && (
+        <>
+          {!hasConsented ? (
+            <ConsentSection onAgree={handleConsent} />
+          ) : (
+            <RequestRegistrationForm
+              onSuccess={handleSuccess}
+              onError={(message) => {
+                if (message.includes("must be unique")) {
+                  handleAlreadyRegistered();
+                } else {
+                  handleError(message);
+                }
+              }}
+            />
+          )}
+        </>
+      )}
+
+      {/* Back button always visible */}
+      <div className={styles["form-navigation"]}>
+        <button onClick={handleBack} className={styles["back-button"]}>
           Back
         </button>
       </div>
@@ -71,4 +80,4 @@ const PlayerRegistrationPage = () => {
   );
 };
 
-export default PlayerRegistrationPage;
+export default PlayerRegistrationForm;

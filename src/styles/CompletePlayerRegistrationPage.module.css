@@ -1,0 +1,73 @@
+.container {
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+}
+
+.title {
+    font-size: 1.5rem;
+    color: #005bb5;
+    /* Customize the title color */
+    margin: 0 auto;
+    /* Center the title */
+    white-space: nowrap;
+    /* Ensure it doesn't overflow the container */
+    text-overflow: ellipsis;
+    /* Add ellipsis if the text overflows */
+}
+
+.loading {
+    font-size: 1.2rem;
+    color: #0070f3;
+    /* Blue theme color */
+    margin-top: 20px;
+}
+
+.error-message {
+    font-size: 1.2rem;
+    color: #d32f2f;
+    /* Red for errors */
+    margin-top: 20px;
+}
+
+.consent-container {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #e6f7ff;
+    /* Light blue background */
+    border: 1px solid #b3e0ff;
+    /* Subtle blue border */
+    border-radius: 8px;
+    color: #005bb5;
+    /* Blue text */
+    font-size: 1rem;
+    text-align: left;
+}
+
+.registration-form-container {
+    margin-top: 20px;
+}
+
+.back-button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    color: #fff;
+    background-color: #0070f3;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.back-button:hover {
+    background-color: #005bb5;
+}
+
+.form-navigation {
+    margin-top: 20px;
+    text-align: center;
+}

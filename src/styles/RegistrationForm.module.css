@@ -1,9 +1,11 @@
 .form-container {
     max-width: 600px;
     margin: 0 auto;
+    margin-top: 25px;
     background: #f9f9f9;
     border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px 20px;
+    box-shadow: 0 4px 6px rgba(88, 181, 239, 0.308);
 }
 
 .section-title {
@@ -11,10 +13,12 @@
     font-weight: bold;
     margin-bottom: 20px;
     text-align: center;
+    color: #005bb5
 }
 
 .form-field {
     margin-bottom: 20px;
+    color: #005bb5
 }
 
 .field-label {
@@ -22,6 +26,7 @@
     font-weight: bold;
     margin-bottom: 5px;
     display: block;
+    color: #005bb5
 }
 
 .field-subtext {

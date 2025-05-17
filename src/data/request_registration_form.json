@@ -1,0 +1,42 @@
+[
+    {
+        "id": "name",
+        "label": "Name",
+        "type": "text",
+        "required": true
+    },
+    {
+        "id": "email",
+        "label": "Email",
+        "type": "email",
+        "required": true
+    },
+    {
+        "id": "verifyEmail",
+        "label": "Verify Email",
+        "type": "email",
+        "required": true
+    },
+    {
+        "id": "phone",
+        "label": "Phone Number",
+        "type": "text",
+        "required": true
+    },
+    {
+        "id": "isLivingInMunich",
+        "label": "Are you living in Munich?",
+        "type": "radio",
+        "options": [
+            {
+                "label": "Yes",
+                "value": true
+            },
+            {
+                "label": "No",
+                "value": false
+            }
+        ],
+        "required": true
+    }
+]
