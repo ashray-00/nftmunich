@@ -30,6 +30,7 @@ const RequestRegistrationForm = ({ onSuccess, onError }: { onSuccess: () => void
                         email: data.email,
                         phone: data.phone,
                         isLivingInMunich: data.isLivingInMunich,
+                        beenInTraining: data.beenInTraining,
                     },
                 }),
             });
@@ -54,6 +55,9 @@ const RequestRegistrationForm = ({ onSuccess, onError }: { onSuccess: () => void
                         {field.label}
                         {field.required && <span className={styles["required-asterisk"]}>*</span>}
                     </label>
+
+                    {/* Render subtext if it exists */}
+                    {field.subtext && <p className={styles["field-subtext"]}>{field.subtext}</p>}
 
                     {/* Render input fields dynamically */}
                     {field.type === "radio" ? (

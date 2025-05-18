@@ -125,3 +125,16 @@
 .back-button:hover {
     background-color: #005bb5;
 }
+
+.field-subtext {
+    font-size: 0.85rem;
+    /* Smaller font size */
+    color: #005bb5;
+    /* Subtle gray color */
+    margin-top: 5px;
+    /* Add spacing below the label */
+    line-height: 1.4;
+    /* Improve readability for multiline text */
+    white-space: pre-wrap;
+    /* Preserve line breaks in the subtext */
+}

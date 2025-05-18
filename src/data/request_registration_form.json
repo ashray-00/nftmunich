@@ -38,5 +38,22 @@
             }
         ],
         "required": true
+    },
+    {
+        "id": "beenInTraining",
+        "label": "Have you been in our Training sessions?",
+        "subtext": "We recommend you to take part in couple of training sessions.\n(Wednesday 16:00 Siemensallee 61, 81379 Munich and \non weekends in Tübinger Str. 10, 80686 München)",
+        "type": "radio",
+        "options": [
+            {
+                "label": "Yes",
+                "value": true
+            },
+            {
+                "label": "No",
+                "value": false
+            }
+        ],
+        "required": true
     }
 ]

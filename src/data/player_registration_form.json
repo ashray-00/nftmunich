@@ -128,9 +128,9 @@
             },
             {
                 "id": 36,
-                "label": "Your Fitness Goal by the End of July.",
+                "label": "Your Fitness Goal by the End of August.",
                 "required": true,
-                "subtext": "(Before NRNA Tournament)",
+                "subtext": "(i.e Before NRNA Tournament)\nThe medical and fitness team will assess your fitness sporadically",
                 "type": "long-text"
             },
             {
@@ -162,8 +162,8 @@
                 "type": "radio",
                 "options": [
                     {
-                        "label": "Yes (For Tournament, regular commitment required)",
-                        "value": "Yes (For Tournament, regular commitment required)"
+                        "label": "Yes (For Tournament commitment and minimum of fitness 8 is required. Commitment includes regular participation in training, friendlies, events. If you play for a local club, inform us)",
+                        "value": "Yes (For Tournament commitment and minimum of fitness 8 is required. Commitment includes regular participation in training, friendlies, events. If you play for a local club, inform us)"
                     },
                     {
                         "label": "Yes, but only for Friendlies (regular Training required)",
@@ -208,7 +208,7 @@
                 "id": 43,
                 "label": "Do you have NFT Beanie Bag?",
                 "required": true,
-                "subtext": "Link: [Order List](https://docs.google.com/spreadsheets/d/1npfFZxLxj143Sf83q16zewkUAdiFLuslvV945gH4ZLA/edit#gid=0)\n\n(compulsory for Tournament)\n - costs around 10 Euros (depending upon the number of orders)\n - is very practical to carry your footballing stuffs\n\n ![](/player_registration/beenie.jpg)",
+                "subtext": "Link: [Order List](https://docs.google.com/spreadsheets/d/1npfFZxLxj143Sf83q16zewkUAdiFLuslvV945gH4ZLA/edit#gid=0)\n\n(compulsory for Tournament)\n - costs around 15 Euros (depending upon the number of orders)\n - is very practical to carry your footballing stuffs\n\n ![](/player_registration/beenie.jpg)",
                 "type": "radio",
                 "options": [
                     {
@@ -275,6 +275,63 @@
                         "value": "No, I don't want to be a full member (Don't plan me for friendlies/tournaments)."
                     }
                 ]
+            }
+        ]
+    },
+    {
+        "section": "NRNA Tournament 2025 in Munich",
+        "fields": [
+            {
+                "id": 71,
+                "label": "Dear team, We are hosting the prestigious 8th edition of the NRNA Germany Football Cup in Munich on the 6th of September. We expect to host a minimum of 18 teams (men’s and women’s) and around 1,000 guests. This will only be possible with your help and commitment.",
+                "type": "info",
+                "subtext": "Every registered member must be available on that day — that’s a given."
+            },
+            {
+                "id": 72,
+                "label": "Other possible commitments (please read carefully and think thoroughly before selecting one or more options):",
+                "type": "multi-select",
+                "required": true,
+                "options": [
+                    {
+                        "label": "I will bring my family, friends, and everyone I know on the tournament day. I will also promote the event regularly through my social media — this is expected from all of us.",
+                        "value": "I will bring my family, friends, and everyone I know on the tournament day. I will also promote the event regularly through my social media."
+                    },
+                    {
+                        "label": "I want to contribute financially to the tournament (cash or PayPal: nftmunich@gmail.com). You can also ask your friends and family to support us as much as possible.",
+                        "value": "I want to contribute financially to the tournament."
+                    },
+                    {
+                        "label": "I will bring in sponsors and connect them to the team asap (email: nftmunich@gmail.com).",
+                        "value": "I will bring in sponsors and connect them to the team asap"
+                    },
+                    {
+                        "label": "I will take at least a couple of days off prior to the tournament and dedicate my time to on-field preparations. (Or you can ask friends to help with this.)",
+                        "value": "I will take at least a couple of days off prior to the tournament and dedicate my time to on-field preparations."
+                    },
+                    {
+                        "label": "I want to be a full-time volunteer for tournament preparation. Requirements: You'll be given a 2-hour task each week starting in June (or more if you can). This can be offline (e.g., writing letters, making posters, writing certificates etc) or on-field (e.g., buying or collecting logistics etc).",
+                        "value": "I want to be a full-time volunteer for tournament preparation."
+                    },
+                    {
+                        "label": "I want to be actively involved in the tournament preparation as part of the Task Force. Requirements: You must be available for at least half a day each week (most likely on weekends), be willing to contribute financially, and accept the possibility of bearing financial loss (up to €1000 per person). Some committed individuals have already joined. If you're interested, we will contact you. Please note: this is a significant commitment, and we completely understand if you cannot take it on.",
+                        "value": "I want to be actively involved in the tournament preparation as part of the Task Force."
+                    }
+                ]
+            },
+            {
+                "id": 73,
+                "label": "What specific skills do you have that we can use for the event?",
+                "type": "long-text",
+                "required": false,
+                "subtext": "For example: we need photographers, videographers, graphic designers, DJs, Medical personnel etc."
+            },
+            {
+                "id": 74,
+                "label": "Do you have any suggestions for the tournament? What kind of tournament would you like to see in Munich? What more you can offer? We are always open for suggestions :)",
+                "type": "long-text",
+                "required": false,
+                "subtext": ""
             }
         ]
     },

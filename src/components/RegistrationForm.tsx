@@ -8,7 +8,7 @@ import CryptoJS from "crypto-js";
 
 const RegistrationForm = () => {
     const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
-    type FormData = Record<number, string>; // Define a type for form data
+    type FormData = Record<number, string | string[]>; // Define a type for form data
     const [formData, setFormData] = useState<FormData>({});
     const [formSubmitted, setFormSubmitted] = useState(false); // Track if the form is submitted
     const methods = useForm();
@@ -21,23 +21,37 @@ const RegistrationForm = () => {
     // Check if all required fields in the current section are filled
     const isSectionValid = currentSection.fields.every((field) => {
         if (field.required) {
-            return watchedFields[field.id] && watchedFields[field.id].trim() !== "";
+            const value = watchedFields[field.id];
+            if (field.type === "multi-select") {
+                return value && value.length > 0; // Ensure at least one option is selected
+            }
+            return value && value.trim() !== "";
         }
         return true;
     });
 
     useEffect(() => {
-        const defaultValues = currentSection.fields.reduce<Record<number, string>>((acc, field) => {
-            acc[field.id] = formData[field.id] || ""; // Use saved value or empty string
+        const defaultValues = currentSection.fields.reduce<Record<number, string | string[]>>((acc, field) => {
+            if (field.type !== "info") { // Skip `info` fields
+                acc[field.id] = formData[field.id] || (field.type === "multi-select" ? [] : ""); // Use saved value or empty string/array
+            }
             return acc;
         }, {});
         methods.reset(defaultValues); // Reset the form with new default values
     }, [currentSectionIndex, methods, currentSection.fields, formData]);
 
     const handleNext = (data: FormData) => {
+        const filteredData = Object.keys(data).reduce((acc, key) => {
+            const fieldConfig = currentSection.fields.find((field) => field.id === parseInt(key, 10));
+            if (fieldConfig && fieldConfig.type !== "info") { // Skip `info` fields
+                acc[parseInt(key, 10)] = data[parseInt(key, 10)];
+            }
+            return acc;
+        }, {} as FormData);
+
         setFormData((prevData: FormData) => ({
             ...prevData,
-            ...data, // Merge current section data with previously saved data
+            ...filteredData, // Merge current section data with previously saved data
         }));
 
         // Move to the next section
@@ -146,86 +160,114 @@ const RegistrationForm = () => {
                 <h2 className={styles["section-title"]}>{currentSection.section}</h2>
                 {currentSection.fields.map((field) => (
                     <div key={field.id} className={styles["form-field"]}>
-                        <label className={styles["field-label"]}>
-                            {field.label}
-                            {field.required && <span className={styles["required-asterisk"]}> *</span>}
-                        </label>
-                        {field.subtext && (
-                            <div className={styles["field-subtext"]}>
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                    {field.subtext}
-                                </ReactMarkdown>
+                        {field.type === "info" ? (
+                            <div className={styles["info-field"]}>
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{field.label}</ReactMarkdown>
+                                {field.subtext && (
+                                    <div className={styles["field-subtext"]}>
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{field.subtext}</ReactMarkdown>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                        {field.type === "short-text" && (
-                            <input
-                                type="text"
-                                {...methods.register(`${field.id}`, { required: field.required })}
-                                className={styles["input-field"]}
-                            />
-                        )}
-                        {field.type === "long-text" && (
-                            <textarea
-                                {...methods.register(`${field.id}`, { required: field.required })}
-                                className={styles["textarea-field"]}
-                            />
-                        )}
-                        {field.type === "email" && (
-                            <input
-                                type="email"
-                                {...methods.register(`${field.id}`, {
-                                    required: field.required,
-                                    pattern: {
-                                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, // Regex for email validation
-                                        message: "Please enter a valid email address", // Error message
-                                    },
-                                })}
-                                className={styles["input-field"]}
-                            />
-                        )}
-                        {methods.formState.errors[field.id]?.type === "pattern" && (
-                            <p className={styles["error-text"]}>
-                                {(methods.formState.errors[field.id]?.message as string) ?? "Invalid input"}
-                            </p>
-                        )}
+                        ) : (
+                            <>
+                                <label className={styles["field-label"]}>
+                                    {field.label}
+                                    {field.required && <span className={styles["required-asterisk"]}> *</span>}
+                                </label>
+                                {field.subtext && (
+                                    <div className={styles["field-subtext"]}>
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                            {field.subtext}
+                                        </ReactMarkdown>
+                                    </div>
+                                )}
+                                {field.type === "short-text" && (
+                                    <input
+                                        type="text"
+                                        {...methods.register(`${field.id}`, { required: field.required })}
+                                        className={styles["input-field"]}
+                                    />
+                                )}
+                                {field.type === "long-text" && (
+                                    <textarea
+                                        {...methods.register(`${field.id}`, { required: field.required })}
+                                        className={styles["textarea-field"]}
+                                    />
+                                )}
+                                {field.type === "multi-select" && (
+                                    <div className={styles["checkbox-group"]}>
+                                        {field.options?.map((option) => (
+                                            <label key={option.value} className={styles["checkbox-option"]}>
+                                                <input
+                                                    type="checkbox"
+                                                    value={option.value}
+                                                    {...methods.register(`${field.id}`, { required: field.required })}
+                                                    className={styles["checkbox-input"]}
+                                                />
+                                                {option.label}
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                                {field.type === "email" && (
+                                    <input
+                                        type="email"
+                                        {...methods.register(`${field.id}`, {
+                                            required: field.required,
+                                            pattern: {
+                                                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, // Regex for email validation
+                                                message: "Please enter a valid email address", // Error message
+                                            },
+                                        })}
+                                        className={styles["input-field"]}
+                                    />
+                                )}
+                                {methods.formState.errors[field.id]?.type === "pattern" && (
+                                    <p className={styles["error-text"]}>
+                                        {(methods.formState.errors[field.id]?.message as string) ?? "Invalid input"}
+                                    </p>
+                                )}
 
-                        {field.type === "radio" && (
-                            <div className={styles["radio-group"]}>
-                                {field.options?.map((option) => (
-                                    <label key={option.value} className={styles["radio-option"]}>
-                                        <input
-                                            className={styles["radio-input"]}
-                                            type="radio"
-                                            value={option.value}
-                                            {...methods.register(`${field.id}`, { required: field.required })}
-                                        />
-                                        {option.label}
-                                    </label>
-                                ))}
-                            </div>
-                        )}
-                        {field.type === "rating" && (
-                            <input
-                                type="number"
-                                {...methods.register(`${field.id}`, {
-                                    required: field.required,
-                                    min: field.min,
-                                    max: field.max,
-                                })}
-                                className={styles["input-field"]}
-                                min={field.min} // HTML attribute to prevent smaller values
-                                max={field.max} // HTML attribute to prevent larger values
-                            />
-                        )}
-                        {methods.formState.errors[field.id]?.type === "min" && (
-                            <p className={styles["error-text"]}>
-                                {field.label} must be at least {field.min}.
-                            </p>
-                        )}
-                        {methods.formState.errors[field.id]?.type === "max" && (
-                            <p className={styles["error-text"]}>
-                                {field.label} must be at most {field.max}.
-                            </p>
+                                {field.type === "radio" && (
+                                    <div className={styles["radio-group"]}>
+                                        {field.options?.map((option) => (
+                                            <label key={option.value} className={styles["radio-option"]}>
+                                                <input
+                                                    className={styles["radio-input"]}
+                                                    type="radio"
+                                                    value={option.value}
+                                                    {...methods.register(`${field.id}`, { required: field.required })}
+                                                />
+                                                {option.label}
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                                {field.type === "rating" && (
+                                    <input
+                                        type="number"
+                                        {...methods.register(`${field.id}`, {
+                                            required: field.required,
+                                            min: "min" in field && field.min !== undefined ? field.min : undefined,
+                                            max: "max" in field && field.max !== undefined ? field.max : undefined,
+                                        })}
+                                        className={styles["input-field"]}
+                                        min={"min" in field && field.min !== undefined ? field.min : undefined} // HTML attribute to prevent smaller values
+                                        max={"max" in field && field.max !== undefined ? field.max : undefined} // HTML attribute to prevent larger values
+                                    />
+                                )}
+                                {methods.formState.errors[field.id]?.type === "min" && (
+                                    <p className={styles["error-text"]}>
+                                        {field.label} must be at least {"min" in field && field.min}.
+                                    </p>
+                                )}
+                                {methods.formState.errors[field.id]?.type === "max" && (
+                                    <p className={styles["error-text"]}>
+                                        {field.label} must be at most {"max" in field && field.max}.
+                                    </p>
+                                )}
+                            </>
                         )}
                         {methods.formState.errors[field.id] && (
                             <p className={styles["error-text"]}>{field.label} is required</p>
