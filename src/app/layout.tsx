@@ -22,7 +22,7 @@ export const metadata = {
         type: "website",
         images: [
             {
-                url: "/about_us_images/intro.jpg",
+                url: "/logo.png",
                 width: 1200,
                 height: 630,
                 alt: "NFT Munich Club"
@@ -34,7 +34,7 @@ export const metadata = {
         title: "NFT Munich Club – Nepalese Football Club in Munich, Germany",
         description:
             "NFT Munich is a Nepalese football club in Munich, Germany. Join our community at nftmunich.club.",
-        images: ["/about_us_images/intro.jpg"]
+        images: ["/logo.png"]
     }
 };
 
