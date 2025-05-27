@@ -259,6 +259,10 @@
                 "type": "radio",
                 "options": [
                     {
+                        "label": "I have already paid.",
+                        "value": "I have already paid."
+                    },
+                    {
                         "label": "Ok, I will pay now.",
                         "value": "Ok, I will pay now."
                     },
@@ -269,10 +273,6 @@
                     {
                         "label": "I am not able to pay this amount. I will talk to the manager (017645691077)",
                         "value": "I am not able to pay this amount. I will talk to the manager (017645691077)"
-                    },
-                    {
-                        "label": "No, I don't want to be a full member (Don't plan me for friendlies/tournaments).",
-                        "value": "No, I don't want to be a full member (Don't plan me for friendlies/tournaments)."
                     }
                 ]
             }
