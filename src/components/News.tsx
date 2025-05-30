@@ -23,8 +23,9 @@ const News = () => {
         fetch("/api/news")
             .then((response) => response.json())
             .then((data) => {
-                setNews(data.data || []); // Set the news data directly
-                localStorage.setItem("news", JSON.stringify(data));
+                const newsArray = Array.isArray(data) ? data : data.data || [];
+                setNews(newsArray);
+                localStorage.setItem("news", JSON.stringify(newsArray));
             })
             .catch((error) => console.error("Error fetching news:", error));
     }, []);
