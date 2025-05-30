@@ -23,7 +23,7 @@ const NewsPage = () => {
     useEffect(() => {
         window.scrollTo(0, 0);
         // Fetch news with pagination
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/newses?sort[0]=date:desc&pagination[page]=${page}&pagination[pageSize]=10`)
+        fetch(`/api/news/all?page=${page}&pageSize=10`)
             .then((response) => response.json())
             .then((data) => {
                 setNews(data.data || []);

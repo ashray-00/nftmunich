@@ -15,12 +15,16 @@ const News = () => {
     const [news, setNews] = useState<NewsItem[]>([]);
 
     useEffect(() => {
+        const cached = localStorage.getItem("news");
+        if (cached) {
+            setNews(JSON.parse(cached));
+        }
         // Fetch the latest 5 news articles
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/newses?sort[0]=date:desc&pagination[limit]=5`)
+        fetch("/api/news")
             .then((response) => response.json())
             .then((data) => {
-                console.log("API Response:", data); // Debugging the response
                 setNews(data.data || []); // Set the news data directly
+                localStorage.setItem("news", JSON.stringify(data));
             })
             .catch((error) => console.error("Error fetching news:", error));
     }, []);
