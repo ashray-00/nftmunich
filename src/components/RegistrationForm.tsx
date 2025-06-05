@@ -138,7 +138,7 @@ const RegistrationForm = () => {
                         For <strong>Others</strong>: 100€
                     </p>
                     <p>
-                        <strong>PayPal Email:</strong> nftmunich2014@gmail.com
+                        <strong>PayPal Email:</strong> nftmunich@gmail.com
                     </p>
                     <p>
                         <strong>Subject:</strong> NFT Yearly Contribution 2025_your name_email only
