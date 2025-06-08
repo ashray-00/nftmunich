@@ -32,7 +32,7 @@ const NewsDetail = async ({ params }: { params: Promise<{ slug: string }> }) => 
             {news.image && (
                 <div className={styles["my-6"]}>
                     <img
-                        src={`${process.env.NEXT_PUBLIC_API_URL}${news.image[0].formats.large.url}`}
+                        src={`${news.image[0].formats.large.url}`}
                         alt={news.title}
                     />
                 </div>
