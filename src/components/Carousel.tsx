@@ -1,4 +1,4 @@
-'use client'; // This is required for Swiper to work with Next.js
+'use client';
 
 import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -9,35 +9,47 @@ import 'swiper/css/pagination';
 import Image from 'next/image';
 import '../styles/Carousel.css';
 
-// Define the type for the API response image formats
 interface APIImage {
   url: string;
 }
 
-// Define the type for the fetched images
 interface CarouselImage {
   original: string;
 }
+
+const CACHE_KEY = "carouselImages";
+const CACHE_TIME_KEY = "carouselImagesCacheTime";
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in ms
 
 export default function Carousel() {
   const [images, setImages] = useState<CarouselImage[]>([]);
 
   useEffect(() => {
-    // Fetch images from the Strapi API
+    const now = Date.now();
+    const cachedImages = localStorage.getItem(CACHE_KEY);
+    const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+
+    if (
+      cachedImages &&
+      cachedTime &&
+      now - parseInt(cachedTime, 10) < CACHE_DURATION
+    ) {
+      setImages(JSON.parse(cachedImages));
+      return;
+    }
+
     const fetchImages = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/home-images?populate=images`);
+        const response = await fetch("/api/carousel");
         const data = await response.json();
 
-        // Map the API response to extract large and medium image URLs
-        // After:
         const fetchedImages = data.data[0]?.images.map((image: APIImage) => ({
           original: image.url,
         }));
 
         setImages(fetchedImages || []);
-
-        setImages(fetchedImages || []);
+        localStorage.setItem(CACHE_KEY, JSON.stringify(fetchedImages || []));
+        localStorage.setItem(CACHE_TIME_KEY, now.toString());
       } catch (error) {
         console.error('Error fetching images:', error);
       }
@@ -48,7 +60,7 @@ export default function Carousel() {
 
   return (
     <Swiper
-      spaceBetween={10} // Reduce space between slides for mobile
+      spaceBetween={10}
       centeredSlides={true}
       autoplay={{
         delay: 2500,
