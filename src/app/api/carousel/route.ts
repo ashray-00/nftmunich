@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/home-images?populate=images`;
     const res = await fetch(apiUrl, { next: { revalidate: 3600 } }); // Cache for 1 hour at the edge
     const data = await res.json();
