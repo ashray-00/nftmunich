@@ -7,29 +7,20 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import Image from 'next/image';
-import { useMediaQuery } from 'react-responsive';
 import '../styles/Carousel.css';
 
 // Define the type for the API response image formats
-interface ImageFormats {
-  large: { url: string };
-  medium: { url: string };
-}
-
-// Define the type for each image in the API response
 interface APIImage {
-  formats: ImageFormats;
+  url: string;
 }
 
 // Define the type for the fetched images
 interface CarouselImage {
-  large: string;
-  medium: string;
+  original: string;
 }
 
 export default function Carousel() {
   const [images, setImages] = useState<CarouselImage[]>([]);
-  const isMobile = useMediaQuery({ query: '(max-width: 768px)' });
 
   useEffect(() => {
     // Fetch images from the Strapi API
@@ -39,10 +30,12 @@ export default function Carousel() {
         const data = await response.json();
 
         // Map the API response to extract large and medium image URLs
+        // After:
         const fetchedImages = data.data[0]?.images.map((image: APIImage) => ({
-          large: `${image.formats.large.url}`,
-          medium: `${image.formats.medium.url}`,
+          original: image.url,
         }));
+
+        setImages(fetchedImages || []);
 
         setImages(fetchedImages || []);
       } catch (error) {
@@ -72,11 +65,11 @@ export default function Carousel() {
         <SwiperSlide key={index}>
           <div className="relative w-full h-full">
             <Image
-              src={isMobile ? image.medium : image.large} // Use medium for mobile, large for desktop
+              src={image.original}
               alt={`Slide ${index + 1}`}
               fill
               className="carousel-image"
-              {...(index === 0 ? { priority: true } : { loading: 'lazy' })} // Fix priority and lazy conflict
+              {...(index === 0 ? { priority: true } : { loading: 'lazy' })}
             />
           </div>
         </SwiperSlide>
