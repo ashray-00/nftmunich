@@ -1,5 +1,7 @@
 import "./globals.css"; // Import global styles
 import Header from "../components/Header"; // Import the Header component
+import { Analytics } from "@vercel/analytics/react";
+import Script from "next/script";
 
 export const metadata = {
     metadataBase: new URL('https://nftmunich.club'),
@@ -46,11 +48,16 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body>
-                {/* Header */}
                 <Header />
-
-                {/* Main Content */}
                 <main style={{ paddingTop: "80px" }}>{children}</main>
+                <Analytics />
+                <Script
+                    src="https://www.googletagmanager.com/gtag/js?id=G-3PSKLP4HFV"
+                    strategy="afterInteractive"
+                />
+                <Script id="google-analytics" strategy="afterInteractive">
+                    {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-3PSKLP4HFV');`}
+                </Script>
             </body>
         </html>
     );
