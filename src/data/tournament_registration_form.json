@@ -263,7 +263,14 @@
   {
     "id": "travel_info",
     "type": "info",
-    "label": "We plan to travel together as a team by train and stay in a hotel. Exceptions are only possible in individual cases after discussion with the management.\n\nApproximate costs:\n• Train: around 30–40 € one way\n• Hotel: around 30–40 €\n• Final price depends on the number of travelling squad members."
+    "label": "We plan to travel together as a team by train and stay in a hotel. Exceptions are only possible in individual cases after discussion with the management.\n\nApproximate costs:\n• Train: around 30–40 € one way\n• Hotel: around 30–40 €\n• Final price depends on the number of travelling squad members.",
+    "tournamentOnly": "berlin"
+  },
+  {
+    "id": "frankfurt_travel_info",
+    "type": "info",
+    "label": "Frankfurt Tournament Travel Plan\n\nFor the Frankfurt tournament, the current plan is:\n\n• Departure: 05 June in the evening\n• Hotel: 1 night\n• Return: 06 June at night after the one-day tournament\n\nAll participants are expected to travel together with the team by train and stay in the team hotel. Individual travel is only possible in special cases after discussion with the management.",
+    "tournamentOnly": "frankfurt"
   },
   {
     "id": "travel_with_team",
@@ -314,6 +321,12 @@
     "id": "section_food",
     "type": "section-heading",
     "label": "Food"
+  },
+  {
+    "id": "frankfurt_food_info",
+    "type": "info",
+    "label": "Lunch Order — Frankfurt Tournament\n\nLunch is not included in the tournament registration fee and must be pre-ordered by 30.05.2026.\n\nLunch options:\n• Non-veg: Chicken curry with mushroom sauce, rice, and 1 soft drink\n• Veg: Similar meal without meat\n\nPrice:\n• 8.50 € per box for squad members\n• 10.00 € per box for non-squad members",
+    "tournamentOnly": "frankfurt"
   },
   {
     "id": "food_pref",

@@ -29,6 +29,7 @@ interface FormField {
   links?: FieldLink[];
   image?: string;
   showIf?: ShowIfCondition[];
+  tournamentOnly?: string;
 }
 
 const formFields = formFieldsRaw as FormField[];
@@ -155,6 +156,7 @@ export default function TournamentRegistrationForm({
   const [validationError, setValidationError] = useState<string>("");
 
   function isVisible(field: FormField): boolean {
+    if (field.tournamentOnly && field.tournamentOnly !== tournament) return false;
     if (!field.showIf) return true;
     return field.showIf.every((cond) => {
       const val = watchedValues[cond.field] as string | undefined;
