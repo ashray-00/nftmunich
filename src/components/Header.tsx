@@ -78,9 +78,9 @@ export default function Header() {
           { id: "home", label: "Home" },
           { id: "about", label: "About Us" },
           { id: "news", label: "News" },
-          { id: "nrna-cup-2025", label: "NRNA Cup"},
           { id: "achievements", label: "Achievements" },
           { id: "player-registration", label: "Player Registration" },
+          { id: "tournament-registration", label: "Tournament Registration" },
           { id: "shop", label: "Shop" },
           { id: "contact", label: "Contact" },
         ].map((section) => (
@@ -118,9 +118,9 @@ export default function Header() {
               { id: "home", label: "Home" },
               { id: "about", label: "About Us" },
               { id: "news", label: "News" },
-              { id: "nrna-cup-2025", label: "NRNA Cup"},
               { id: "achievements", label: "Achievements" },
               { id: "player-registration", label: "Player Registration" },
+              { id: "tournament-registration", label: "Tournament Registration" },
               { id: "shop", label: "Shop" },
               { id: "contact", label: "Contact" },
             ].map((section) => (

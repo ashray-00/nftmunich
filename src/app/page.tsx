@@ -7,7 +7,7 @@ import AboutUs from "../components/AboutUs";
 import Shop from "../components/Shop";
 import Achievements from '../components/Achievements';
 import News from '../components/News'; // Ensure the file exists at this path or adjust the path accordingly
-import NrnaCup2025 from '../components/NrnaCup2025';
+import TournamentRegistration from '../components/TournamentRegistration';
 import { useRouter } from "next/navigation";
 
 export default function Home() {
@@ -31,9 +31,6 @@ export default function Home() {
             <News />
           </div>
         </section>
-        <section id="nrna-cup-2025" className="w-full min-h-screen flex flex-col items-center justify-center">
-          <NrnaCup2025 />
-        </section>
         <section id="achievements" className="relative w-full min-h-screen flex flex-col items-center justify-center">
           <Achievements />
         </section>
@@ -52,6 +49,9 @@ export default function Home() {
               </button>
             </div>
           </div>
+        </section>
+        <section id="tournament-registration" className="w-full min-h-screen flex flex-col items-center justify-center">
+          <TournamentRegistration />
         </section>
         <section id="shop" className="w-full min-h-screen flex flex-col items-center justify-center">
           <Shop />

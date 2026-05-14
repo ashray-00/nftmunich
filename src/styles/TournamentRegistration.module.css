@@ -1,0 +1,298 @@
+/* ── Outer wrapper ───────────────────────────────────────────────── */
+.wrapper {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+}
+
+/* ── Card container (shared by selector and form views) ─────────── */
+.container {
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(88, 181, 239, 0.308);
+    padding: 40px 30px;
+}
+
+@media (max-width: 767px) {
+    .container {
+        padding: 24px 16px;
+        margin-top: 7vh;
+    }
+}
+
+/* ── Title ───────────────────────────────────────────────────────── */
+.title {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 12px;
+}
+
+.subtitle {
+    font-size: 1rem;
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 32px;
+}
+
+/* ── Tournament selection buttons ───────────────────────────────── */
+.buttonWrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.tournamentButton {
+    display: inline-block;
+    background-color: #0056b3;
+    color: #ffffff;
+    padding: 14px 32px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-align: center;
+    min-width: 220px;
+}
+
+.tournamentButton:hover {
+    background-color: #003f7f;
+}
+
+/* ── Back button (above form) ───────────────────────────────────── */
+.backButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: #0056b3;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 24px;
+    transition: color 0.2s ease;
+}
+
+.backButton:hover {
+    color: #003f7f;
+}
+
+/* ── Form tournament label ──────────────────────────────────────── */
+.formTournamentLabel {
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 28px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(0, 86, 179, 0.15);
+}
+
+/* ── Section headings inside the form ──────────────────────────── */
+.sectionHeading {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #0056b3;
+    margin-top: 28px;
+    margin-bottom: 16px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(0, 86, 179, 0.2);
+}
+
+.sectionHint {
+    font-size: 0.8rem;
+    font-weight: normal;
+    color: #005bb5;
+    opacity: 0.75;
+}
+
+/* ── Form field wrapper ─────────────────────────────────────────── */
+.formField {
+    margin-bottom: 20px;
+}
+
+/* ── Labels ─────────────────────────────────────────────────────── */
+.fieldLabel {
+    display: block;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #005bb5;
+    margin-bottom: 6px;
+}
+
+.requiredAsterisk {
+    color: red;
+    margin-left: 4px;
+}
+
+/* ── Text / email / number inputs ───────────────────────────────── */
+.inputField {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #005bb5;
+    background-color: #f9f9f9;
+    box-sizing: border-box;
+}
+
+.inputField:focus {
+    border-color: #0070f3;
+    outline: none;
+}
+
+/* ── Textarea ───────────────────────────────────────────────────── */
+.textareaField {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #005bb5;
+    background-color: #f9f9f9;
+    resize: vertical;
+    min-height: 80px;
+    box-sizing: border-box;
+}
+
+.textareaField:focus {
+    border-color: #0070f3;
+    outline: none;
+}
+
+/* ── Radio group ────────────────────────────────────────────────── */
+.radioGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.radioOption {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #005bb5;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.radioOption input {
+    accent-color: #0056b3;
+    cursor: pointer;
+}
+
+/* ── Checkbox group ─────────────────────────────────────────────── */
+.checkboxGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.checkboxOption {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #005bb5;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.checkboxOption input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #0056b3;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* ── Error text ─────────────────────────────────────────────────── */
+.errorText {
+    color: red;
+    font-size: 0.85rem;
+    margin-top: 4px;
+}
+
+/* ── Submit button ──────────────────────────────────────────────── */
+.submitButton {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: #0070f3;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.submitButton:hover:not(:disabled) {
+    background-color: #005bb5;
+}
+
+.submitButton:disabled {
+    background-color: #4a9df8;
+    cursor: not-allowed;
+}
+
+/* ── Spinner ────────────────────────────────────────────────────── */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+}
+
+/* ── Success message ────────────────────────────────────────────── */
+.successMessage {
+    text-align: center;
+    padding: 28px 20px;
+    background-color: #e6f7ff;
+    border: 1px solid #b3e0ff;
+    border-radius: 8px;
+    color: #005bb5;
+    font-size: 1.1rem;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(88, 181, 239, 0.308);
+    margin-top: 8px;
+}
+
+.successMessage p {
+    margin-top: 8px;
+    font-size: 0.95rem;
+    font-weight: normal;
+    color: #0056b3;
+}
+
+/* ── API error message ──────────────────────────────────────────── */
+.apiError {
+    color: red;
+    font-size: 1rem;
+    text-align: center;
+    margin-top: 12px;
+}

@@ -1,0 +1,111 @@
+[
+  {
+    "id": "section_personal",
+    "type": "section-heading",
+    "label": "Personal Details"
+  },
+  {
+    "id": "name",
+    "type": "text",
+    "label": "Full Name",
+    "required": true
+  },
+  {
+    "id": "phone",
+    "type": "text",
+    "label": "Contact Number",
+    "required": true
+  },
+  {
+    "id": "email",
+    "type": "email",
+    "label": "Email Address",
+    "required": true
+  },
+  {
+    "id": "section_participation",
+    "type": "section-heading",
+    "label": "Participation Details"
+  },
+  {
+    "id": "role",
+    "type": "radio",
+    "label": "I am participating as",
+    "required": true,
+    "options": ["Player", "Supporter", "Other"]
+  },
+  {
+    "id": "accompanying",
+    "type": "number",
+    "label": "Number of accompanying persons",
+    "required": false
+  },
+  {
+    "id": "section_travel",
+    "type": "section-heading",
+    "label": "Travel"
+  },
+  {
+    "id": "travel",
+    "type": "long-text",
+    "label": "Travelling options",
+    "required": false,
+    "placeholder": "Describe how you plan to travel (e.g. car, train, flight...)"
+  },
+  {
+    "id": "section_food",
+    "type": "section-heading",
+    "label": "Food"
+  },
+  {
+    "id": "food_pref",
+    "type": "radio",
+    "label": "Food Preference",
+    "required": true,
+    "options": ["Veg", "Non-Veg"]
+  },
+  {
+    "id": "meal_boxes",
+    "type": "number",
+    "label": "Number of meal boxes",
+    "required": false
+  },
+  {
+    "id": "section_checklist",
+    "type": "section-heading",
+    "label": "Checklist / Confirmation"
+  },
+  {
+    "id": "checklist",
+    "type": "checkbox-group",
+    "label": "Please confirm you will bring the following:",
+    "required": false,
+    "options": [
+      "Socks",
+      "Shin guards",
+      "Bibs",
+      "NFT T-shirt",
+      "Football shoes for Kunstrasen",
+      "Football shoes for natural turf"
+    ]
+  },
+  {
+    "id": "section_other",
+    "type": "section-heading",
+    "label": "Other"
+  },
+  {
+    "id": "special_info",
+    "type": "long-text",
+    "label": "Special information",
+    "required": false,
+    "placeholder": "Any special requirements or information we should know about"
+  },
+  {
+    "id": "comments",
+    "type": "long-text",
+    "label": "Additional comments",
+    "required": false,
+    "placeholder": "Any other comments or questions"
+  }
+]
