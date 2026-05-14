@@ -100,6 +100,10 @@ export default function TournamentRegistrationForm({
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         {(formFields as FormField[]).map((field) => {
+          const isChecklistField =
+            field.id === "section_checklist" || field.id === "checklist";
+          if (isChecklistField && !isPlayer) return null;
+
           if (field.type === "section-heading") {
             const isChecklistHeading = field.id === "section_checklist";
             return (
@@ -107,9 +111,7 @@ export default function TournamentRegistrationForm({
                 {field.label}
                 {isChecklistHeading && (
                   <span className={styles.sectionHint}>
-                    {isPlayer
-                      ? " (Required for Players)"
-                      : " (If not applicable, add details in Additional Comments)"}
+                    {" (Required for Players)"}
                   </span>
                 )}
               </div>
