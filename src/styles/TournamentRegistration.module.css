@@ -175,8 +175,8 @@
 /* ── Radio group ────────────────────────────────────────────────── */
 .radioGroup {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .radioOption {
@@ -295,4 +295,141 @@
     font-size: 1rem;
     text-align: center;
     margin-top: 12px;
+}
+
+/* ── Info box (travel info, general notes) ──────────────────────── */
+.infoBox {
+    background-color: #e8f2ff;
+    border-left: 4px solid #0056b3;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    color: #003f7f;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.infoBox p {
+    margin: 0 0 6px 0;
+}
+
+.infoBox p:last-child {
+    margin-bottom: 0;
+}
+
+/* ── Field image ────────────────────────────────────────────────── */
+.fieldImageWrapper {
+    margin-bottom: 10px;
+}
+
+.fieldImage {
+    max-width: 220px;
+    max-height: 150px;
+    border-radius: 8px;
+    object-fit: contain;
+    border: 1px solid rgba(0, 86, 179, 0.15);
+    display: block;
+}
+
+/* ── Field description ──────────────────────────────────────────── */
+.fieldDescription {
+    font-size: 0.88rem;
+    color: #4a6785;
+    margin: 0 0 8px 0;
+    line-height: 1.5;
+}
+
+/* ── Field links ────────────────────────────────────────────────── */
+.fieldLinks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.fieldLink {
+    display: inline-block;
+    background-color: #e8f2ff;
+    color: #0056b3;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    border: 1px solid rgba(0, 86, 179, 0.25);
+    transition: background-color 0.2s ease;
+}
+
+.fieldLink:hover {
+    background-color: #cce0ff;
+}
+
+/* ── Fitness rating (1–10 radio row) ────────────────────────────── */
+.fitnessGroup {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.fitnessOption {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.fitnessOption input[type="radio"] {
+    accent-color: #0056b3;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+.fitnessLabel {
+    font-size: 0.85rem;
+    color: #005bb5;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* ── Dev test toolbar (development only) ────────────────────────── */
+.devToolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background-color: #fff8e1;
+    border: 1px dashed #f59e0b;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 24px;
+}
+
+.devLabel {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #92400e;
+    background-color: #fde68a;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+}
+
+.devButton {
+    background-color: #f59e0b;
+    color: #1a1a1a;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.devButton:hover {
+    background-color: #d97706;
 }

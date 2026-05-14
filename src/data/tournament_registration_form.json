@@ -1,5 +1,13 @@
 [
   {
+    "id": "role",
+    "type": "radio",
+    "label": "I am registering as",
+    "required": true,
+    "options": ["Player", "Supporter / Guest", "Management", "Volunteer", "Other"]
+  },
+
+  {
     "id": "section_personal",
     "type": "section-heading",
     "label": "Personal Details"
@@ -11,47 +19,297 @@
     "required": true
   },
   {
-    "id": "phone",
-    "type": "text",
-    "label": "Contact Number",
-    "required": true
-  },
-  {
     "id": "email",
     "type": "email",
     "label": "Email Address",
     "required": true
   },
   {
-    "id": "section_participation",
+    "id": "phone",
+    "type": "text",
+    "label": "Phone / WhatsApp Number",
+    "required": true
+  },
+
+  {
+    "id": "section_player_info",
     "type": "section-heading",
-    "label": "Participation Details"
+    "label": "Player Information",
+    "showIf": [{ "field": "role", "values": ["Player"] }]
   },
   {
-    "id": "role",
+    "id": "position",
     "type": "radio",
-    "label": "I am participating as",
-    "required": true,
-    "options": ["Player", "Supporter", "Other"]
+    "label": "Which position do you usually play?",
+    "required": false,
+    "options": ["Goalkeeper", "Defender", "Midfielder", "Forward", "Flexible / Any position"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
   },
   {
-    "id": "accompanying",
-    "type": "number",
-    "label": "Number of accompanying persons",
-    "required": false
+    "id": "position_note",
+    "type": "text",
+    "label": "Preferred position or short explanation",
+    "required": false,
+    "placeholder": "",
+    "showIf": [
+      { "field": "role", "values": ["Player"] },
+      { "field": "position", "values": ["Flexible / Any position"] }
+    ]
   },
+  {
+    "id": "availability",
+    "type": "radio",
+    "label": "Are you available for the full tournament weekend?",
+    "required": false,
+    "options": ["Yes", "No", "Not sure yet"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "availability_note",
+    "type": "text",
+    "label": "Please provide a short explanation",
+    "required": false,
+    "placeholder": "",
+    "showIf": [
+      { "field": "role", "values": ["Player"] },
+      { "field": "availability", "values": ["No", "Not sure yet"] }
+    ]
+  },
+  {
+    "id": "fitness",
+    "type": "fitness-rating",
+    "label": "Fitness level (1 = Not fit, 10 = Fully fit)",
+    "required": false,
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "physical_prep",
+    "type": "long-text",
+    "label": "How are you preparing physically for the tournament?",
+    "required": false,
+    "placeholder": "Describe your physical preparation...",
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+
+  {
+    "id": "section_equipment",
+    "type": "section-heading",
+    "label": "Jersey & Equipment",
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "jersey_size",
+    "type": "radio",
+    "label": "Jersey Size",
+    "description": "Trikots (without socks) will be provided by us. We are still missing some Trikots from players — please check if you still have any with you.",
+    "image": "/player_registration/tricot.jpg",
+    "required": false,
+    "options": ["S", "M", "L", "XL", "XXL"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "socks",
+    "type": "radio",
+    "label": "Do you have the required socks?",
+    "description": "Both Blue Puma Stützten and Red Jako Socks are required.",
+    "links": [
+      { "text": "Buy: Blue Puma Stützten", "url": "https://amzn.eu/d/e13VLpj" },
+      { "text": "Buy: Red Jako Socks", "url": "https://amzn.eu/d/0eJGg2t" }
+    ],
+    "image": "/player_registration/socks.jpg",
+    "required": false,
+    "options": ["Yes", "No, but I will buy them", "No, I need help from the team"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "shin_guards",
+    "type": "radio",
+    "label": "Do you have shin guards?",
+    "required": false,
+    "options": ["Yes", "No, but I will buy them"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "bibs",
+    "type": "radio",
+    "label": "Do you have bibs?",
+    "required": false,
+    "options": ["Yes", "No, I need one"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "beanie_bag",
+    "type": "radio",
+    "label": "NFT Beanie Bag (Optional, but recommended)",
+    "description": "A handy bag for your shoes, also needed for training. Available only while stock remains.",
+    "image": "/player_registration/beenie.jpg",
+    "required": false,
+    "options": ["Yes, I have one", "I need one (15 € if stock available — we will contact you)", "No, I don't need it"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "nft_tshirt",
+    "type": "radio",
+    "label": "Do you have an NFT T-shirt?",
+    "image": "/player_registration/grey-nft.png",
+    "required": false,
+    "options": ["Yes", "No, I need one"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "nft_tshirt_size",
+    "type": "radio",
+    "label": "T-Shirt Size",
+    "required": false,
+    "options": ["XS", "S", "M", "L", "XL", "XXL"],
+    "showIf": [
+      { "field": "role", "values": ["Player"] },
+      { "field": "nft_tshirt", "values": ["No, I need one"] }
+    ]
+  },
+
+  {
+    "id": "section_shoes",
+    "type": "section-heading",
+    "label": "Football Shoes",
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "shoes_kunstrasen",
+    "type": "radio",
+    "label": "Do you have football shoes for Kunstrasen / artificial turf?",
+    "required": false,
+    "options": ["Yes", "No, but I will arrange them"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "shoes_natural",
+    "type": "radio",
+    "label": "Do you have football shoes for natural grass?",
+    "required": false,
+    "options": ["Yes", "No, but I will arrange them"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+
+  {
+    "id": "section_documents",
+    "type": "section-heading",
+    "label": "Documents",
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "health_insurance",
+    "type": "radio",
+    "label": "Do you have valid German health insurance?",
+    "required": true,
+    "options": ["Yes", "No"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "health_card",
+    "type": "radio",
+    "label": "Will you bring your health insurance card?",
+    "required": true,
+    "options": ["Yes", "No"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "id_doc",
+    "type": "radio",
+    "label": "Do you have a valid ID / passport / residence permit?",
+    "required": true,
+    "options": ["Yes", "No"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "id_bring",
+    "type": "radio",
+    "label": "Will you bring your ID / passport / residence permit?",
+    "required": true,
+    "options": ["Yes", "No"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+
+  {
+    "id": "section_goalkeeper",
+    "type": "section-heading",
+    "label": "Goalkeeper Equipment",
+    "showIf": [
+      { "field": "role", "values": ["Player"] },
+      { "field": "position", "values": ["Goalkeeper"] }
+    ]
+  },
+  {
+    "id": "goalkeeper_set",
+    "type": "radio",
+    "label": "Do you have your own goalkeeper set?",
+    "required": false,
+    "options": [
+      "Yes, I have jersey, trousers, and gloves",
+      "No, but I will arrange it",
+      "Not applicable"
+    ],
+    "showIf": [
+      { "field": "role", "values": ["Player"] },
+      { "field": "position", "values": ["Goalkeeper"] }
+    ]
+  },
+
   {
     "id": "section_travel",
     "type": "section-heading",
-    "label": "Travel"
+    "label": "Travel & Accommodation"
   },
   {
-    "id": "travel",
-    "type": "long-text",
-    "label": "Travelling options",
-    "required": false,
-    "placeholder": "Describe how you plan to travel (e.g. car, train, flight...)"
+    "id": "travel_info",
+    "type": "info",
+    "label": "We plan to travel together as a team by train and stay in a hotel. Exceptions are only possible in individual cases after discussion with the management.\n\nApproximate costs:\n• Train: around 30–40 € one way\n• Hotel: around 30–40 €\n• Final price depends on the number of travelling squad members."
   },
+  {
+    "id": "travel_with_team",
+    "type": "radio",
+    "label": "Will you travel with the team by train?",
+    "required": false,
+    "options": [
+      "Yes, I will travel with the team by train",
+      "No (only if you have a special case)"
+    ]
+  },
+  {
+    "id": "hotel",
+    "type": "radio",
+    "label": "Do you need hotel accommodation?",
+    "required": false,
+    "options": ["Yes", "No", "Not sure yet"]
+  },
+  {
+    "id": "accompanying_persons",
+    "type": "radio",
+    "label": "Are you bringing any accompanying person?",
+    "required": false,
+    "options": ["No", "Yes, 1 person", "Yes, 2 people", "Yes, more than 2 people"]
+  },
+  {
+    "id": "accompanying_names",
+    "type": "text",
+    "label": "Name(s) of accompanying person(s)",
+    "required": false,
+    "placeholder": "Enter the name(s) of your accompanying person(s)",
+    "showIf": [
+      {
+        "field": "accompanying_persons",
+        "values": ["Yes, 1 person", "Yes, 2 people", "Yes, more than 2 people"]
+      }
+    ]
+  },
+  {
+    "id": "special_travel",
+    "type": "long-text",
+    "label": "Any special travel situation?",
+    "required": false,
+    "placeholder": "e.g. travelling separately, coming from another city, leaving earlier, etc."
+  },
+
   {
     "id": "section_food",
     "type": "section-heading",
@@ -61,34 +319,66 @@
     "id": "food_pref",
     "type": "radio",
     "label": "Food Preference",
-    "required": true,
-    "options": ["Veg", "Non-Veg"]
+    "required": false,
+    "options": ["Veg", "Non-veg", "No food needed"]
   },
   {
     "id": "meal_boxes",
-    "type": "number",
-    "label": "Number of meal boxes",
-    "required": false
+    "type": "radio",
+    "label": "Number of Meal Boxes Needed",
+    "required": false,
+    "options": ["0", "1", "2", "3", "More than 3"]
   },
   {
-    "id": "section_checklist",
+    "id": "food_allergy",
+    "type": "long-text",
+    "label": "Food Allergy or Special Food Information",
+    "required": false,
+    "placeholder": "Any allergies or special dietary requirements"
+  },
+
+  {
+    "id": "section_confirmation",
     "type": "section-heading",
-    "label": "Checklist / Confirmation"
+    "label": "Final Confirmation"
   },
   {
-    "id": "checklist",
+    "id": "player_confirmation",
     "type": "checkbox-group",
-    "label": "Please confirm you will bring the following:",
+    "label": "Player Confirmation — please confirm all items below:",
     "required": false,
     "options": [
-      "Socks",
-      "Shin guards",
-      "Bibs",
-      "NFT T-shirt",
-      "Football shoes for Kunstrasen",
-      "Football shoes for natural turf"
+      "I have socks or will arrange them.",
+      "I have shin guards or will arrange them.",
+      "I have bibs or will arrange them.",
+      "I have an NFT T-shirt or will arrange it.",
+      "I have football shoes for Kunstrasen / artificial turf or will arrange them.",
+      "I have football shoes for natural grass or will arrange them.",
+      "I will bring my ID / passport / residence permit.",
+      "I will bring my health insurance card."
+    ],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "player_notes",
+    "type": "long-text",
+    "label": "Anything else you would like to share with the management?",
+    "required": false,
+    "placeholder": "Any additional information for the management team...",
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "general_confirmation",
+    "type": "checkbox-group",
+    "label": "General Confirmation — please confirm all items below:",
+    "required": false,
+    "options": [
+      "I understand that the final cost depends on the number of travelling squad members.",
+      "I understand that the team plans to travel together by train and stay in a hotel.",
+      "I confirm that the information I provided is correct."
     ]
   },
+
   {
     "id": "section_other",
     "type": "section-heading",
@@ -97,14 +387,14 @@
   {
     "id": "special_info",
     "type": "long-text",
-    "label": "Special information",
+    "label": "Special information for management",
     "required": false,
-    "placeholder": "Any special requirements or information we should know about"
+    "placeholder": "Any special requirements or information for the management team"
   },
   {
     "id": "comments",
     "type": "long-text",
-    "label": "Additional comments",
+    "label": "Additional comments / message for the team",
     "required": false,
     "placeholder": "Any other comments or questions"
   }
