@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export default function FinishLoginPage() {
+function FinishLoginContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "error">("loading");
@@ -45,7 +46,7 @@ export default function FinishLoginPage() {
       <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", textAlign: "center" }}>
         <h2 style={{ color: "#1a3a6b", marginBottom: "1rem" }}>Login Failed</h2>
         <p style={{ color: "#555", maxWidth: "400px", marginBottom: "1.5rem" }}>{errorMessage}</p>
-        <a href="/" style={{ color: "#1a3a6b", textDecoration: "underline" }}>Return to home page</a>
+        <Link href="/" style={{ color: "#1a3a6b", textDecoration: "underline" }}>Return to home page</Link>
       </div>
     );
   }
@@ -54,5 +55,17 @@ export default function FinishLoginPage() {
     <div style={{ minHeight: "60vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
       <p style={{ color: "#1a3a6b", fontSize: "1.1rem" }}>Verifying your login link…</p>
     </div>
+  );
+}
+
+export default function FinishLoginPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "60vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ color: "#1a3a6b", fontSize: "1.1rem" }}>Loading…</p>
+      </div>
+    }>
+      <FinishLoginContent />
+    </Suspense>
   );
 }
