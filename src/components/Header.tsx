@@ -3,13 +3,22 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 
 export default function Header() {
   const [activeSection, setActiveSection] = useState<string>("home");
   const [isOpen, setIsOpen] = useState(false);
+  const { user, loading: authLoading, signOut } = useAuth();
+  const router = useRouter();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleSignOut = () => {
+    signOut();
+    router.push("/");
   };
 
   useEffect(() => {
@@ -94,6 +103,30 @@ export default function Header() {
             {section.label}
           </Link>
         ))}
+        {!authLoading && (
+          <div className="md:ml-6 flex items-center gap-3">
+            {user ? (
+              <>
+                <span className="text-sm text-bavarian-blue opacity-75 max-w-[140px] truncate">
+                  {user.email}
+                </span>
+                <button
+                  onClick={handleSignOut}
+                  className="text-sm border border-bavarian-blue text-bavarian-blue px-3 py-1 rounded hover:bg-bavarian-blue hover:text-bavarian-white transition-colors"
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => router.push("/login")}
+                className="text-sm bg-bavarian-blue text-bavarian-white px-3 py-1 rounded hover:opacity-90 transition-opacity"
+              >
+                Sign In
+              </button>
+            )}
+          </div>
+        )}
       </nav>
       {isOpen && (
         <div className="fixed inset-0 bg-bavarian-white bg-opacity-90 flex flex-col items-center justify-center z-20">
@@ -133,6 +166,25 @@ export default function Header() {
                 {section.label}
               </Link>
             ))}
+            {!authLoading && (
+              <div className="mt-6">
+                {user ? (
+                  <button
+                    onClick={() => { handleSignOut(); toggleMenu(); }}
+                    className="text-xl text-bavarian-blue border border-bavarian-blue px-6 py-2 rounded"
+                  >
+                    Sign Out
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { router.push("/login"); toggleMenu(); }}
+                    className="text-xl text-bavarian-blue border border-bavarian-blue px-6 py-2 rounded"
+                  >
+                    Sign In
+                  </button>
+                )}
+              </div>
+            )}
           </nav>
         </div>
       )}

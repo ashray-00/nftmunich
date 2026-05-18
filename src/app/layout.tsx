@@ -1,5 +1,6 @@
 import "./globals.css"; // Import global styles
 import Header from "../components/Header"; // Import the Header component
+import { AuthProvider } from "../context/AuthContext";
 import { Analytics } from "@vercel/analytics/react";
 import Script from "next/script";
 
@@ -48,8 +49,10 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body>
-                <Header />
-                <main style={{ paddingTop: "80px" }}>{children}</main>
+                <AuthProvider>
+                    <Header />
+                    <main style={{ paddingTop: "80px" }}>{children}</main>
+                </AuthProvider>
                 <Analytics />
                 <Script
                     src="https://www.googletagmanager.com/gtag/js?id=G-3PSKLP4HFV"

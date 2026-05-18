@@ -5,6 +5,8 @@ import { useForm, useWatch } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import styles from "../styles/TournamentRegistration.module.css";
 import formFieldsRaw from "../data/tournament_registration_form.json";
+import { useAuth } from "../context/AuthContext";
+import LoginGate from "./LoginGate";
 
 type Tournament = "frankfurt" | "berlin";
 
@@ -71,6 +73,9 @@ export default function TournamentRegistrationForm({
   } = useForm<Record<string, unknown>>();
 
   const watchedValues = useWatch({ control }) as Record<string, unknown>;
+
+  const { user, loading: authLoading } = useAuth();
+  const selectedRole = watchedValues["role"] as string | undefined;
 
   const isDev = process.env.NODE_ENV === "development";
 
@@ -279,6 +284,12 @@ export default function TournamentRegistrationForm({
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         {formFields.map((field) => {
+          if (field.id !== "role" && !selectedRole) {
+            return null;
+          }
+          if (field.id !== "role" && selectedRole === "Player" && !authLoading && !user) {
+            return null;
+          }
           if (!isVisible(field)) return null;
 
           if (field.type === "section-heading") {
@@ -478,6 +489,13 @@ export default function TournamentRegistrationForm({
           return null;
         })}
 
+        {selectedRole === "Player" && authLoading && (
+          <p style={{ color: "#1a3a6b", margin: "1rem 0" }}>Checking login status…</p>
+        )}
+        {selectedRole === "Player" && !authLoading && !user && (
+          <LoginGate />
+        )}
+
         {validationError && (
           <p className={styles.apiError}>{validationError}</p>
         )}
@@ -485,20 +503,22 @@ export default function TournamentRegistrationForm({
           <p className={styles.apiError}>{apiError}</p>
         )}
 
-        <button
-          type="submit"
-          className={styles.submitButton}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <>
-              <span className={styles.spinner} />
-              Submitting...
-            </>
-          ) : (
-            "Submit Registration"
-          )}
-        </button>
+        {selectedRole && !(selectedRole === "Player" && !authLoading && !user) && (
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <span className={styles.spinner} />
+                Submitting...
+              </>
+            ) : (
+              "Submit Registration"
+            )}
+          </button>
+        )}
       </form>
     </div>
   );
