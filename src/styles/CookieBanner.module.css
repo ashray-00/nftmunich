@@ -1,0 +1,140 @@
+/* ── Banner card ────────────────────────────────────────────────── */
+.banner {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: calc(100% - 32px);
+    max-width: 640px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 86, 179, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 86, 179, 0.12);
+    padding: 24px 28px;
+    font-family: Arial, sans-serif;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@media (max-width: 480px) {
+    .banner {
+        bottom: 0;
+        left: 0;
+        right: 0;
+        transform: none;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 12px 12px 0 0;
+        padding: 20px 16px;
+    }
+}
+
+/* ── Header row ─────────────────────────────────────────────────── */
+.header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0056b3;
+    margin: 0;
+}
+
+/* ── Body text ──────────────────────────────────────────────────── */
+.body {
+    font-size: 0.88rem;
+    color: #4a6785;
+    line-height: 1.6;
+    margin: 0 0 20px 0;
+}
+
+.body a {
+    color: #0056b3;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.body a:hover {
+    color: #003f7f;
+}
+
+/* ── Button row ─────────────────────────────────────────────────── */
+.buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.acceptButton {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+    background-color: #0056b3;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.acceptButton:hover {
+    background-color: #003f7f;
+}
+
+.declineButton {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #0056b3;
+    background-color: transparent;
+    border: 1.5px solid #0056b3;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.declineButton:hover {
+    background-color: #e8f2ff;
+}
+
+/* ── Manage Cookies persistent link ─────────────────────────────── */
+.manageLink {
+    position: fixed;
+    bottom: 12px;
+    left: 16px;
+    z-index: 998;
+    font-size: 0.75rem;
+    color: #4a6785;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 86, 179, 0.15);
+    border-radius: 4px;
+    padding: 4px 10px;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: Arial, sans-serif;
+    transition: color 0.2s ease, background 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+.manageLink:hover {
+    color: #0056b3;
+    background: #ffffff;
+}

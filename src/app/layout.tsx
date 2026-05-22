@@ -1,8 +1,9 @@
-import "./globals.css"; // Import global styles
-import Header from "../components/Header"; // Import the Header component
+import "./globals.css";
+import Header from "../components/Header";
+import CookieBanner from "../components/CookieBanner";
 import { AuthProvider } from "../context/AuthContext";
 import { Analytics } from "@vercel/analytics/react";
-import Script from "next/script";
+import ConditionalGA from "../components/ConditionalGA";
 
 export const metadata = {
     metadataBase: new URL('https://nftmunich.club'),
@@ -52,15 +53,10 @@ export default function RootLayout({
                 <AuthProvider>
                     <Header />
                     <main style={{ paddingTop: "80px" }}>{children}</main>
+                    <CookieBanner />
                 </AuthProvider>
                 <Analytics />
-                <Script
-                    src="https://www.googletagmanager.com/gtag/js?id=G-3PSKLP4HFV"
-                    strategy="afterInteractive"
-                />
-                <Script id="google-analytics" strategy="afterInteractive">
-                    {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-3PSKLP4HFV');`}
-                </Script>
+                <ConditionalGA />
             </body>
         </html>
     );
