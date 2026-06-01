@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface User {
   email: string;
+  role: "player" | "admin" | "super_admin";
 }
 
 interface AuthContextValue {
@@ -30,7 +31,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (parts.length === 3) {
           const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
           if (payload.exp && payload.exp * 1000 > Date.now() && payload.email) {
-            setUser({ email: payload.email });
+            const role: User["role"] =
+              payload.role === "super_admin" ? "super_admin"
+              : payload.role === "admin" ? "admin"
+              : "player";
+            setUser({ email: payload.email, role });
           } else {
             localStorage.removeItem("nft_session");
           }

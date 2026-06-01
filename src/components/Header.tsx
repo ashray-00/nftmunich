@@ -110,6 +110,14 @@ export default function Header() {
                 <span className="text-sm text-bavarian-blue opacity-75 max-w-[140px] truncate">
                   {user.email}
                 </span>
+                {(user.role === "admin" || user.role === "super_admin") && (
+                  <Link
+                    href="/admin"
+                    className="text-sm bg-bavarian-blue text-bavarian-white px-3 py-1 rounded hover:opacity-90 transition-opacity"
+                  >
+                    Admin
+                  </Link>
+                )}
                 <button
                   onClick={handleSignOut}
                   className="text-sm border border-bavarian-blue text-bavarian-blue px-3 py-1 rounded hover:bg-bavarian-blue hover:text-bavarian-white transition-colors"
@@ -167,14 +175,25 @@ export default function Header() {
               </Link>
             ))}
             {!authLoading && (
-              <div className="mt-6">
+              <div className="mt-6 flex flex-col items-center gap-4">
                 {user ? (
-                  <button
-                    onClick={() => { handleSignOut(); toggleMenu(); }}
-                    className="text-xl text-bavarian-blue border border-bavarian-blue px-6 py-2 rounded"
-                  >
-                    Sign Out
-                  </button>
+                  <>
+                    {(user.role === "admin" || user.role === "super_admin") && (
+                      <Link
+                        href="/admin"
+                        onClick={toggleMenu}
+                        className="text-xl text-bavarian-blue border border-bavarian-blue px-6 py-2 rounded"
+                      >
+                        Admin Panel
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => { handleSignOut(); toggleMenu(); }}
+                      className="text-xl text-bavarian-blue border border-bavarian-blue px-6 py-2 rounded"
+                    >
+                      Sign Out
+                    </button>
+                  </>
                 ) : (
                   <button
                     onClick={() => { router.push("/login"); toggleMenu(); }}
