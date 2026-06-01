@@ -128,8 +128,13 @@ function Table({ rows }: { rows: { name: string; email: string }[] }) {
     return <p style={{ color: "#777", fontSize: "0.9rem" }}>No results found.</p>;
   }
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.92rem" }}>
+    <div style={tableScrollStyle}>
+      <table style={{ minWidth: "480px", width: "100%", borderCollapse: "collapse", fontSize: "0.92rem", tableLayout: "fixed" }}>
+        <colgroup>
+          <col style={{ width: "3rem" }} />
+          <col style={{ width: "40%" }} />
+          <col />
+        </colgroup>
         <thead>
           <tr style={{ background: "#1a3a6b", color: "#fff" }}>
             <th style={thStyle}>#</th>
@@ -140,7 +145,7 @@ function Table({ rows }: { rows: { name: string; email: string }[] }) {
         <tbody>
           {rows.map((row, i) => (
             <tr key={row.email} style={{ background: i % 2 === 0 ? "#f9f9f9" : "#fff" }}>
-              <td style={tdStyle}>{i + 1}</td>
+              <td style={tdNumStyle}>{i + 1}</td>
               <td style={tdStyle}>{row.name || <span style={{ color: "#aaa" }}>—</span>}</td>
               <td style={tdStyle}>{row.email}</td>
             </tr>
@@ -315,6 +320,21 @@ const tdStyle: React.CSSProperties = {
   padding: "0.6rem 0.9rem",
   borderBottom: "1px solid #eee",
   wordBreak: "break-all",
+};
+
+// For the # column — never wraps, fixed narrow width
+const tdNumStyle: React.CSSProperties = {
+  padding: "0.6rem 0.9rem",
+  borderBottom: "1px solid #eee",
+  whiteSpace: "nowrap",
+  width: "3rem",
+  color: "#888",
+  fontSize: "0.85rem",
+};
+
+const tableScrollStyle: React.CSSProperties = {
+  overflowX: "auto",
+  WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"],
 };
 
 const labelStyle: React.CSSProperties = {
@@ -632,8 +652,14 @@ export default function AdminPage() {
           ) : adminsError ? (
             <p style={{ color: "#c0392b" }}>{adminsError}</p>
           ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.92rem" }}>
+            <div style={tableScrollStyle}>
+              <table style={{ minWidth: "480px", width: "100%", borderCollapse: "collapse", fontSize: "0.92rem", tableLayout: "fixed" }}>
+                <colgroup>
+                  <col style={{ width: "3rem" }} />
+                  <col style={{ width: "35%" }} />
+                  <col />
+                  <col style={{ width: "7rem" }} />
+                </colgroup>
                 <thead>
                   <tr style={{ background: "#1a3a6b", color: "#fff" }}>
                     <th style={thStyle}>#</th>
@@ -650,10 +676,10 @@ export default function AdminPage() {
                   ) : (
                     filteredAdmins.map((a, i) => (
                       <tr key={a.email} style={{ background: i % 2 === 0 ? "#f9f9f9" : "#fff" }}>
-                        <td style={tdStyle}>{i + 1}</td>
+                        <td style={tdNumStyle}>{i + 1}</td>
                         <td style={tdStyle}>{a.name || <span style={{ color: "#aaa" }}>—</span>}</td>
                         <td style={tdStyle}>{a.email}</td>
-                        <td style={tdStyle}>
+                        <td style={{ ...tdStyle, whiteSpace: "nowrap" }}>
                           <span style={{
                             fontSize: "0.78rem",
                             fontWeight: 600,
