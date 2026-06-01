@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 
@@ -26,7 +26,11 @@ interface ModalState {
   isSuperAdmin: boolean;
   error: string;
   loading: boolean;
-  success: string;
+}
+
+interface Toast {
+  id: number;
+  message: string;
 }
 
 const MODAL_DEFAULTS: ModalState = {
@@ -36,7 +40,6 @@ const MODAL_DEFAULTS: ModalState = {
   isSuperAdmin: false,
   error: "",
   loading: false,
-  success: "",
 };
 
 // ---------------------------------------------------------------------------
@@ -46,6 +49,54 @@ const MODAL_DEFAULTS: ModalState = {
 function authHeader(): string {
   const token = typeof window !== "undefined" ? localStorage.getItem("nft_session") : null;
   return token ? `Bearer ${token}` : "";
+}
+
+// ---------------------------------------------------------------------------
+// Toast component
+// ---------------------------------------------------------------------------
+
+function ToastContainer({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: number) => void }) {
+  if (toasts.length === 0) return null;
+  return (
+    <div style={{
+      position: "fixed",
+      bottom: "1.5rem",
+      left: "50%",
+      transform: "translateX(-50%)",
+      zIndex: 100,
+      display: "flex",
+      flexDirection: "column",
+      gap: "0.5rem",
+      alignItems: "center",
+    }}>
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          style={{
+            background: "#1e7e34",
+            color: "#fff",
+            padding: "0.7rem 1.25rem",
+            borderRadius: "8px",
+            fontSize: "0.92rem",
+            fontWeight: 500,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span>✓ {t.message}</span>
+          <button
+            onClick={() => onDismiss(t.id)}
+            style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: "1rem", lineHeight: 1, padding: 0 }}
+          >
+            ×
+          </button>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -138,9 +189,31 @@ function Modal({
           width: "100%",
           maxWidth: "440px",
           boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
+          position: "relative",
         }}
       >
-        <h2 style={{ color: "#1a3a6b", marginTop: 0, marginBottom: "1.2rem", fontSize: "1.25rem" }}>
+        {/* X close button */}
+        <button
+          onClick={onClose}
+          disabled={state.loading}
+          style={{
+            position: "absolute",
+            top: "1rem",
+            right: "1rem",
+            background: "none",
+            border: "none",
+            fontSize: "1.4rem",
+            color: "#888",
+            cursor: state.loading ? "not-allowed" : "pointer",
+            lineHeight: 1,
+            padding: "0 0.2rem",
+          }}
+          aria-label="Close"
+        >
+          ×
+        </button>
+
+        <h2 style={{ color: "#1a3a6b", marginTop: 0, marginBottom: "1.2rem", fontSize: "1.25rem", paddingRight: "2rem" }}>
           {title}
         </h2>
 
@@ -150,7 +223,7 @@ function Modal({
         <input
           type="text"
           value={state.name}
-          onChange={(e) => onChange({ name: e.target.value, error: "", success: "" })}
+          onChange={(e) => onChange({ name: e.target.value, error: "" })}
           placeholder="e.g. Max Mustermann"
           disabled={state.loading}
           style={inputStyle}
@@ -162,7 +235,7 @@ function Modal({
         <input
           type="email"
           value={state.email}
-          onChange={(e) => onChange({ email: e.target.value, error: "", success: "" })}
+          onChange={(e) => onChange({ email: e.target.value, error: "" })}
           placeholder="email@example.com"
           disabled={state.loading}
           style={inputStyle}
@@ -184,11 +257,6 @@ function Modal({
         {state.error && (
           <p style={{ color: "#c0392b", fontSize: "0.87rem", marginTop: "0.6rem", marginBottom: 0 }}>
             {state.error}
-          </p>
-        )}
-        {state.success && (
-          <p style={{ color: "#1e7e34", fontSize: "0.87rem", marginTop: "0.6rem", marginBottom: 0 }}>
-            {state.success}
           </p>
         )}
 
@@ -281,6 +349,7 @@ const sectionCardStyle: React.CSSProperties = {
 export default function AdminPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const toastCounter = useRef(0);
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [playersLoading, setPlayersLoading] = useState(true);
@@ -295,8 +364,20 @@ export default function AdminPage() {
   const [playerModal, setPlayerModal] = useState<ModalState>(MODAL_DEFAULTS);
   const [adminModal, setAdminModal] = useState<ModalState>(MODAL_DEFAULTS);
 
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
   const isSuperAdmin = user?.role === "super_admin";
   const isAdmin = user?.role === "admin" || isSuperAdmin;
+
+  const showToast = useCallback((message: string) => {
+    const id = ++toastCounter.current;
+    setToasts((prev) => [...prev, { id, message }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 4000);
+  }, []);
+
+  const dismissToast = useCallback((id: number) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   // Redirect if not admin
   useEffect(() => {
@@ -362,7 +443,7 @@ export default function AdminPage() {
       setPlayerModal((s) => ({ ...s, error: "Please enter a valid email address." }));
       return;
     }
-    setPlayerModal((s) => ({ ...s, loading: true, error: "", success: "" }));
+    setPlayerModal((s) => ({ ...s, loading: true, error: "" }));
     try {
       const res = await fetch("/api/admin/players", {
         method: "POST",
@@ -378,7 +459,8 @@ export default function AdminPage() {
         setPlayerModal((s) => ({ ...s, loading: false, error: data.detail ?? "Failed to add player." }));
         return;
       }
-      setPlayerModal((s) => ({ ...s, loading: false, name: "", email: "", success: `${name} was added successfully.` }));
+      setPlayerModal(MODAL_DEFAULTS);
+      showToast(`${name} has been added.`);
       fetchPlayers();
     } catch {
       setPlayerModal((s) => ({ ...s, loading: false, error: "A network error occurred. Please try again." }));
@@ -400,7 +482,7 @@ export default function AdminPage() {
       setAdminModal((s) => ({ ...s, error: "Please enter a valid email address." }));
       return;
     }
-    setAdminModal((s) => ({ ...s, loading: true, error: "", success: "" }));
+    setAdminModal((s) => ({ ...s, loading: true, error: "" }));
     try {
       const res = await fetch("/api/admin/admins", {
         method: "POST",
@@ -416,7 +498,8 @@ export default function AdminPage() {
         setAdminModal((s) => ({ ...s, loading: false, error: data.detail ?? "Failed to add admin." }));
         return;
       }
-      setAdminModal((s) => ({ ...s, loading: false, name: "", email: "", isSuperAdmin: false, success: `${name} was added as admin.` }));
+      setAdminModal(MODAL_DEFAULTS);
+      showToast(`${name} has been added as admin.`);
       fetchAdmins();
     } catch {
       setAdminModal((s) => ({ ...s, loading: false, error: "A network error occurred. Please try again." }));
@@ -608,6 +691,9 @@ export default function AdminPage() {
         onSubmit={submitAddAdmin}
         showSuperAdminToggle
       />
+
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }
