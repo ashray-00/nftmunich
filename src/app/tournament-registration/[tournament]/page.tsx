@@ -7,7 +7,7 @@ import TournamentRegistrationForm, {
 } from "../../../components/TournamentRegistrationForm";
 import styles from "../../../styles/TournamentRegistration.module.css";
 
-const VALID_TOURNAMENTS = ["frankfurt", "berlin"] as const;
+const VALID_TOURNAMENTS = ["berlin"] as const;
 type Tournament = (typeof VALID_TOURNAMENTS)[number];
 
 export default function TournamentRegistrationPage() {

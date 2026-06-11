@@ -263,70 +263,78 @@
   {
     "id": "travel_info",
     "type": "info",
-    "label": "We plan to travel together as a team by train and stay in a hotel. Exceptions are only possible in individual cases after discussion with the management.\n\nApproximate costs:\n• Train: around 30–40 € one way\n• Hotel: around 30–40 €\n• Final price depends on the number of travelling squad members.",
+    "label": "Tournament: Nepali Europapokal 2026\nDate: Saturday–Sunday, 4–5 July 2026\nLocation: Sportanlage Grüngürtel, Askanierring 149, Berlin\nOrganizer: FC Berlin Nepal e.V.\nTeam: NFT Munich",
     "tournamentOnly": "berlin"
-  },
-  {
-    "id": "frankfurt_travel_info",
-    "type": "info",
-    "label": "Frankfurt Tournament Travel Plan\n\nFor the Frankfurt tournament, the current plan is:\n\n• Departure: 05 June in the evening\n• Hotel: 1 night\n• Return: 06 June at night after the one-day tournament\n\nAll participants are expected to travel together with the team by train and stay in the team hotel. Individual travel is only possible in special cases after discussion with the management.",
-    "tournamentOnly": "frankfurt"
   },
   {
     "id": "travel_with_team",
     "type": "radio",
-    "label": "Will you travel with the team by train?",
-    "required": false,
+    "label": "When can you travel for the tournament?",
+    "required": true,
     "options": [
-      "Yes, I will travel with the team by train",
-      "No (only if you have a special case)"
-    ]
-  },
-  {
-    "id": "hotel",
-    "type": "radio",
-    "label": "Do you need hotel accommodation?",
-    "required": false,
-    "options": ["Yes", "No", "Not sure yet"]
-  },
-  {
-    "id": "accompanying_persons",
-    "type": "radio",
-    "label": "Are you bringing any accompanying person?",
-    "required": false,
-    "options": ["No", "Yes, 1 person", "Yes, 2 people", "Yes, more than 2 people"]
-  },
-  {
-    "id": "accompanying_names",
-    "type": "text",
-    "label": "Name(s) of accompanying person(s)",
-    "required": false,
-    "placeholder": "Enter the name(s) of your accompanying person(s)",
-    "showIf": [
-      {
-        "field": "accompanying_persons",
-        "values": ["Yes, 1 person", "Yes, 2 people", "Yes, more than 2 people"]
-      }
+      "I can travel on Friday and stay until the end of the tournament.",
+      "I can only join on Saturday due to an important reason.",
+      "Other"
     ]
   },
   {
     "id": "special_travel",
     "type": "long-text",
-    "label": "Any special travel situation?",
-    "required": false,
-    "placeholder": "e.g. travelling separately, coming from another city, leaving earlier, etc."
+    "label": "Please explain your reason.",
+    "required": true,
+    "placeholder": "",
+    "showIf": [
+      { "field": "travel_with_team", "values": ["I can only join on Saturday due to an important reason."] }
+    ]
+  },
+  {
+    "id": "accompanying_persons",
+    "type": "long-text",
+    "label": "Please explain your travel plan.",
+    "required": true,
+    "placeholder": "",
+    "showIf": [
+      { "field": "travel_with_team", "values": ["Other"] }
+    ]
+  },
+  {
+    "id": "berlin_return_heading",
+    "type": "section-heading",
+    "label": "Return Plan",
+    "tournamentOnly": "berlin"
+  },
+  {
+    "id": "hotel",
+    "type": "radio",
+    "label": "When will you return?",
+    "required": true,
+    "options": [
+      "I will return on Sunday night after the tournament.",
+      "I will stay Sunday night and return on Monday with the team.",
+      "Other"
+    ]
+  },
+  {
+    "id": "accompanying_names",
+    "type": "long-text",
+    "label": "Please explain your return plan.",
+    "required": true,
+    "placeholder": "",
+    "showIf": [
+      { "field": "hotel", "values": ["Other"] }
+    ]
+  },
+  {
+    "id": "berlin_hotel_info",
+    "type": "info",
+    "label": "Hotel booking will be planned according to the selected travel and return options. Join WA group for updates and info.",
+    "tournamentOnly": "berlin"
   },
 
   {
     "id": "section_food",
     "type": "section-heading",
     "label": "Food"
-  },
-  {
-    "id": "frankfurt_food_info",
-    "type": "info",
-    "label": "Lunch Order — Frankfurt Tournament\n\nLunch is not included in the tournament registration fee and must be pre-ordered by 30.05.2026.\n\nLunch options:\n• Non-veg: Chicken curry with mushroom sauce, rice, and 1 soft drink\n• Veg: Similar meal without meat\n\nPrice:\n• 8.50 € per box for squad members\n• 10.00 € per box for non-squad members",
-    "tournamentOnly": "frankfurt"
   },
   {
     "id": "food_pref",

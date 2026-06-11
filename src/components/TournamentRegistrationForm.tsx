@@ -8,7 +8,7 @@ import formFieldsRaw from "../data/tournament_registration_form.json";
 import { useAuth } from "../context/AuthContext";
 import LoginGate from "./LoginGate";
 
-type Tournament = "frankfurt" | "berlin";
+type Tournament = "berlin";
 
 interface ShowIfCondition {
   field: string;
@@ -37,8 +37,7 @@ interface FormField {
 const formFields = formFieldsRaw as FormField[];
 
 export const TOURNAMENT_LABELS: Record<Tournament, string> = {
-  frankfurt: "Frankfurt Tournament",
-  berlin: "Berlin Tournament",
+  berlin: "Berlin Tournament — Nepali Europapokal 2026",
 };
 
 const PLAYER_CONFIRMATION_ITEMS = [
@@ -101,10 +100,10 @@ export default function TournamentRegistrationForm({
       shoes_kunstrasen: "Yes",
       shoes_natural: "Yes",
       goalkeeper_set: "Yes, I have jersey, trousers, and gloves",
-      travel_with_team: "Yes, I will travel with the team by train",
-      hotel: "Yes",
-      accompanying_persons: "Yes, 1 person",
-      accompanying_names: "Anna Mustermann",
+      travel_with_team: "I can travel on Friday and stay until the end of the tournament.",
+      hotel: "I will stay Sunday night and return on Monday with the team.",
+      accompanying_persons: "",
+      accompanying_names: "",
       special_travel: "",
       food_pref: "Non-veg",
       meal_boxes: "2",
@@ -136,9 +135,9 @@ export default function TournamentRegistrationForm({
       name: "Julia Beispiel",
       email: "julia@example.com",
       phone: "+49 160 9876543",
-      travel_with_team: "Yes, I will travel with the team by train",
-      hotel: "Not sure yet",
-      accompanying_persons: "No",
+      travel_with_team: "I can travel on Friday and stay until the end of the tournament.",
+      hotel: "I will return on Sunday night after the tournament.",
+      accompanying_persons: "",
       accompanying_names: "",
       special_travel: "",
       food_pref: "Veg",

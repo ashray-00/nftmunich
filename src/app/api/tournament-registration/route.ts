@@ -12,7 +12,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-const VALID_TOURNAMENTS = ["frankfurt", "berlin"];
+const VALID_TOURNAMENTS = ["berlin"];
 const VALID_ROLES = [
   "Player",
   "Supporter / Guest",
