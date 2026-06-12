@@ -122,14 +122,11 @@ export async function POST(req: NextRequest) {
     const goalkeeper_set = sanitizeString(formData.goalkeeper_set, 100);
 
     // ── Travel & accommodation ────────────────────────────────────
-    const travel_with_team = sanitizeString(formData.travel_with_team, 100);
-    const hotel = sanitizeString(formData.hotel, 20);
-    const accompanying_persons = sanitizeString(
-      formData.accompanying_persons,
-      50
-    );
-    const accompanying_names = sanitizeString(formData.accompanying_names, 300);
-    const special_travel = sanitizeString(formData.special_travel, 500);
+    const travel_day = sanitizeString(formData.travel_day, 150);
+    const saturday_reason = sanitizeString(formData.saturday_reason, 500);
+    const travel_other_plan = sanitizeString(formData.travel_other_plan, 500);
+    const return_day = sanitizeString(formData.return_day, 150);
+    const return_other_plan = sanitizeString(formData.return_other_plan, 500);
 
     // ── Food ──────────────────────────────────────────────────────
     const food_pref = sanitizeString(formData.food_pref, 20);
@@ -192,11 +189,11 @@ export async function POST(req: NextRequest) {
       // Goalkeeper
       goalkeeper_set,
       // Travel
-      travel_with_team,
-      hotel,
-      accompanying_persons,
-      accompanying_names,
-      special_travel,
+      travel_day,
+      saturday_reason,
+      travel_other_plan,
+      return_day,
+      return_other_plan,
       // Food
       food_pref,
       meal_boxes,

@@ -267,7 +267,7 @@
     "tournamentOnly": "berlin"
   },
   {
-    "id": "travel_with_team",
+    "id": "travel_day",
     "type": "radio",
     "label": "When can you travel for the tournament?",
     "required": true,
@@ -278,23 +278,23 @@
     ]
   },
   {
-    "id": "special_travel",
+    "id": "saturday_reason",
     "type": "long-text",
     "label": "Please explain your reason.",
     "required": true,
     "placeholder": "",
     "showIf": [
-      { "field": "travel_with_team", "values": ["I can only join on Saturday due to an important reason."] }
+      { "field": "travel_day", "values": ["I can only join on Saturday due to an important reason."] }
     ]
   },
   {
-    "id": "accompanying_persons",
+    "id": "travel_other_plan",
     "type": "long-text",
     "label": "Please explain your travel plan.",
     "required": true,
     "placeholder": "",
     "showIf": [
-      { "field": "travel_with_team", "values": ["Other"] }
+      { "field": "travel_day", "values": ["Other"] }
     ]
   },
   {
@@ -304,7 +304,7 @@
     "tournamentOnly": "berlin"
   },
   {
-    "id": "hotel",
+    "id": "return_day",
     "type": "radio",
     "label": "When will you return?",
     "required": true,
@@ -315,13 +315,13 @@
     ]
   },
   {
-    "id": "accompanying_names",
+    "id": "return_other_plan",
     "type": "long-text",
     "label": "Please explain your return plan.",
     "required": true,
     "placeholder": "",
     "showIf": [
-      { "field": "hotel", "values": ["Other"] }
+      { "field": "return_day", "values": ["Other"] }
     ]
   },
   {
