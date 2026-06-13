@@ -106,7 +106,21 @@ export async function POST(req: NextRequest) {
     }
 
     const scriptJson = await scriptRes.json().catch(() => ({}));
+
+    // Apps Script always returns HTTP 200 even on internal errors.
+    // A missing fileUrl means the script ran but failed — surface that error.
+    if (scriptJson.status && scriptJson.status !== 200) {
+      console.error("Apps Script upload error:", scriptJson.message);
+      throw new Error(
+        scriptJson.message || "Apps Script failed to save the file."
+      );
+    }
+
     const fileUrl: string = scriptJson.fileUrl ?? "";
+    if (!fileUrl) {
+      console.error("Apps Script returned no fileUrl. Response:", scriptJson);
+      throw new Error("Apps Script did not return a file URL. Check that the script is redeployed and Drive permissions are granted.");
+    }
 
     return NextResponse.json({ fileUrl });
   } catch (err) {
