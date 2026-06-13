@@ -32,6 +32,10 @@ interface FormField {
   image?: string;
   showIf?: ShowIfCondition[];
   tournamentOnly?: string;
+  uploadLabel?: string;
+  maxFiles?: number;
+  accept?: string[];
+  fileKey?: string;
 }
 
 const formFields = formFieldsRaw as FormField[];
@@ -55,6 +59,12 @@ const GENERAL_CONFIRMATION_ITEMS = [
   "I understand that the final cost depends on the number of travelling squad members.",
   "I understand that the team plans to travel together by train and stay in a hotel.",
   "I confirm that the information I provided is correct.",
+];
+
+const DOC_CONFIRMATION_ITEMS = [
+  "I confirm that the uploaded documents are valid.",
+  "I confirm that the required information is clearly visible.",
+  "I confirm that I will bring the valid original documents on the tournament day.",
 ];
 
 export default function TournamentRegistrationForm({
@@ -100,11 +110,14 @@ export default function TournamentRegistrationForm({
       shoes_kunstrasen: "Yes",
       shoes_natural: "Yes",
       goalkeeper_set: "Yes, I have jersey, trousers, and gloves",
-      travel_day: "I can travel on Friday and stay until the end of the tournament.",
-      saturday_reason: "",
-      travel_other_plan: "",
-      return_day: "I will stay Sunday night and return on Monday with the team.",
-      return_other_plan: "",
+      health_insurance: "Yes",
+      health_card: "Yes",
+      residence_permit: "Yes",
+      residence_permit_bring: "Yes",
+      travel_availability: "I will travel and return with the team.",
+      travel_saturday_reason: "",
+      travel_other_explanation: "",
+      hotel_need: "Yes",
       food_pref: "Non-veg",
       meal_boxes: "2",
       food_allergy: "",
@@ -117,6 +130,11 @@ export default function TournamentRegistrationForm({
         item_5: true,
         item_6: true,
         item_7: true,
+      },
+      doc_confirmation: {
+        item_0: true,
+        item_1: true,
+        item_2: true,
       },
       player_notes: "",
       general_confirmation: {
@@ -158,6 +176,8 @@ export default function TournamentRegistrationForm({
   );
   const [apiError, setApiError] = useState<string>("");
   const [validationError, setValidationError] = useState<string>("");
+  const [fileStates, setFileStates] = useState<Record<string, File[]>>({});
+  const [fileUploadErrors, setFileUploadErrors] = useState<Record<string, string>>({});
 
   function isVisible(field: FormField): boolean {
     if (field.tournamentOnly && field.tournamentOnly !== tournament) return false;
@@ -165,6 +185,53 @@ export default function TournamentRegistrationForm({
     return field.showIf.every((cond) => {
       const val = watchedValues[cond.field] as string | undefined;
       return val != null && cond.values.includes(val);
+    });
+  }
+
+  function handleFileChange(
+    fieldId: string,
+    files: FileList | null,
+    maxFiles: number
+  ) {
+    if (!files) return;
+    const ACCEPTED_MIME_TYPES = ["application/pdf", "image/jpeg", "image/png"];
+    const MAX_SIZE = 2 * 1024 * 1024;
+    const existing = fileStates[fieldId] || [];
+    const toAdd: File[] = [];
+    let error = "";
+    Array.from(files).forEach((file) => {
+      if (!ACCEPTED_MIME_TYPES.includes(file.type)) {
+        error = "Only PDF, JPG, and PNG files are accepted.";
+        return;
+      }
+      if (file.size > MAX_SIZE) {
+        error = `"${file.name}" exceeds the 2 MB size limit.`;
+        return;
+      }
+      toAdd.push(file);
+    });
+    const combined = [...existing, ...toAdd].slice(0, maxFiles);
+    setFileStates((prev) => ({ ...prev, [fieldId]: combined }));
+    if (error) {
+      setFileUploadErrors((prev) => ({ ...prev, [fieldId]: error }));
+    } else {
+      setFileUploadErrors((prev) => {
+        const next = { ...prev };
+        delete next[fieldId];
+        return next;
+      });
+    }
+    const input = document.getElementById(
+      `file-input-${fieldId}`
+    ) as HTMLInputElement | null;
+    if (input) input.value = "";
+  }
+
+  function removeFile(fieldId: string, index: number) {
+    setFileStates((prev) => {
+      const updated = [...(prev[fieldId] || [])];
+      updated.splice(index, 1);
+      return { ...prev, [fieldId]: updated };
     });
   }
 
@@ -198,6 +265,29 @@ export default function TournamentRegistrationForm({
         );
         return;
       }
+
+      const docConf = data.doc_confirmation as Record<string, unknown> | undefined;
+      const allDocConfirmed = DOC_CONFIRMATION_ITEMS.every((_, i) =>
+        Boolean(docConf?.[`item_${i}`])
+      );
+      if (!allDocConfirmed) {
+        setValidationError(
+          "Please confirm all items in the document confirmation section before submitting."
+        );
+        return;
+      }
+
+      const requiredUploads = formFields.filter(
+        (f) => f.type === "file-upload" && f.required && isVisible(f)
+      );
+      for (const f of requiredUploads) {
+        if (!fileStates[f.id] || fileStates[f.id].length === 0) {
+          setValidationError(
+            `Please upload at least one file for: ${f.uploadLabel || f.label}`
+          );
+          return;
+        }
+      }
     }
 
     // Serialize checkbox groups to readable strings before sending to the API
@@ -212,10 +302,45 @@ export default function TournamentRegistrationForm({
     });
 
     try {
+      // Upload files one at a time, then submit the main form
+      const fileUrls: Record<string, string[]> = {};
+      const fileUploadFields = formFields.filter(
+        (f) => f.type === "file-upload" && isVisible(f)
+      );
+
+      for (const field of fileUploadFields) {
+        const files = fileStates[field.id] || [];
+        if (files.length === 0) continue;
+        const urls: string[] = [];
+        for (let i = 0; i < files.length; i++) {
+          const fd = new FormData();
+          fd.append("file", files[i]);
+          fd.append("fieldType", field.fileKey || field.id);
+          fd.append("fileIndex", files.length > 1 ? String(i + 1) : "0");
+          fd.append("fullName", String(data.name || ""));
+          const uploadRes = await fetch("/api/upload-documents", {
+            method: "POST",
+            body: fd,
+          });
+          if (!uploadRes.ok) {
+            const json = await uploadRes.json().catch(() => ({}));
+            throw new Error(json.message || "File upload failed. Please try again.");
+          }
+          const uploadJson = await uploadRes.json();
+          urls.push(uploadJson.fileUrl || "");
+        }
+        fileUrls[field.id] = urls;
+      }
+
       const res = await fetch("/api/tournament-registration", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tournament, ...serializedData }),
+        body: JSON.stringify({
+          tournament,
+          ...serializedData,
+          health_insurance_file_urls: (fileUrls["health_insurance_upload"] || []).join(", "),
+          id_file_urls: (fileUrls["residence_permit_upload"] || []).join(", "),
+        }),
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
@@ -308,6 +433,21 @@ export default function TournamentRegistrationForm({
                   ) : (
                     <p key={i}>{line}</p>
                   )
+                )}
+                {field.links && field.links.length > 0 && (
+                  <div className={styles.infoBoxLinks}>
+                    {field.links.map((link, i) => (
+                      <a
+                        key={i}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.infoBoxLink}
+                      >
+                        {link.text}
+                      </a>
+                    ))}
+                  </div>
                 )}
               </div>
             );
@@ -481,6 +621,75 @@ export default function TournamentRegistrationForm({
                     </label>
                   ))}
                 </div>
+              </div>
+            );
+          }
+
+          if (field.type === "file-upload") {
+            const currentFiles = fileStates[field.id] || [];
+            const maxFiles = field.maxFiles ?? 1;
+            return (
+              <div key={field.id} className={styles.formField}>
+                <span className={styles.fieldLabel}>
+                  {field.label}
+                  {field.required && (
+                    <span className={styles.requiredAsterisk}>*</span>
+                  )}
+                </span>
+                {field.uploadLabel && (
+                  <p className={styles.fileUploadLabel}>{field.uploadLabel}</p>
+                )}
+                <p className={styles.uploadHint}>
+                  Accepted: PDF, JPG, PNG — Max 2 MB per file
+                  {maxFiles > 1 ? ` — Up to ${maxFiles} files` : ""}
+                </p>
+                <input
+                  type="file"
+                  id={`file-input-${field.id}`}
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  multiple={maxFiles > 1}
+                  style={{ display: "none" }}
+                  onChange={(e) =>
+                    handleFileChange(field.id, e.target.files, maxFiles)
+                  }
+                />
+                {currentFiles.length < maxFiles && (
+                  <button
+                    type="button"
+                    className={styles.fileChooseButton}
+                    onClick={() =>
+                      (
+                        document.getElementById(
+                          `file-input-${field.id}`
+                        ) as HTMLInputElement | null
+                      )?.click()
+                    }
+                  >
+                    {currentFiles.length === 0 ? "Choose File(s)" : "Add Another File"}
+                  </button>
+                )}
+                {currentFiles.length > 0 && (
+                  <ul className={styles.fileList}>
+                    {currentFiles.map((f, i) => (
+                      <li key={i} className={styles.fileItem}>
+                        <span className={styles.fileName}>{f.name}</span>
+                        <button
+                          type="button"
+                          className={styles.fileRemoveBtn}
+                          onClick={() => removeFile(field.id, i)}
+                          aria-label="Remove file"
+                        >
+                          ✕
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {fileUploadErrors[field.id] && (
+                  <span className={styles.errorText}>
+                    {fileUploadErrors[field.id]}
+                  </span>
+                )}
               </div>
             );
           }

@@ -208,25 +208,65 @@
   {
     "id": "health_card",
     "type": "radio",
-    "label": "Will you bring your health insurance card?",
+    "label": "Will you bring your health insurance card/proof to the tournament?",
     "required": true,
     "options": ["Yes", "No"],
     "showIf": [{ "field": "role", "values": ["Player"] }]
   },
   {
-    "id": "id_doc",
+    "id": "health_insurance_upload",
+    "type": "file-upload",
+    "label": "Please upload your health insurance card or valid insurance proof.",
+    "uploadLabel": "Health Insurance Card / Insurance Proof",
+    "required": true,
+    "accept": ["pdf", "jpg", "jpeg", "png"],
+    "maxFiles": 2,
+    "fileKey": "insurance",
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "residence_permit",
     "type": "radio",
-    "label": "Do you have a valid ID / passport / residence permit?",
+    "label": "Do you have a valid residence permit / Aufenthaltstitel?",
     "required": true,
     "options": ["Yes", "No"],
     "showIf": [{ "field": "role", "values": ["Player"] }]
   },
   {
-    "id": "id_bring",
+    "id": "residence_permit_bring",
     "type": "radio",
-    "label": "Will you bring your ID / passport / residence permit?",
+    "label": "Will you bring your original residence permit / Aufenthaltstitel to the tournament?",
     "required": true,
     "options": ["Yes", "No"],
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "residence_permit_upload",
+    "type": "file-upload",
+    "label": "Please upload your valid residence permit / Aufenthaltstitel.",
+    "uploadLabel": "Residence Permit / Aufenthaltstitel",
+    "required": true,
+    "accept": ["pdf", "jpg", "jpeg", "png"],
+    "maxFiles": 2,
+    "fileKey": "id",
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "permit_blackout_note",
+    "type": "info",
+    "label": "If you upload your residence permit/Aufenthaltstitel, you can black out sensitive information if you want.\n\nThe following information must remain clearly visible:\n- Full name\n- Validity date\n- Address\n\nAll other sensitive information can be blacked out.\n\nPlease also bring your original residence permit/Aufenthaltstitel and health insurance card/proof with you on the tournament day.",
+    "showIf": [{ "field": "role", "values": ["Player"] }]
+  },
+  {
+    "id": "doc_confirmation",
+    "type": "checkbox-group",
+    "label": "Please confirm all of the following:",
+    "required": true,
+    "options": [
+      "I confirm that the uploaded documents are valid.",
+      "I confirm that the required information is clearly visible.",
+      "I confirm that I will bring the valid original documents on the tournament day."
+    ],
     "showIf": [{ "field": "role", "values": ["Player"] }]
   },
 
@@ -263,71 +303,87 @@
   {
     "id": "travel_info",
     "type": "info",
-    "label": "Tournament: Nepali Europapokal 2026\nDate: Saturday–Sunday, 4–5 July 2026\nLocation: Sportanlage Grüngürtel, Askanierring 149, Berlin\nOrganizer: FC Berlin Nepal e.V.\nTeam: NFT Munich",
+    "label": "Tournament: Nepali Europapokal 2026\nDate: Saturday–Sunday, 4–5 July 2026\nLocation: Sportanlage Grüngürtel, Askanierring 149, Berlin\nTeam: NFT Munich",
+    "links": [
+      { "text": "Join WhatsApp Group", "url": "https://chat.whatsapp.com/LDIMl1V9WAPIqTOlxyGwiQ" }
+    ],
     "tournamentOnly": "berlin"
   },
   {
-    "id": "travel_day",
-    "type": "radio",
-    "label": "When can you travel for the tournament?",
-    "required": true,
-    "options": [
-      "I can travel on Friday and stay until the end of the tournament.",
-      "I can only join on Saturday due to an important reason.",
-      "Other"
-    ]
+    "id": "travel_pending_info",
+    "type": "info",
+    "label": "The exact travel plan and accommodation details are not final yet. Final information about departure, return, hotel, and costs will be shared later in the WhatsApp group.",
+    "links": [
+      { "text": "Join WhatsApp Group", "url": "https://chat.whatsapp.com/LDIMl1V9WAPIqTOlxyGwiQ" }
+    ],
+    "tournamentOnly": "berlin"
   },
   {
-    "id": "saturday_reason",
-    "type": "long-text",
-    "label": "Please explain your reason.",
-    "required": true,
-    "placeholder": "",
-    "showIf": [
-      { "field": "travel_day", "values": ["I can only join on Saturday due to an important reason."] }
-    ]
-  },
-  {
-    "id": "travel_other_plan",
-    "type": "long-text",
-    "label": "Please explain your travel plan.",
-    "required": true,
-    "placeholder": "",
-    "showIf": [
-      { "field": "travel_day", "values": ["Other"] }
-    ]
-  },
-  {
-    "id": "berlin_return_heading",
+    "id": "berlin_travel_availability_heading",
     "type": "section-heading",
-    "label": "Return Plan",
+    "label": "Travel & Return Availability",
     "tournamentOnly": "berlin"
   },
   {
-    "id": "return_day",
+    "id": "travel_availability_info",
+    "type": "info",
+    "label": "The team will most probably travel to Berlin on Friday evening, 03.07, and return on Monday. Exact details will be shared later in the WhatsApp group.",
+    "links": [
+      { "text": "Join WhatsApp Group", "url": "https://chat.whatsapp.com/LDIMl1V9WAPIqTOlxyGwiQ" }
+    ],
+    "tournamentOnly": "berlin"
+  },
+  {
+    "id": "travel_availability",
     "type": "radio",
-    "label": "When will you return?",
+    "label": "Please select your travel availability",
     "required": true,
     "options": [
-      "I will return on Sunday night after the tournament.",
-      "I will stay Sunday night and return on Monday with the team.",
+      "I will travel and return with the team.",
+      "I can only join on Saturday or Sunday due to an important reason.",
       "Other"
     ]
   },
   {
-    "id": "return_other_plan",
+    "id": "travel_saturday_reason",
     "type": "long-text",
-    "label": "Please explain your return plan.",
+    "label": "Please explain which day you can join and your reason.",
     "required": true,
     "placeholder": "",
     "showIf": [
-      { "field": "return_day", "values": ["Other"] }
+      { "field": "travel_availability", "values": ["I can only join on Saturday or Sunday due to an important reason."] }
     ]
+  },
+  {
+    "id": "travel_other_explanation",
+    "type": "long-text",
+    "label": "Please explain your travel/return situation briefly.",
+    "required": true,
+    "placeholder": "",
+    "showIf": [
+      { "field": "travel_availability", "values": ["Other"] }
+    ]
+  },
+  {
+    "id": "berlin_accommodation_heading",
+    "type": "section-heading",
+    "label": "Accommodation",
+    "tournamentOnly": "berlin"
+  },
+  {
+    "id": "hotel_need",
+    "type": "radio",
+    "label": "Do you need hotel accommodation?",
+    "required": true,
+    "options": ["Yes", "No", "Not sure yet"]
   },
   {
     "id": "berlin_hotel_info",
     "type": "info",
-    "label": "Hotel booking will be planned according to the selected travel and return options. Join WA group for updates and info.",
+    "label": "Hotel booking will be planned based on the final squad and travel availability. Please submit your information early, because hotel availability cannot be guaranteed for late registrations.\n\nFurther hotel details, booking updates, and cost information will be shared later in the WhatsApp group.",
+    "links": [
+      { "text": "Join WhatsApp Group", "url": "https://chat.whatsapp.com/LDIMl1V9WAPIqTOlxyGwiQ" }
+    ],
     "tournamentOnly": "berlin"
   },
 

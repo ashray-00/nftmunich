@@ -115,18 +115,20 @@ export async function POST(req: NextRequest) {
     // ── Documents ─────────────────────────────────────────────────
     const health_insurance = sanitizeString(formData.health_insurance, 10);
     const health_card = sanitizeString(formData.health_card, 10);
-    const id_doc = sanitizeString(formData.id_doc, 10);
-    const id_bring = sanitizeString(formData.id_bring, 10);
+    const health_insurance_file_urls = sanitizeString(formData.health_insurance_file_urls, 1000);
+    const residence_permit = sanitizeString(formData.residence_permit, 10);
+    const residence_permit_bring = sanitizeString(formData.residence_permit_bring, 10);
+    const id_file_urls = sanitizeString(formData.id_file_urls, 1000);
+    const doc_confirmation = sanitizeString(formData.doc_confirmation, 500);
 
     // ── Goalkeeper ────────────────────────────────────────────────
     const goalkeeper_set = sanitizeString(formData.goalkeeper_set, 100);
 
     // ── Travel & accommodation ────────────────────────────────────
-    const travel_day = sanitizeString(formData.travel_day, 150);
-    const saturday_reason = sanitizeString(formData.saturday_reason, 500);
-    const travel_other_plan = sanitizeString(formData.travel_other_plan, 500);
-    const return_day = sanitizeString(formData.return_day, 150);
-    const return_other_plan = sanitizeString(formData.return_other_plan, 500);
+    const travel_availability = sanitizeString(formData.travel_availability, 150);
+    const travel_saturday_reason = sanitizeString(formData.travel_saturday_reason, 500);
+    const travel_other_explanation = sanitizeString(formData.travel_other_explanation, 500);
+    const hotel_need = sanitizeString(formData.hotel_need, 50);
 
     // ── Food ──────────────────────────────────────────────────────
     const food_pref = sanitizeString(formData.food_pref, 20);
@@ -184,16 +186,18 @@ export async function POST(req: NextRequest) {
       // Documents
       health_insurance,
       health_card,
-      id_doc,
-      id_bring,
+      health_insurance_file_urls,
+      residence_permit,
+      residence_permit_bring,
+      id_file_urls,
+      doc_confirmation,
       // Goalkeeper
       goalkeeper_set,
       // Travel
-      travel_day,
-      saturday_reason,
-      travel_other_plan,
-      return_day,
-      return_other_plan,
+      travel_availability,
+      travel_saturday_reason,
+      travel_other_explanation,
+      hotel_need,
       // Food
       food_pref,
       meal_boxes,
