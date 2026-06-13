@@ -304,19 +304,23 @@
     "id": "travel_info",
     "type": "info",
     "label": "Tournament: Nepali Europapokal 2026\nDate: Saturday–Sunday, 4–5 July 2026\nLocation: Sportanlage Grüngürtel, Askanierring 149, Berlin\nTeam: NFT Munich",
-    "links": [
-      { "text": "Join WhatsApp Group", "url": "https://chat.whatsapp.com/LDIMl1V9WAPIqTOlxyGwiQ" }
-    ],
     "tournamentOnly": "berlin"
   },
   {
     "id": "travel_pending_info",
     "type": "info",
     "label": "The exact travel plan and accommodation details are not final yet. Final information about departure, return, hotel, and costs will be shared later in the WhatsApp group.",
+    "tournamentOnly": "berlin"
+  },
+  {
+    "id": "travel_whatsapp_link",
+    "type": "info",
+    "label": "Join our WhatsApp group for all travel updates and team communication.",
     "links": [
       { "text": "Join WhatsApp Group", "url": "https://chat.whatsapp.com/LDIMl1V9WAPIqTOlxyGwiQ" }
     ],
-    "tournamentOnly": "berlin"
+    "tournamentOnly": "berlin",
+    "showIf": [{ "field": "role", "values": ["Player"] }]
   },
   {
     "id": "berlin_travel_availability_heading",
@@ -328,9 +332,6 @@
     "id": "travel_availability_info",
     "type": "info",
     "label": "The team will most probably travel to Berlin on Friday evening, 03.07, and return on Monday. Exact details will be shared later in the WhatsApp group.",
-    "links": [
-      { "text": "Join WhatsApp Group", "url": "https://chat.whatsapp.com/LDIMl1V9WAPIqTOlxyGwiQ" }
-    ],
     "tournamentOnly": "berlin"
   },
   {
@@ -381,9 +382,6 @@
     "id": "berlin_hotel_info",
     "type": "info",
     "label": "Hotel booking will be planned based on the final squad and travel availability. Please submit your information early, because hotel availability cannot be guaranteed for late registrations.\n\nFurther hotel details, booking updates, and cost information will be shared later in the WhatsApp group.",
-    "links": [
-      { "text": "Join WhatsApp Group", "url": "https://chat.whatsapp.com/LDIMl1V9WAPIqTOlxyGwiQ" }
-    ],
     "tournamentOnly": "berlin"
   },
 
