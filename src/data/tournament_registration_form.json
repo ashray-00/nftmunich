@@ -323,6 +323,13 @@
     "showIf": [{ "field": "role", "values": ["Player"] }]
   },
   {
+    "id": "travel_whatsapp_info_others",
+    "type": "info",
+    "label": "Once your registration is confirmed, you will be added to the team WhatsApp group for further updates.",
+    "tournamentOnly": "berlin",
+    "showIf": [{ "field": "role", "values": ["Supporter / Guest", "Management", "Volunteer", "Other"] }]
+  },
+  {
     "id": "berlin_travel_availability_heading",
     "type": "section-heading",
     "label": "Travel & Return Availability",
