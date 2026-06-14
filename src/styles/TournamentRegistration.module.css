@@ -1,11 +1,11 @@
 /* ── Outer wrapper ───────────────────────────────────────────────── */
 .wrapper {
     width: 100%;
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 40px 20px;
     font-family: Arial, sans-serif;
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
 /* ── Card container (shared by selector and form views) ─────────── */
