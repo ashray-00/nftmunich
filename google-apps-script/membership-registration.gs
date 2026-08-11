@@ -5,8 +5,12 @@
  */
 
 const DEFAULT_MEMBERSHIP_SHEET_ID = "1VpURRDCv_PRP82A8mOsvFwt7dXd94mPcT1oFTv5ibOs";
-const APPLICATIONS_TAB = "Applications";
 const UPLOAD_FOLDER = "NFT Munich e.V. — Private Membership Uploads";
+const APPLICATION_TABS = {
+  member: "Club Members",
+  player: "Registered Players",
+  management: "Management + Players"
+};
 
 function doPost(e) {
   try {
@@ -38,8 +42,10 @@ function uploadMembershipFile_(payload) {
 function saveMembershipRegistration_(payload) {
   const data = payload.registration || {};
   const spreadsheet = SpreadsheetApp.openById(payload.spreadsheetId || DEFAULT_MEMBERSHIP_SHEET_ID);
-  const sheet = spreadsheet.getSheetByName(APPLICATIONS_TAB);
-  if (!sheet) return json_({ status: 500, message: "Applications tab was not found." });
+  const tabName = APPLICATION_TABS[data.registrationType];
+  if (!tabName) return json_({ status: 400, message: "Unknown registration type." });
+  const sheet = spreadsheet.getSheetByName(tabName);
+  if (!sheet) return json_({ status: 500, message: tabName + " tab was not found." });
 
   const applicationId = "NFT-" + Utilities.formatDate(new Date(), "Europe/Berlin", "yyyyMMdd-HHmmss") + "-" + Math.floor(1000 + Math.random() * 9000);
   const now = Utilities.formatDate(new Date(), "Europe/Berlin", "yyyy-MM-dd HH:mm:ss");
