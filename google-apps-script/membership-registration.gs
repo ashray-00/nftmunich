@@ -36,13 +36,54 @@ function sendRegistrationInterest_(payload) {
     player: "Player",
     "management-player": "Management and Player"
   };
-  const registrationType = typeLabels[String(payload.registrationType || "")];
+  const typePaths = {
+    supporter: "member",
+    player: "player",
+    "management-player": "management"
+  };
+  const requestedType = String(payload.registrationType || "");
+  const registrationType = typeLabels[requestedType];
+  const registrationPath = typePaths[requestedType];
   if (!name || !email || email.indexOf("@") < 1 || !registrationType) {
     return json_({ status: 400, message: "Name, email and registration type are required." });
   }
 
-  const subject = "New NFT Munich registration request — " + name;
-  const body = [
+  const registrationLink = "https://www.nftmunich.club/registration?type=" + registrationPath;
+  const feeInformation = requestedType === "supporter"
+    ? "€10 per year"
+    : "€60 total for students/trainees or €110 total for others";
+
+  const applicantBody = [
+    "Hallo " + name + ",",
+    "",
+    "vielen Dank für dein Interesse an NFT Munich e.V.",
+    "Gewählte Kategorie: " + registrationType,
+    "",
+    "Bitte fülle deinen vollständigen Antrag über diesen Link aus:",
+    registrationLink,
+    "",
+    "Beitrag: " + feeInformation,
+    "Die genaue Zahlungsinformation wird im Formular angezeigt und dir nach dem vollständigen Absenden nochmals per E-Mail geschickt.",
+    "",
+    "--- English ---",
+    "",
+    "Hello " + name + ",",
+    "",
+    "Thank you for your interest in NFT Munich e.V.",
+    "Selected category: " + registrationType,
+    "",
+    "Please complete your full application using this link:",
+    registrationLink,
+    "",
+    "Fee: " + feeInformation,
+    "The exact payment information is shown in the form and will be emailed to you again after submission.",
+    "",
+    "NFT Munich e.V.",
+    "www.nftmunich.club"
+  ].join("\n");
+
+  const adminSubject = "New NFT Munich registration request — " + name;
+  const adminBody = [
     "A person would like to register with NFT Munich e.V.",
     "",
     "Name: " + name,
@@ -50,11 +91,22 @@ function sendRegistrationInterest_(payload) {
     "Registration type: " + registrationType,
     "Received: " + Utilities.formatDate(new Date(), "Europe/Berlin", "yyyy-MM-dd HH:mm:ss"),
     "",
-    "Send the private registration link:",
-    "https://www.nftmunich.club/registration"
+    "Registration link sent automatically:",
+    registrationLink
   ].join("\n");
 
-  MailApp.sendEmail({ to: REGISTRATION_EMAIL, subject: subject, body: body, replyTo: email });
+  MailApp.sendEmail({
+    to: email,
+    subject: "NFT Munich e.V. – Dein Registrierungslink / Your registration link",
+    body: applicantBody,
+    name: "NFT Munich e.V.",
+    replyTo: REGISTRATION_EMAIL
+  });
+  try {
+    MailApp.sendEmail({ to: REGISTRATION_EMAIL, subject: adminSubject, body: adminBody, replyTo: email });
+  } catch (adminEmailError) {
+    console.error("Admin registration notification failed", adminEmailError);
+  }
   return json_({ status: 200 });
 }
 
