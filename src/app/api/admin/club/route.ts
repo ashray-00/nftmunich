@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyOwnerWithBackend } from "../../../../lib/adminAuth";
 
+export const maxDuration = 60;
+
 async function callScript(payload: Record<string, unknown>) {
   const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
   if (!scriptUrl) throw new Error("Club storage is not configured.");
