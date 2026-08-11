@@ -51,8 +51,9 @@ export default function Header() {
   const scrollToSection = (sectionId: string) => {
     const section = document.getElementById(sectionId);
     if (section) {
+      const headerHeight = document.querySelector("header")?.getBoundingClientRect().height || 0;
       window.scrollTo({
-        top: section.offsetTop,
+        top: section.getBoundingClientRect().top + window.scrollY - headerHeight,
         behavior: "smooth",
       });
     }
@@ -68,7 +69,7 @@ export default function Header() {
 
         <div className="hidden lg:flex items-center gap-5 text-sm font-semibold">
           <span className="text-blue-950/55">Est. 2014 · Munich</span>
-          <a href="mailto:nftmunich@gmail.com" className="hover:text-blue-800 transition-colors">Contact</a>
+          <Link href="/#contact" onClick={() => scrollToSection("contact")} className="hover:text-blue-800 transition-colors">Contact</Link>
           {!authLoading && (user ? (
             <div className="flex items-center gap-3">
               <span className="max-w-[160px] truncate text-blue-950/60">{user.email}</span>
