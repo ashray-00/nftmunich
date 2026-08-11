@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const maxDuration = 60;
+
 const REGISTRATION_TYPES = new Set(["member", "player", "management"]);
 const PLAYER_FEE_CATEGORIES = new Set(["student", "other", "hardship"]);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
