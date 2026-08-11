@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok || result.status !== 200) throw new Error(result.message || "Email service failed.");
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, result: result.result === "pending" ? "pending" : "link-sent" });
   } catch (error) {
     console.error("Registration interest error:", error);
     return NextResponse.json({ message: "Could not send request." }, { status: 500 });
