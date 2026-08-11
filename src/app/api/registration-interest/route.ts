@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const REGISTRATION_TYPES = new Set(["supporter", "player", "management-player"]);
 
 function clean(value: unknown, max: number) {
   return String(value ?? "").replace(/[<>\u0000-\u001F]/g, "").trim().slice(0, max);
@@ -12,14 +13,17 @@ export async function POST(request: NextRequest) {
     if (clean(body.website, 100)) return NextResponse.json({ success: true });
     const name = clean(body.name, 150);
     const email = clean(body.email, 254).toLowerCase();
-    if (!name || !EMAIL_RE.test(email)) return NextResponse.json({ message: "Valid name and email required." }, { status: 400 });
+    const registrationType = clean(body.registrationType, 30);
+    if (!name || !EMAIL_RE.test(email) || !REGISTRATION_TYPES.has(registrationType)) {
+      return NextResponse.json({ message: "Valid name, email and registration type required." }, { status: 400 });
+    }
 
     const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
     if (!scriptUrl) return NextResponse.json({ message: "Email service is not configured." }, { status: 503 });
     const response = await fetch(scriptUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "registrationInterest", name, email }),
+      body: JSON.stringify({ action: "registrationInterest", name, email, registrationType }),
       cache: "no-store",
     });
     const result = await response.json().catch(() => ({}));

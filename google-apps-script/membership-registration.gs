@@ -29,8 +29,14 @@ function doPost(e) {
 function sendRegistrationInterest_(payload) {
   const name = String(payload.name || "").replace(/[\r\n<>]/g, "").trim().slice(0, 150);
   const email = String(payload.email || "").replace(/[\r\n<>]/g, "").trim().slice(0, 254);
-  if (!name || !email || email.indexOf("@") < 1) {
-    return json_({ status: 400, message: "Name and email are required." });
+  const typeLabels = {
+    supporter: "Supporter / Club member",
+    player: "Player",
+    "management-player": "Management and Player"
+  };
+  const registrationType = typeLabels[String(payload.registrationType || "")];
+  if (!name || !email || email.indexOf("@") < 1 || !registrationType) {
+    return json_({ status: 400, message: "Name, email and registration type are required." });
   }
 
   const subject = "New NFT Munich registration request — " + name;
@@ -39,6 +45,7 @@ function sendRegistrationInterest_(payload) {
     "",
     "Name: " + name,
     "Email: " + email,
+    "Registration type: " + registrationType,
     "Received: " + Utilities.formatDate(new Date(), "Europe/Berlin", "yyyy-MM-dd HH:mm:ss"),
     "",
     "Send the private registration link:",
