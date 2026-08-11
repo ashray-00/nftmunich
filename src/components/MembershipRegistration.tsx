@@ -315,9 +315,9 @@ export default function MembershipRegistration() {
                 <strong>{language === "de" ? `${memberFee} € pro Jahr` : `€${memberFee} per year`}</strong>
               ) : (
                 <>
-                  <span style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: ".8rem", alignItems: "center", borderBottom: "1px solid #ffffff66", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{clubSettings.playerStudentFee} €</strong><small>{language === "de" ? "für Studierende / Azubis" : "for students / trainees"}</small></span>
-                  <span style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: ".8rem", alignItems: "center", borderBottom: "1px solid #ffffff66", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{clubSettings.playerOtherFee} €</strong><small>{language === "de" ? "für Sonstige" : "for others"}</small></span>
-                  <span style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: ".8rem", alignItems: "center", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>+ {memberFee} €</strong><small>{language === "de" ? "Mitgliedsgebühr" : "membership fee"}</small></span>
+                  <div style={{ display: "flex", gap: ".55rem", alignItems: "baseline", borderBottom: "1px solid #ffffff66", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{clubSettings.playerStudentFee} €</strong><small>{language === "de" ? "für Studierende / Azubis" : "for students / trainees"}</small></div>
+                  <div style={{ display: "flex", gap: ".55rem", alignItems: "baseline", borderBottom: "1px solid #ffffff66", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{clubSettings.playerOtherFee} €</strong><small>{language === "de" ? "für Sonstige" : "for others"}</small></div>
+                  <div style={{ display: "flex", gap: ".55rem", alignItems: "baseline", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>+ {memberFee} €</strong><small>{language === "de" ? "Mitgliedsgebühr" : "membership fee"}</small></div>
                 </>
               )}
             </div>
@@ -334,7 +334,7 @@ export default function MembershipRegistration() {
                     <div className={styles.grid}>
                       <Field label={t.firstName} name="firstName" />
                       <Field label={t.lastName} name="lastName" />
-                      <Field label={t.birthDate} name="birthDate" type="date" />
+                      <Field label={t.birthDate} name="birthDate" placeholder={language === "de" ? "TT.MM.JJJJ" : "DD.MM.YYYY"} />
                       <Field label={t.email} name="email" type="email" defaultValue={user?.email} readOnly={Boolean(user)} />
                       <Field label={t.street} name="street" wide />
                       <Field label={t.postalCode} name="postalCode" />
@@ -380,8 +380,8 @@ export default function MembershipRegistration() {
   );
 }
 
-function Field({ label, name, type = "text", wide, defaultValue, readOnly }: { label: string; name: string; type?: string; wide?: boolean; defaultValue?: string; readOnly?: boolean }) {
-  return <label className={wide ? styles.wide : ""}>{label}<input name={name} type={type} required defaultValue={defaultValue} readOnly={readOnly} /></label>;
+function Field({ label, name, type = "text", wide, defaultValue, readOnly, placeholder }: { label: string; name: string; type?: string; wide?: boolean; defaultValue?: string; readOnly?: boolean; placeholder?: string }) {
+  return <label className={wide ? styles.wide : ""}>{label}<input name={name} type={type} required defaultValue={defaultValue} readOnly={readOnly} placeholder={placeholder} /></label>;
 }
 
 function Upload({ label, name, busy, done, onFile }: { label: string; name: string; busy: boolean; done: boolean; onFile: (file: File, form: FormData) => Promise<void> }) {
