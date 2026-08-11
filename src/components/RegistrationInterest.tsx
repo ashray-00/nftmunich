@@ -41,9 +41,9 @@ export default function RegistrationInterest() {
 
         <div className="my-7 rounded-xl border border-blue-900/10 bg-blue-50/80 p-5 text-sm leading-6 text-slate-700">
           <strong className="block text-base text-bavarian-blue">What happens next?</strong>
-          <p className="mt-2">1. Send your request and check your email.</p>
-          <p>2. Club members receive the appropriate form link. Player requests are checked against our approved-player list first.</p>
-          <p>3. The full form explains the fee and payment process for your selected category. Detailed payment information is also emailed after submission.</p>
+          <p className="mt-2"><strong>1.</strong> Choose your category and send your request.</p>
+          <p><strong>2.</strong> Open the registration link sent by email.</p>
+          <p><strong>3.</strong> Complete the form and receive payment details.</p>
         </div>
 
         {status === "success" ? (

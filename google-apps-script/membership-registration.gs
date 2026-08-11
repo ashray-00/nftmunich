@@ -269,6 +269,13 @@ function safeFolderName_(value) {
 function saveMembershipRegistration_(payload) {
   const data = payload.registration || {};
   const spreadsheet = SpreadsheetApp.openById(payload.spreadsheetId || DEFAULT_MEMBERSHIP_SHEET_ID);
+  const settings = readClubSettings_(spreadsheet);
+  const hardship = data.feeCategory === "hardship";
+  data.membershipFee = hardship ? "" : Number(settings.memberFee) || 0;
+  data.playerFee = data.registrationType === "member" || hardship
+    ? ""
+    : data.feeCategory === "student" ? Number(settings.playerStudentFee) || 0 : Number(settings.playerOtherFee) || 0;
+  data.totalFee = hardship ? "" : Number(data.membershipFee) + Number(data.playerFee || 0);
   const tabName = APPLICATION_TABS[data.registrationType];
   if (!tabName) return json_({ status: 400, message: "Unknown registration type." });
   const sheet = getOrCreateApplicationSheet_(spreadsheet, tabName);
@@ -288,12 +295,12 @@ function saveMembershipRegistration_(payload) {
   sheet.appendRow(row.map(safeSpreadsheetValue_));
   let emailSent = true;
   try {
-    sendApplicantConfirmation_(data, applicationId, readClubSettings_(spreadsheet));
+    sendApplicantConfirmation_(data, applicationId, settings);
   } catch (emailError) {
     emailSent = false;
     console.error("Applicant confirmation email failed", emailError);
   }
-  return json_({ status: 200, applicationId: applicationId, emailSent: emailSent });
+  return json_({ status: 200, applicationId: applicationId, totalFee: data.totalFee, emailSent: emailSent });
 }
 
 function getOrCreateApplicationSheet_(spreadsheet, tabName) {

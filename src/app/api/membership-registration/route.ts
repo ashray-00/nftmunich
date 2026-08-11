@@ -45,21 +45,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Registration storage is not configured." }, { status: 503 });
     }
     const spreadsheetId = process.env.GOOGLE_MEMBERSHIP_SHEET_ID || "1VpURRDCv_PRP82A8mOsvFwt7dXd94mPcT1oFTv5ibOs";
-    const settingsResponse = await fetch(scriptUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "publicClubSettings", spreadsheetId }),
-      cache: "no-store",
-    });
-    const settingsResult = await settingsResponse.json().catch(() => ({}));
-    const settings = settingsResult.settings || { memberFee: "10", playerStudentFee: "50", playerOtherFee: "100" };
-
-    const membershipFee = feeCategory === "hardship" ? "" : Number(settings.memberFee) || 0;
-    const playerFee = registrationType === "member" || feeCategory === "hardship"
-      ? ""
-      : feeCategory === "student" ? Number(settings.playerStudentFee) || 0 : Number(settings.playerOtherFee) || 0;
-    const totalFee = feeCategory === "hardship" ? "" : Number(membershipFee) + Number(playerFee || 0);
-
     const registration = {
       registrationType,
       language: clean(body.language, 2),
@@ -72,9 +57,6 @@ export async function POST(request: NextRequest) {
       email,
       phone: clean(body.phone, 50),
       feeCategory,
-      membershipFee,
-      playerFee,
-      totalFee,
       position: clean(body.position, 100),
       emergencyName: clean(body.emergencyName, 150),
       emergencyPhone: clean(body.emergencyPhone, 50),
@@ -108,7 +90,7 @@ export async function POST(request: NextRequest) {
       throw new Error(result.message || "Registration storage rejected the request.");
     }
 
-    return NextResponse.json({ success: true, applicationId: result.applicationId, totalFee, emailSent: result.emailSent !== false });
+    return NextResponse.json({ success: true, applicationId: result.applicationId, totalFee: result.totalFee, emailSent: result.emailSent !== false });
   } catch (error) {
     console.error("Membership registration error:", error);
     return NextResponse.json({ message: "Could not save the application." }, { status: 500 });

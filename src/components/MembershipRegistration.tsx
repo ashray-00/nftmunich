@@ -207,7 +207,6 @@ export default function MembershipRegistration() {
     : language === "de"
       ? [`${studentTotal} € gesamt – Studierende/Azubis`, `${otherTotal} € gesamt – Sonstige`]
       : [`€${studentTotal} total – students/trainees`, `€${otherTotal} total – others`];
-  const fee = selected ? feeLines(selected).join(" · ") : "";
   const amount = selected === "member" ? memberFee : feeCategory === "student" ? studentTotal : feeCategory === "other" ? otherTotal : null;
   const categoryLabel = selected ? t[selected] : "";
 
@@ -295,7 +294,16 @@ export default function MembershipRegistration() {
           <button className={styles.back} type="button" onClick={() => { setSelected(null); setFeeCategory(null); setApplicationId(""); setConfirmationSent(true); setStatus("idle"); }}>← {t.back}</button>
           <div className={styles.formHeading}>
             <div><span>01</span><h2>{t[selected]}</h2></div>
-            <p>{fee}</p>
+            <div style={{ display: "grid", gap: ".55rem", minWidth: "min(100%, 320px)" }} aria-label={language === "de" ? "Beiträge" : "Fees"}>
+              {selected === "member" ? (
+                <strong>{language === "de" ? `${memberFee} € pro Jahr` : `€${memberFee} per year`}</strong>
+              ) : (
+                <>
+                  <span style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: ".8rem", alignItems: "center", borderBottom: "1px solid #ffffff66", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{studentTotal} € gesamt</strong><small>{language === "de" ? "Studierende / Azubis" : "Students / trainees"}</small></span>
+                  <span style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: ".8rem", alignItems: "center", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{otherTotal} € gesamt</strong><small>{language === "de" ? "Sonstige" : "Others"}</small></span>
+                </>
+              )}
+            </div>
           </div>
 
           {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}{applicationId ? ` · ${applicationId}` : ""}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
