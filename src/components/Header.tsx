@@ -60,10 +60,10 @@ export default function Header() {
 
   return (
     <header className="bg-bavarian-white text-bavarian-blue p-4 md:px-8 md:py-3 flex justify-between items-center fixed w-full z-10 md:z-20">
-      <div className="flex items-center">
+      <Link href="/" className="flex items-center" aria-label="NFT Munich homepage">
         <Image src="/logo.png" alt="NFT Munich Logo" width={50} height={50} />
         <span className="ml-2 text-xl font-bold">NFT Munich</span>
-      </div>
+      </Link>
       <div className="md:hidden">
         <button onClick={toggleMenu} className="focus:outline-none">
           <svg
@@ -88,14 +88,14 @@ export default function Header() {
           { id: "about", label: "About Us" },
           { id: "news", label: "News" },
           { id: "achievements", label: "Achievements" },
-          { id: "registration", label: "Player Registration" },
+          { id: "registration-request", label: "Registration" },
           { id: "shop", label: "Shop" },
           { id: "contact", label: "Contact" },
         ].map((section) => (
           <Link
             key={section.id}
-            href={section.id === "registration" ? "/registration" : `/#${section.id}`}
-            onClick={() => section.id !== "registration" && scrollToSection(section.id)}
+            href={section.id === "registration-request" ? "/registration-request" : `/#${section.id}`}
+            onClick={() => section.id !== "registration-request" && scrollToSection(section.id)}
             className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === section.id ? "text-yellow-700" : ""
               }`}
           >
@@ -159,13 +159,13 @@ export default function Header() {
               { id: "about", label: "About Us" },
               { id: "news", label: "News" },
               { id: "achievements", label: "Achievements" },
-              { id: "registration", label: "Player Registration" },
+              { id: "registration-request", label: "Registration" },
               { id: "shop", label: "Shop" },
               { id: "contact", label: "Contact" },
             ].map((section) => (
               <Link
                 key={section.id}
-                href={section.id === "registration" ? "/registration" : `/#${section.id}`}
+                href={section.id === "registration-request" ? "/registration-request" : `/#${section.id}`}
                 onClick={toggleMenu}
                 className="text-2xl text-bavarian-blue"
               >

@@ -6,6 +6,7 @@
 
 const DEFAULT_MEMBERSHIP_SHEET_ID = "1VpURRDCv_PRP82A8mOsvFwt7dXd94mPcT1oFTv5ibOs";
 const UPLOAD_FOLDER = "NFT Munich e.V. — Private Membership Uploads";
+const REGISTRATION_EMAIL = "nftmunich@gmail.com";
 const APPLICATION_TABS = {
   member: "Club Members",
   player: "Registered Players",
@@ -17,11 +18,35 @@ function doPost(e) {
     const payload = JSON.parse(e.postData.contents || "{}");
     if (payload.action === "uploadFile") return uploadMembershipFile_(payload);
     if (payload.action === "membershipRegistration") return saveMembershipRegistration_(payload);
+    if (payload.action === "registrationInterest") return sendRegistrationInterest_(payload);
     return json_({ status: 400, message: "Unknown action." });
   } catch (error) {
     console.error(error);
     return json_({ status: 500, message: "The registration could not be stored." });
   }
+}
+
+function sendRegistrationInterest_(payload) {
+  const name = String(payload.name || "").replace(/[\r\n<>]/g, "").trim().slice(0, 150);
+  const email = String(payload.email || "").replace(/[\r\n<>]/g, "").trim().slice(0, 254);
+  if (!name || !email || email.indexOf("@") < 1) {
+    return json_({ status: 400, message: "Name and email are required." });
+  }
+
+  const subject = "New NFT Munich registration request — " + name;
+  const body = [
+    "A person would like to register with NFT Munich e.V.",
+    "",
+    "Name: " + name,
+    "Email: " + email,
+    "Received: " + Utilities.formatDate(new Date(), "Europe/Berlin", "yyyy-MM-dd HH:mm:ss"),
+    "",
+    "Send the private registration link:",
+    "https://www.nftmunich.club/registration"
+  ].join("\n");
+
+  MailApp.sendEmail({ to: REGISTRATION_EMAIL, subject: subject, body: body, replyTo: email });
+  return json_({ status: 200 });
 }
 
 function uploadMembershipFile_(payload) {
