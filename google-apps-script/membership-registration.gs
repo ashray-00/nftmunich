@@ -356,7 +356,9 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
   const category = labels[data.registrationType] || data.registrationType;
   const hardship = data.feeCategory === "hardship";
   const total = hardship ? "" : Number(data.totalFee || 0);
-  const reference = applicationId;
+  const reference = [applicationId, paymentReferencePart_(data.firstName), paymentReferencePart_(data.lastName)]
+    .filter(String)
+    .join("-");
   const paymentEn = hardship
     ? ["Please do not transfer anything yet. The board will review your hardship request and contact you personally."]
     : [
@@ -412,6 +414,15 @@ function escapeHtml_(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function paymentReferencePart_(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 30);
 }
 
 function defaultClubSettings_() {
