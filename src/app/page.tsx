@@ -13,8 +13,8 @@ export default function Home() {
     <div className="min-h-screen bg-bavarian-white text-bavarian-blue">
       {/* <Header /> */}
       <main className="flex flex-col items-center">
-        <section id="home" className="relative w-full flex flex-col items-center justify-center">
-          <div className="w-full">
+        <section id="home" className="relative w-full flex flex-col items-center justify-center bg-slate-950 px-3 py-4 md:px-8 md:py-7">
+          <div className="w-full max-w-[1280px]">
             <Carousel />
           </div>
         </section>
