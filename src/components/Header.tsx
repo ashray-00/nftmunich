@@ -60,13 +60,10 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 w-full z-30 shadow-[0_10px_30px_rgba(0,35,80,0.16)]">
-      <div className="h-[79px] lg:h-[88px] bg-white text-bavarian-blue px-5 md:px-8 lg:px-10 xl:px-14 flex items-center justify-between">
+      <div className="h-[83px] lg:h-[94px] bg-white text-bavarian-blue px-5 md:px-8 lg:px-10 xl:px-14 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 lg:gap-4 group" aria-label="NFT Munich homepage">
-          <Image className="h-[54px] w-[54px] lg:h-[66px] lg:w-[66px] object-contain transition-transform duration-300 group-hover:scale-105" src="/logo.png" alt="NFT Munich Logo" width={66} height={66} priority />
-          <div className="leading-none">
-            <span className="block text-xl lg:text-[1.7rem] font-black tracking-[-0.035em]">NFT Munich</span>
-            <span className="hidden sm:block mt-1.5 text-[10px] lg:text-[11px] font-extrabold uppercase tracking-[0.2em] text-blue-800/65">Football · Community · Munich</span>
-          </div>
+          <Image className="h-[58px] w-[58px] lg:h-[74px] lg:w-[74px] object-contain transition-transform duration-300 group-hover:scale-105" src="/logo.png" alt="NFT Munich Logo" width={74} height={74} priority />
+          <span className="text-xl lg:text-[1.65rem] font-semibold tracking-[-0.025em] leading-none">NFT Munich</span>
         </Link>
 
         <div className="hidden lg:flex items-center gap-5 text-sm font-semibold">

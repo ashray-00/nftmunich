@@ -52,7 +52,7 @@ export default function RootLayout({
             <body>
                 <AuthProvider>
                     <Header />
-                    <main className="pt-[79px] lg:pt-[138px]">{children}</main>
+                    <main className="pt-[83px] lg:pt-[144px]">{children}</main>
                     <CookieBanner />
                 </AuthProvider>
                 <Analytics />
