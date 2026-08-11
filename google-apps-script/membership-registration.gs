@@ -265,13 +265,35 @@ function uploadMembershipFile_(payload) {
   }
 
   const folders = DriveApp.getFoldersByName(UPLOAD_FOLDER);
-  const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(UPLOAD_FOLDER);
+  const rootFolder = folders.hasNext() ? folders.next() : DriveApp.createFolder(UPLOAD_FOLDER);
+  const categoryNames = {
+    member: "01_Club_Members",
+    player: "02_Players",
+    management: "03_Management_and_Players"
+  };
+  const categoryName = categoryNames[payload.registrationType] || "00_Unsorted";
+  const categoryFolder = getOrCreateChildFolder_(rootFolder, categoryName);
+  const applicantName = safeFolderName_((payload.fullName || "Applicant") + "_" + (payload.email || "no-email"));
+  const folder = getOrCreateChildFolder_(categoryFolder, applicantName);
   const bytes = Utilities.base64Decode(payload.base64);
   const blob = Utilities.newBlob(bytes, payload.mimeType, safeFileName_(payload.filename));
   const file = folder.createFile(blob);
-  file.setDescription("Private NFT Munich membership application document");
+  file.setDescription("Private NFT Munich membership application document. Category: " + categoryName);
 
   return json_({ status: 200, fileUrl: file.getUrl() });
+}
+
+function getOrCreateChildFolder_(parent, name) {
+  const children = parent.getFoldersByName(name);
+  return children.hasNext() ? children.next() : parent.createFolder(name);
+}
+
+function safeFolderName_(value) {
+  return String(value || "Applicant")
+    .replace(/[\\/:*?"<>|#%{}\[\]]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120) || "Applicant";
 }
 
 function saveMembershipRegistration_(payload) {
@@ -279,8 +301,7 @@ function saveMembershipRegistration_(payload) {
   const spreadsheet = SpreadsheetApp.openById(payload.spreadsheetId || DEFAULT_MEMBERSHIP_SHEET_ID);
   const tabName = APPLICATION_TABS[data.registrationType];
   if (!tabName) return json_({ status: 400, message: "Unknown registration type." });
-  const sheet = spreadsheet.getSheetByName(tabName);
-  if (!sheet) return json_({ status: 500, message: tabName + " tab was not found." });
+  const sheet = getOrCreateApplicationSheet_(spreadsheet, tabName);
 
   const applicationId = "NFT-" + Utilities.formatDate(new Date(), "Europe/Berlin", "yyyyMMdd-HHmmss") + "-" + Math.floor(1000 + Math.random() * 9000);
   const now = Utilities.formatDate(new Date(), "Europe/Berlin", "yyyy-MM-dd HH:mm:ss");
@@ -303,6 +324,26 @@ function saveMembershipRegistration_(payload) {
     console.error("Applicant confirmation email failed", emailError);
   }
   return json_({ status: 200, applicationId: applicationId, emailSent: emailSent });
+}
+
+function getOrCreateApplicationSheet_(spreadsheet, tabName) {
+  let sheet = spreadsheet.getSheetByName(tabName);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(tabName);
+    sheet.appendRow([
+      "Application ID", "Submitted at", "Registration type", "Language",
+      "First name", "Last name", "Birth date", "Street", "Postal code",
+      "City", "Email", "Phone", "Fee category", "Membership fee",
+      "Player fee", "Position", "Emergency contact", "Emergency phone",
+      "Management role", "Responsibility", "Photo", "ID document",
+      "Insurance", "Truth accepted", "Statutes accepted", "Privacy accepted",
+      "Application status", "Review status", "Notes"
+    ]);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, 29).setFontWeight("bold").setBackground("#0b5dbb").setFontColor("#ffffff");
+    sheet.autoResizeColumns(1, 29);
+  }
+  return sheet;
 }
 
 function sendApplicantConfirmation_(data, applicationId, settings) {
