@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const REGISTRATION_TYPES = new Set(["member", "player", "management"]);
-const FEE_CATEGORIES = new Set(["student", "other", "hardship"]);
+const PLAYER_FEE_CATEGORIES = new Set(["student", "other", "hardship"]);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function clean(value: unknown, maxLength = 500) {
@@ -18,11 +18,21 @@ export async function POST(request: NextRequest) {
     const feeCategory = clean(body.feeCategory, 20);
     const email = clean(body.email, 254).toLowerCase();
 
-    if (!REGISTRATION_TYPES.has(registrationType) || !FEE_CATEGORIES.has(feeCategory)) {
+    const validFeeCategory = registrationType === "member"
+      ? feeCategory === "standard"
+      : PLAYER_FEE_CATEGORIES.has(feeCategory);
+    if (!REGISTRATION_TYPES.has(registrationType) || !validFeeCategory) {
       return NextResponse.json({ message: "Invalid registration category." }, { status: 400 });
     }
-    if (!clean(body.firstName, 100) || !clean(body.lastName, 100) || !EMAIL_RE.test(email)) {
-      return NextResponse.json({ message: "Name and a valid email address are required." }, { status: 400 });
+    const requiredPersonalFields = ["firstName", "lastName", "birthDate", "street", "postalCode", "city", "phone"];
+    if (requiredPersonalFields.some((field) => !clean(body[field], 200)) || !EMAIL_RE.test(email)) {
+      return NextResponse.json({ message: "All personal details and a valid email address are required." }, { status: 400 });
+    }
+    if (registrationType !== "member" && ["position", "emergencyName", "emergencyPhone"].some((field) => !clean(body[field], 200))) {
+      return NextResponse.json({ message: "All player details are required." }, { status: 400 });
+    }
+    if (registrationType === "management" && ["managementRole", "responsibility"].some((field) => !clean(body[field], 1000))) {
+      return NextResponse.json({ message: "All management details are required." }, { status: 400 });
     }
     if (body.truth !== "accepted" || body.statutes !== "accepted" || body.privacy !== "accepted") {
       return NextResponse.json({ message: "All declarations must be accepted." }, { status: 400 });
@@ -32,6 +42,7 @@ export async function POST(request: NextRequest) {
     const playerFee = registrationType === "member" || feeCategory === "hardship"
       ? ""
       : feeCategory === "student" ? 50 : 100;
+    const totalFee = feeCategory === "hardship" ? "" : Number(membershipFee) + Number(playerFee || 0);
 
     const registration = {
       registrationType,
@@ -47,6 +58,7 @@ export async function POST(request: NextRequest) {
       feeCategory,
       membershipFee,
       playerFee,
+      totalFee,
       position: clean(body.position, 100),
       emergencyName: clean(body.emergencyName, 150),
       emergencyPhone: clean(body.emergencyPhone, 50),
@@ -84,7 +96,7 @@ export async function POST(request: NextRequest) {
       throw new Error(result.message || "Registration storage rejected the request.");
     }
 
-    return NextResponse.json({ success: true, applicationId: result.applicationId });
+    return NextResponse.json({ success: true, applicationId: result.applicationId, totalFee, emailSent: result.emailSent !== false });
   } catch (error) {
     console.error("Membership registration error:", error);
     return NextResponse.json({ message: "Could not save the application." }, { status: 500 });
