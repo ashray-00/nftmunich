@@ -7,11 +7,8 @@ import AboutUs from "../components/AboutUs";
 import Shop from "../components/Shop";
 import Achievements from '../components/Achievements';
 import News from '../components/News'; // Ensure the file exists at this path or adjust the path accordingly
-import TournamentRegistration from '../components/TournamentRegistration';
-import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const router = useRouter();
   return (
     <div className="min-h-screen bg-bavarian-white text-bavarian-blue">
       {/* <Header /> */}
@@ -33,25 +30,6 @@ export default function Home() {
         </section>
         <section id="achievements" className="relative w-full min-h-screen flex flex-col items-center justify-center">
           <Achievements />
-        </section>
-        <section id="player-registration" className="w-full min-h-screen flex flex-col items-center justify-center">
-          <div className="container mx-auto px-4">
-            <h2 className="text-4xl mb-8 font-bold title">Player Registration</h2>
-            <div className="text-center mb-6">
-              <p className="mb-4">
-                Join our football community. Click the button below to get started.
-              </p>
-              <button
-                onClick={() => router.push("/player-registration")}
-                className="bg-blue-800 text-white px-6 py-2 rounded hover:bg-blue-900 transition"
-              >
-                Register
-              </button>
-            </div>
-          </div>
-        </section>
-        <section id="tournament-registration" className="w-full min-h-screen flex flex-col items-center justify-center">
-          <TournamentRegistration />
         </section>
         <section id="shop" className="w-full min-h-screen flex flex-col items-center justify-center">
           <Shop />
