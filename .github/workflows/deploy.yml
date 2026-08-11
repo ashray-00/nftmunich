@@ -20,6 +20,13 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
+      - name: Connect Google membership automation
+        run: printf '%s' "$GOOGLE_SCRIPT_URL" | vercel env add GOOGLE_SCRIPT_URL production --force --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          GOOGLE_SCRIPT_URL: https://script.google.com/macros/s/AKfycbxgGGV5UfABGnNrMoLZqjosM0w1ITVDMTOfHtJc6Xtq8LxfZ5NZDL0TfhJXUquxzVvmnA/exec
+
       - name: Pull Vercel environment info
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         env:
