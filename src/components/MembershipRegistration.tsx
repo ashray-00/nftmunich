@@ -162,8 +162,21 @@ export default function MembershipRegistration() {
   const [uploading, setUploading] = useState<string | null>(null);
   const [uploadFailed, setUploadFailed] = useState(false);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [showStatutes, setShowStatutes] = useState(false);
   const { user, loading } = useAuth();
   const t = copy[language];
+
+  useEffect(() => {
+    if (!showStatutes) return;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setShowStatutes(false); };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [showStatutes]);
 
   useEffect(() => {
     const requestedType = new URLSearchParams(window.location.search).get("type");
@@ -321,7 +334,7 @@ export default function MembershipRegistration() {
                   </fieldset>
 
                   <fieldset><legend><span>{selected === "member" ? "03" : selected === "player" ? "04" : "05"}</span>{t.payment}</legend><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /></fieldset>
-                  <fieldset><legend><span>{selected === "member" ? "04" : selected === "player" ? "05" : "06"}</span>{t.declaration}</legend><div className={styles.checks}><Check name="truth" label={t.truth} /><Check name="statutes" label={<>{t.statutes} <Link href="/satzung.pdf" target="_blank">Satzung ↗</Link></>} /><Check name="privacy" label={<>{t.privacy} <Link href="/privacy-policy" target="_blank">Privacy ↗</Link></>} /></div></fieldset>
+                  <fieldset><legend><span>{selected === "member" ? "04" : selected === "player" ? "05" : "06"}</span>{t.declaration}</legend><div className={styles.checks}><Check name="truth" label={t.truth} /><Check name="statutes" label={<>{t.statutes} <button style={{ border: 0, background: "transparent", color: "#176b43", font: "inherit", fontWeight: 800, padding: 0, textDecoration: "underline", cursor: "pointer" }} type="button" onClick={() => setShowStatutes(true)}>Satzung</button></>} /><Check name="privacy" label={<>{t.privacy} <Link href="/privacy-policy" target="_blank">Privacy ↗</Link></>} /></div></fieldset>
                   {status === "error" && <p className={styles.error}>{t.error}</p>}
                   <button className={styles.submit} disabled={status === "sending" || Boolean(uploading)}>{status === "sending" ? t.sending : t.submit}</button>
                 </form>
@@ -329,6 +342,14 @@ export default function MembershipRegistration() {
             </>
           )}
         </section>
+      )}
+      {showStatutes && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "#07130dbf", display: "grid", placeItems: "center", padding: ".75rem" }} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowStatutes(false); }}>
+          <section style={{ width: "min(980px, 96vw)", height: "min(92vh, 900px)", background: "white", borderRadius: 16, overflow: "hidden", display: "grid", gridTemplateRows: "auto 1fr", boxShadow: "0 24px 80px #0006" }} role="dialog" aria-modal="true" aria-labelledby="statutes-title">
+            <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", padding: "1rem 1.25rem", background: "#173e2b", color: "white" }}><h2 id="statutes-title" style={{ fontSize: "1.15rem", margin: 0 }}>NFT Munich e.V. Satzung</h2><button style={{ border: 0, background: "transparent", color: "white", fontSize: "2rem", lineHeight: 1, cursor: "pointer" }} type="button" onClick={() => setShowStatutes(false)} aria-label="Close Satzung">×</button></header>
+            <iframe style={{ width: "100%", height: "100%", border: 0, background: "#eee" }} src="/satzung.pdf#toolbar=0&navpanes=0" title="NFT Munich e.V. Satzung" />
+          </section>
+        </div>
       )}
     </main>
   );
