@@ -99,6 +99,7 @@ export async function POST(req: NextRequest) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "uploadFile",
+        sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
         filename,
         base64,
         mimeType: file.type,
