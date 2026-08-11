@@ -198,7 +198,7 @@ export default function MembershipRegistration() {
   const amount = selected === "member" ? memberFee : feeCategory === "student" ? studentTotal : feeCategory === "other" ? otherTotal : null;
   const categoryLabel = selected ? t[selected] : "";
 
-  async function uploadDocument(file: File, fieldType: keyof UploadState, fullName: string) {
+  async function uploadDocument(file: File, fieldType: keyof UploadState, fullName: string, email: string) {
     setUploading(fieldType);
     setUploadFailed(false);
     try {
@@ -207,6 +207,8 @@ export default function MembershipRegistration() {
       body.append("fieldType", fieldType);
       body.append("fileIndex", "0");
       body.append("fullName", fullName || "applicant");
+      body.append("email", email || "");
+      body.append("registrationType", selected || "member");
       const response = await fetch("/api/upload-documents", { method: "POST", body });
       const result = await response.json();
       if (!response.ok || !result.fileUrl) throw new Error(result.message || "Upload failed");
@@ -311,9 +313,9 @@ export default function MembershipRegistration() {
                     <legend><span>{selected === "member" ? "02" : selected === "player" ? "03" : "04"}</span>{t.documents}</legend>
                     <p className={styles.help}>{t.uploadHelp}</p>
                     <div className={styles.uploadGrid}>
-                      <Upload label={t.photo} name="photo" busy={uploading === "photo"} done={Boolean(uploads.photo)} onFile={(file, form) => uploadDocument(file, "photo", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`)} />
-                      <Upload label={t.identity} name="id" busy={uploading === "id"} done={Boolean(uploads.id)} onFile={(file, form) => uploadDocument(file, "id", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`)} />
-                      {protectedRoute && <Upload label={t.insurance} name="insurance" busy={uploading === "insurance"} done={Boolean(uploads.insurance)} onFile={(file, form) => uploadDocument(file, "insurance", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`)} />}
+                      <Upload label={t.photo} name="photo" busy={uploading === "photo"} done={Boolean(uploads.photo)} onFile={(file, form) => uploadDocument(file, "photo", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
+                      <Upload label={t.identity} name="id" busy={uploading === "id"} done={Boolean(uploads.id)} onFile={(file, form) => uploadDocument(file, "id", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
+                      {protectedRoute && <Upload label={t.insurance} name="insurance" busy={uploading === "insurance"} done={Boolean(uploads.insurance)} onFile={(file, form) => uploadDocument(file, "insurance", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />}
                     </div>
                     {uploadFailed && <p className={styles.error}>{t.uploadError}</p>}
                   </fieldset>

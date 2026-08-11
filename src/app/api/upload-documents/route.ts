@@ -52,6 +52,8 @@ export async function POST(req: NextRequest) {
     const fileIndexRaw = String(formData.get("fileIndex") ?? "0");
     const fileIndex = parseInt(fileIndexRaw, 10) || 0;
     const fullName = String(formData.get("fullName") ?? "").slice(0, 150);
+    const email = String(formData.get("email") ?? "").trim().toLowerCase().slice(0, 254);
+    const registrationType = String(formData.get("registrationType") ?? "member").slice(0, 20);
 
     if (!file || file.size === 0) {
       return NextResponse.json({ message: "No file provided." }, { status: 400 });
@@ -98,6 +100,9 @@ export async function POST(req: NextRequest) {
         filename,
         base64,
         mimeType: file.type,
+        fullName,
+        email,
+        registrationType,
       }),
     });
 
