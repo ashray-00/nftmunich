@@ -6,6 +6,7 @@ import styles from "../styles/RegistrationInterest.module.css";
 
 export default function RegistrationInterest() {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [requestResult, setRequestResult] = useState<"link-sent" | "pending">("link-sent");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -16,7 +17,13 @@ export default function RegistrationInterest() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(Object.fromEntries(form.entries())),
     });
-    setStatus(response.ok ? "success" : "error");
+    const result = await response.json().catch(() => ({}));
+    if (response.ok) {
+      setRequestResult(result.result === "pending" ? "pending" : "link-sent");
+      setStatus("success");
+    } else {
+      setStatus("error");
+    }
   }
 
   return (
@@ -34,16 +41,25 @@ export default function RegistrationInterest() {
 
         <div className="my-7 rounded-xl border border-blue-900/10 bg-blue-50/80 p-5 text-sm leading-6 text-slate-700">
           <strong className="block text-base text-bavarian-blue">What happens next?</strong>
-          <p className="mt-2">1. Submit this request and check your email for your personal registration link.</p>
-          <p>2. Complete the full form. Your payment details will be shown there and emailed to you after submission.</p>
-          <p className="mt-3 border-t border-blue-900/10 pt-3 font-semibold text-bavarian-blue">Club member: €10 · Player / Management + Player: €60 for students or trainees, €110 for others.</p>
+          <p className="mt-2">1. Send your request and check your email.</p>
+          <p>2. Club members receive the appropriate form link. Player requests are checked against our approved-player list first.</p>
+          <p>3. The full form explains the fee and payment process for your selected category. Detailed payment information is also emailed after submission.</p>
         </div>
 
         {status === "success" ? (
           <div className={styles.success}>
             <h2>Vielen Dank / Thank you</h2>
-            <p>Der passende Registrierungslink wurde automatisch an deine E-Mail-Adresse gesendet.</p>
-            <p>Your registration link has been emailed to you automatically. Please also check your spam folder.</p>
+            {requestResult === "pending" ? (
+              <>
+                <p>Deine Anfrage wurde erhalten. Deine Spieler-E-Mail muss zuerst freigeschaltet werden. Du erhältst eine E-Mail, sobald du fortfahren kannst.</p>
+                <p>Your request was received. Your player email must be approved first. You will receive an email when you can continue.</p>
+              </>
+            ) : (
+              <>
+                <p>Der passende Registrierungslink wurde automatisch an deine E-Mail-Adresse gesendet.</p>
+                <p>Your registration link has been emailed to you automatically. Please also check your spam folder.</p>
+              </>
+            )}
           </div>
         ) : (
           <form onSubmit={submit} className={styles.form}>

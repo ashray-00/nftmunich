@@ -10,6 +10,8 @@ const REGISTRATION_EMAIL = "nftmunich@gmail.com";
 const PAYMENT_IBAN = "1234XXXX";
 const PAYMENT_ACCOUNT_HOLDER = "NFT Munich e.V.";
 const SETTINGS_TAB = "Club Settings";
+const APPROVED_PLAYERS_TAB = "Approved Player Emails";
+const PENDING_REQUESTS_TAB = "Pending Player Requests";
 const APPLICATION_TABS = {
   member: "Club Members",
   player: "Registered Players",
@@ -22,6 +24,7 @@ function doPost(e) {
     if (payload.action === "uploadFile") return uploadMembershipFile_(payload);
     if (payload.action === "membershipRegistration") return saveMembershipRegistration_(payload);
     if (payload.action === "registrationInterest") return sendRegistrationInterest_(payload);
+    if (payload.action === "syncApprovedPlayers") return syncApprovedPlayers_(payload);
     if (payload.action === "publicClubSettings") return publicClubSettings_(payload);
     if (payload.action === "adminDashboard") return adminDashboard_(payload);
     if (payload.action === "updateClubSettings") return updateClubSettings_(payload);
@@ -53,9 +56,44 @@ function sendRegistrationInterest_(payload) {
   }
 
   const registrationLink = "https://www.nftmunich.club/registration?type=" + registrationPath;
-  const feeInformation = requestedType === "supporter"
-    ? "€10 per year"
-    : "€60 total for students/trainees or €110 total for others";
+  const requiresApproval = requestedType !== "supporter";
+  const isApproved = !requiresApproval || isApprovedPlayerEmail_(email);
+
+  if (!isApproved) {
+    savePendingPlayerRequest_(name, email, requestedType);
+    const pendingBody = [
+      "Hallo " + name + ",",
+      "",
+      "vielen Dank für deine Anfrage als " + registrationType + ".",
+      "Deine E-Mail-Adresse ist noch nicht für die Spielerregistrierung freigeschaltet.",
+      "Wir prüfen deine Anfrage. Sobald du freigeschaltet wurdest, erhältst du den Registrierungslink.",
+      "",
+      "--- English ---",
+      "",
+      "Hello " + name + ",",
+      "",
+      "Thank you for your request as " + registrationType + ".",
+      "Your email address is not yet approved for player registration.",
+      "We will review your request. You will receive the registration link after approval.",
+      "",
+      "NFT Munich e.V.",
+      "www.nftmunich.club"
+    ].join("\n");
+    MailApp.sendEmail({
+      to: email,
+      subject: "NFT Munich e.V. – Anfrage erhalten / Request received",
+      body: pendingBody,
+      name: "NFT Munich e.V.",
+      replyTo: REGISTRATION_EMAIL
+    });
+    MailApp.sendEmail({
+      to: REGISTRATION_EMAIL,
+      subject: "Player approval needed — " + name,
+      body: "Please review and add this person in the admin panel.\n\nName: " + name + "\nEmail: " + email + "\nCategory: " + registrationType,
+      replyTo: email
+    });
+    return json_({ status: 200, result: "pending" });
+  }
 
   const applicantBody = [
     "Hallo " + name + ",",
@@ -66,8 +104,8 @@ function sendRegistrationInterest_(payload) {
     "Bitte fülle deinen vollständigen Antrag über diesen Link aus:",
     registrationLink,
     "",
-    "Beitrag: " + feeInformation,
-    "Die genaue Zahlungsinformation wird im Formular angezeigt und dir nach dem vollständigen Absenden nochmals per E-Mail geschickt.",
+    "Im Formular siehst du den Beitrag und die Zahlungsinformationen für deine Kategorie.",
+    "Nach dem vollständigen Absenden erhältst du die Zahlungsinformationen nochmals per E-Mail.",
     "",
     "--- English ---",
     "",
@@ -79,8 +117,8 @@ function sendRegistrationInterest_(payload) {
     "Please complete your full application using this link:",
     registrationLink,
     "",
-    "Fee: " + feeInformation,
-    "The exact payment information is shown in the form and will be emailed to you again after submission.",
+    "The form shows the fee and payment information for your category.",
+    "After submitting the complete form, the payment information will also be emailed to you.",
     "",
     "NFT Munich e.V.",
     "www.nftmunich.club"
@@ -111,7 +149,114 @@ function sendRegistrationInterest_(payload) {
   } catch (adminEmailError) {
     console.error("Admin registration notification failed", adminEmailError);
   }
-  return json_({ status: 200 });
+  return json_({ status: 200, result: "link-sent" });
+}
+
+function approvedPlayersSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(DEFAULT_MEMBERSHIP_SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(APPROVED_PLAYERS_TAB);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(APPROVED_PLAYERS_TAB);
+    sheet.appendRow(["Name", "Email", "Approved / synced at"]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function isApprovedPlayerEmail_(email) {
+  const normalized = String(email || "").trim().toLowerCase();
+  const sheet = approvedPlayersSheet_();
+  if (sheet.getLastRow() < 2) return false;
+  return sheet.getRange(2, 2, sheet.getLastRow() - 1, 1).getValues().some(function(row) {
+    return String(row[0] || "").trim().toLowerCase() === normalized;
+  });
+}
+
+function syncApprovedPlayers_(payload) {
+  const players = Array.isArray(payload.players) ? payload.players : [];
+  const sheet = approvedPlayersSheet_();
+  const existing = {};
+  if (sheet.getLastRow() >= 2) {
+    sheet.getRange(2, 2, sheet.getLastRow() - 1, 1).getValues().forEach(function(row, index) {
+      existing[String(row[0] || "").trim().toLowerCase()] = index + 2;
+    });
+  }
+  players.forEach(function(player) {
+    const email = String(player && player.email || "").trim().toLowerCase();
+    const name = String(player && player.name || "").trim();
+    if (!email || email.indexOf("@") < 1) return;
+    if (existing[email]) {
+      sheet.getRange(existing[email], 1, 1, 3).setValues([[name, email, new Date()]]);
+    } else {
+      sheet.appendRow([name, email, new Date()]);
+      existing[email] = sheet.getLastRow();
+    }
+    sendApprovedRegistrationLink_(email, name);
+  });
+  return json_({ status: 200, synced: players.length });
+}
+
+function pendingRequestsSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(DEFAULT_MEMBERSHIP_SHEET_ID);
+  let sheet = spreadsheet.getSheetByName(PENDING_REQUESTS_TAB);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(PENDING_REQUESTS_TAB);
+    sheet.appendRow(["Name", "Email", "Registration type", "Requested at", "Status"]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function savePendingPlayerRequest_(name, email, requestedType) {
+  const sheet = pendingRequestsSheet_();
+  const normalized = String(email).trim().toLowerCase();
+  if (sheet.getLastRow() >= 2) {
+    const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues();
+    for (let index = 0; index < rows.length; index++) {
+      if (String(rows[index][1] || "").trim().toLowerCase() === normalized && rows[index][4] !== "Approved") {
+        sheet.getRange(index + 2, 1, 1, 5).setValues([[name, normalized, requestedType, new Date(), "Pending"]]);
+        return;
+      }
+    }
+  }
+  sheet.appendRow([name, normalized, requestedType, new Date(), "Pending"]);
+}
+
+function sendApprovedRegistrationLink_(email, fallbackName) {
+  const sheet = pendingRequestsSheet_();
+  if (sheet.getLastRow() < 2) return;
+  const normalized = String(email).trim().toLowerCase();
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues();
+  rows.forEach(function(row, index) {
+    if (String(row[1] || "").trim().toLowerCase() !== normalized || row[4] === "Approved") return;
+    const path = row[2] === "management-player" ? "management" : "player";
+    const label = path === "management" ? "Management and Player" : "Player";
+    const body = [
+      "Hallo " + (row[0] || fallbackName || "") + ",",
+      "",
+      "deine E-Mail-Adresse wurde für die Registrierung als " + label + " freigeschaltet.",
+      "Bitte fülle jetzt das Formular aus:",
+      "https://www.nftmunich.club/registration?type=" + path,
+      "",
+      "--- English ---",
+      "",
+      "Your email address has been approved for registration as " + label + ".",
+      "Please complete the form now:",
+      "https://www.nftmunich.club/registration?type=" + path,
+      "",
+      "The form contains the fee and payment information for your category.",
+      "",
+      "NFT Munich e.V."
+    ].join("\n");
+    MailApp.sendEmail({
+      to: normalized,
+      subject: "NFT Munich e.V. – Registrierung freigeschaltet / Registration approved",
+      body: body,
+      name: "NFT Munich e.V.",
+      replyTo: REGISTRATION_EMAIL
+    });
+    sheet.getRange(index + 2, 5).setValue("Approved");
+  });
 }
 
 function uploadMembershipFile_(payload) {
