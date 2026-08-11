@@ -187,7 +187,13 @@ export default function MembershipRegistration() {
               <div className={styles.cardNumber}>0{routes.indexOf(route) + 1}</div>
               <h2>{t[route]}</h2>
               <p>{t[`${route}Text` as keyof typeof t]}</p>
-              <strong>{t[`${route}Fee` as keyof typeof t]}</strong>
+              <div style={{ display: "grid", gap: ".55rem", margin: "auto 0 1.5rem", fontWeight: 800 }}>
+                {String(t[`${route}Fee` as keyof typeof t]).split(" · ").map((line) => (
+                  <span key={line} style={{ display: "block", paddingBottom: ".55rem", borderBottom: "1px solid currentColor" }}>
+                    {line}
+                  </span>
+                ))}
+              </div>
               <button onClick={() => setSelected(route)} type="button">{t.choose}</button>
             </article>
           ))}

@@ -41,6 +41,15 @@ export default function RegistrationInterest() {
           <form onSubmit={submit} className={styles.form}>
             <label>Name<input name="name" required maxLength={150} autoComplete="name" /></label>
             <label>E-Mail / Email<input name="email" type="email" required maxLength={254} autoComplete="email" /></label>
+            <label>
+              Gewünschte Registrierung / Registration type
+              <select name="registrationType" required defaultValue="">
+                <option value="" disabled>Bitte auswählen / Please select</option>
+                <option value="supporter">Supporter / Club member</option>
+                <option value="player">Player</option>
+                <option value="management-player">Management and Player</option>
+              </select>
+            </label>
             <label className={styles.honeypot} aria-hidden="true">Website<input name="website" tabIndex={-1} autoComplete="off" /></label>
             {status === "error" && <p className={styles.error}>Die Anfrage konnte nicht gesendet werden. Bitte schreibe an nftmunich@gmail.com.</p>}
             <button disabled={status === "sending"}>{status === "sending" ? "Wird gesendet …" : "Anfrage senden / Send request"}</button>
