@@ -38,10 +38,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "All declarations must be accepted." }, { status: 400 });
     }
 
-    const membershipFee = feeCategory === "hardship" ? "" : 10;
+    const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
+    if (!scriptUrl) {
+      return NextResponse.json({ message: "Registration storage is not configured." }, { status: 503 });
+    }
+    const spreadsheetId = process.env.GOOGLE_MEMBERSHIP_SHEET_ID || "1VpURRDCv_PRP82A8mOsvFwt7dXd94mPcT1oFTv5ibOs";
+    const settingsResponse = await fetch(scriptUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "publicClubSettings", spreadsheetId }),
+      cache: "no-store",
+    });
+    const settingsResult = await settingsResponse.json().catch(() => ({}));
+    const settings = settingsResult.settings || { memberFee: "10", playerStudentFee: "50", playerOtherFee: "100" };
+
+    const membershipFee = feeCategory === "hardship" ? "" : Number(settings.memberFee) || 0;
     const playerFee = registrationType === "member" || feeCategory === "hardship"
       ? ""
-      : feeCategory === "student" ? 50 : 100;
+      : feeCategory === "student" ? Number(settings.playerStudentFee) || 0 : Number(settings.playerOtherFee) || 0;
     const totalFee = feeCategory === "hardship" ? "" : Number(membershipFee) + Number(playerFee || 0);
 
     const registration = {
@@ -76,17 +90,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Required documents have not been uploaded." }, { status: 400 });
     }
 
-    const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
-    if (!scriptUrl) {
-      return NextResponse.json({ message: "Registration storage is not configured." }, { status: 503 });
-    }
-
     const response = await fetch(scriptUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "membershipRegistration",
-        spreadsheetId: process.env.GOOGLE_MEMBERSHIP_SHEET_ID || "1VpURRDCv_PRP82A8mOsvFwt7dXd94mPcT1oFTv5ibOs",
+        spreadsheetId,
         registration,
       }),
       cache: "no-store",

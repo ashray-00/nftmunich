@@ -11,6 +11,7 @@ export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, loading: authLoading, signOut } = useAuth();
   const router = useRouter();
+  const isOwner = user?.email.toLowerCase() === "evrcolgy@gmail.com";
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -73,7 +74,7 @@ export default function Header() {
           {!authLoading && (user ? (
             <div className="flex items-center gap-3">
               <span className="max-w-[160px] truncate text-blue-950/60">{user.email}</span>
-              {(user.role === "admin" || user.role === "super_admin") && <Link href="/admin" className="font-bold hover:text-blue-800">Admin</Link>}
+              {isOwner && <Link href="/admin" className="font-bold hover:text-blue-800">Admin</Link>}
               <button onClick={handleSignOut} className="border border-bavarian-blue px-4 py-2 rounded-md hover:bg-bavarian-blue hover:text-white transition-colors">Sign Out</button>
             </div>
           ) : (
@@ -163,7 +164,7 @@ export default function Header() {
               <div className="mt-6 flex flex-col items-center gap-4">
                 {user ? (
                   <>
-                    {(user.role === "admin" || user.role === "super_admin") && (
+                    {isOwner && (
                       <Link
                         href="/admin"
                         onClick={toggleMenu}

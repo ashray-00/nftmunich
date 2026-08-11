@@ -19,6 +19,38 @@ interface AdminUser {
   is_super_admin: boolean;
 }
 
+interface ClubSettings {
+  clubName: string;
+  address: string;
+  email: string;
+  website: string;
+  accountHolder: string;
+  iban: string;
+  memberFee: string;
+  playerStudentFee: string;
+  playerOtherFee: string;
+}
+
+interface DashboardCounts {
+  members: number;
+  players: number;
+  management: number;
+  total: number;
+}
+
+const OWNER_EMAIL = "evrcolgy@gmail.com";
+const DEFAULT_SETTINGS: ClubSettings = {
+  clubName: "NFT Munich e.V.",
+  address: "Titurelstrasse 8, 81925 Munich",
+  email: "nftmunich@gmail.com",
+  website: "www.nftmunich.club",
+  accountHolder: "NFT Munich e.V.",
+  iban: "1234XXXX",
+  memberFee: "10",
+  playerStudentFee: "50",
+  playerOtherFee: "100",
+};
+
 interface ModalState {
   open: boolean;
   name: string;
@@ -386,8 +418,14 @@ export default function AdminPage() {
 
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const isSuperAdmin = user?.role === "super_admin";
-  const isAdmin = user?.role === "admin" || isSuperAdmin;
+  const [settings, setSettings] = useState<ClubSettings>(DEFAULT_SETTINGS);
+  const [counts, setCounts] = useState<DashboardCounts>({ members: 0, players: 0, management: 0, total: 0 });
+  const [clubLoading, setClubLoading] = useState(true);
+  const [clubSaving, setClubSaving] = useState(false);
+  const [clubError, setClubError] = useState("");
+
+  const isSuperAdmin = false;
+  const isAdmin = user?.email.toLowerCase() === OWNER_EMAIL;
 
   const showToast = useCallback((message: string) => {
     const id = ++toastCounter.current;
@@ -441,12 +479,48 @@ export default function AdminPage() {
     }
   }, [isSuperAdmin]);
 
+  const fetchClubDashboard = useCallback(async () => {
+    setClubLoading(true);
+    setClubError("");
+    try {
+      const response = await fetch("/api/admin/club", { headers: { authorization: authHeader() } });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Could not load club data.");
+      setSettings({ ...DEFAULT_SETTINGS, ...(data.settings || {}) });
+      setCounts({ members: 0, players: 0, management: 0, total: 0, ...(data.counts || {}) });
+    } catch (error) {
+      setClubError(error instanceof Error ? error.message : "Could not load club data.");
+    } finally {
+      setClubLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (isAdmin) {
       fetchPlayers();
-      fetchAdmins();
+      fetchClubDashboard();
     }
-  }, [isAdmin, fetchPlayers, fetchAdmins]);
+  }, [isAdmin, fetchPlayers, fetchClubDashboard]);
+
+  async function saveClubSettings() {
+    setClubSaving(true);
+    setClubError("");
+    try {
+      const response = await fetch("/api/admin/club", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", authorization: authHeader() },
+        body: JSON.stringify(settings),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Could not save settings.");
+      setSettings({ ...DEFAULT_SETTINGS, ...(data.settings || settings) });
+      showToast("Club and payment settings saved.");
+    } catch (error) {
+      setClubError(error instanceof Error ? error.message : "Could not save settings.");
+    } finally {
+      setClubSaving(false);
+    }
+  }
 
   // ---------------------------------------------------------------------------
   // Add player
@@ -555,7 +629,7 @@ export default function AdminPage() {
   if (!isAdmin) return null;
 
   return (
-    <div style={{ minHeight: "80vh", padding: "6rem 1.5rem 3rem", maxWidth: "900px", margin: "0 auto" }}>
+    <div style={{ minHeight: "80vh", padding: "3rem 1.5rem", maxWidth: "1100px", margin: "0 auto" }}>
 
       {/* Page header */}
       <div style={{ marginBottom: "2rem" }}>
@@ -564,17 +638,17 @@ export default function AdminPage() {
         </h1>
         <p style={{ color: "#555", fontSize: "0.92rem" }}>
           Signed in as <strong>{user?.email}</strong>
-          {isSuperAdmin && (
-            <span style={{ marginLeft: "0.5rem", background: "#1a3a6b", color: "#fff", fontSize: "0.75rem", fontWeight: 600, padding: "0.15rem 0.5rem", borderRadius: "4px" }}>
-              Super Admin
-            </span>
-          )}
-          {user?.role === "admin" && (
-            <span style={{ marginLeft: "0.5rem", background: "#4a7fc1", color: "#fff", fontSize: "0.75rem", fontWeight: 600, padding: "0.15rem 0.5rem", borderRadius: "4px" }}>
-              Admin
-            </span>
-          )}
+          <span style={{ marginLeft: "0.5rem", background: "#1a3a6b", color: "#fff", fontSize: "0.75rem", fontWeight: 600, padding: "0.15rem 0.5rem", borderRadius: "4px" }}>Club Owner</span>
         </p>
+      </div>
+
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[["Club members", counts.members], ["Registered players", counts.players], ["Management + players", counts.management], ["Total applications", counts.total]].map(([label, value]) => (
+          <div key={String(label)} className="rounded-2xl border border-blue-950/10 bg-white p-5 shadow-sm">
+            <p className="text-sm font-semibold text-slate-500">{label}</p>
+            <p className="mt-2 text-3xl font-bold text-bavarian-blue">{clubLoading ? "—" : value}</p>
+          </div>
+        ))}
       </div>
 
       {/* Players section */}
@@ -614,6 +688,28 @@ export default function AdminPage() {
         ) : (
           <Table rows={filteredPlayers} />
         )}
+      </div>
+
+      <div style={sectionCardStyle}>
+        <div style={{ marginBottom: "1.25rem" }}>
+          <h2 style={{ color: "#1a3a6b", margin: 0, fontSize: "1.2rem" }}>Club and payment settings</h2>
+          <p style={{ color: "#64748b", fontSize: ".9rem", marginTop: ".35rem" }}>These details are used by the registration form and confirmation emails.</p>
+        </div>
+        {clubError && <p style={{ color: "#c0392b" }}>{clubError}</p>}
+        <div className="grid gap-4 md:grid-cols-2">
+          {([
+            ["Club name", "clubName"], ["Club email", "email"], ["Address", "address"], ["Website", "website"],
+            ["Bank account holder", "accountHolder"], ["IBAN", "iban"], ["Membership fee (€)", "memberFee"],
+            ["Player fee – students/Azubis (€)", "playerStudentFee"], ["Player fee – others (€)", "playerOtherFee"],
+          ] as Array<[string, keyof ClubSettings]>).map(([label, key]) => (
+            <label key={key} style={labelStyle} className={key === "address" ? "md:col-span-2" : ""}>{label}
+              <input value={settings[key]} onChange={(event) => setSettings((current) => ({ ...current, [key]: event.target.value }))} style={{ ...inputStyle, marginTop: ".35rem" }} disabled={clubLoading || clubSaving} />
+            </label>
+          ))}
+        </div>
+        <button onClick={saveClubSettings} disabled={clubLoading || clubSaving} className="mt-5 rounded-lg bg-bavarian-blue px-5 py-3 font-bold text-white disabled:opacity-50">
+          {clubSaving ? "Saving…" : "Save club settings"}
+        </button>
       </div>
 
       {/* Admins section — super admin only */}

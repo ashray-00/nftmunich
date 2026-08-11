@@ -9,6 +9,7 @@ const UPLOAD_FOLDER = "NFT Munich e.V. — Private Membership Uploads";
 const REGISTRATION_EMAIL = "nftmunich@gmail.com";
 const PAYMENT_IBAN = "1234XXXX";
 const PAYMENT_ACCOUNT_HOLDER = "NFT Munich e.V.";
+const SETTINGS_TAB = "Club Settings";
 const APPLICATION_TABS = {
   member: "Club Members",
   player: "Registered Players",
@@ -21,6 +22,9 @@ function doPost(e) {
     if (payload.action === "uploadFile") return uploadMembershipFile_(payload);
     if (payload.action === "membershipRegistration") return saveMembershipRegistration_(payload);
     if (payload.action === "registrationInterest") return sendRegistrationInterest_(payload);
+    if (payload.action === "publicClubSettings") return publicClubSettings_(payload);
+    if (payload.action === "adminDashboard") return adminDashboard_(payload);
+    if (payload.action === "updateClubSettings") return updateClubSettings_(payload);
     return json_({ status: 400, message: "Unknown action." });
   } catch (error) {
     console.error(error);
@@ -148,7 +152,7 @@ function saveMembershipRegistration_(payload) {
   sheet.appendRow(row.map(safeSpreadsheetValue_));
   let emailSent = true;
   try {
-    sendApplicantConfirmation_(data, applicationId);
+    sendApplicantConfirmation_(data, applicationId, readClubSettings_(spreadsheet));
   } catch (emailError) {
     emailSent = false;
     console.error("Applicant confirmation email failed", emailError);
@@ -156,7 +160,7 @@ function saveMembershipRegistration_(payload) {
   return json_({ status: 200, applicationId: applicationId, emailSent: emailSent });
 }
 
-function sendApplicantConfirmation_(data, applicationId) {
+function sendApplicantConfirmation_(data, applicationId, settings) {
   const labels = {
     member: "Vereinsmitglied / Club member",
     player: "Player",
@@ -170,16 +174,16 @@ function sendApplicantConfirmation_(data, applicationId) {
     ? ["Bitte überweise noch nichts. Der Vorstand prüft deinen Härtefall und meldet sich persönlich bei dir."]
     : [
         "Bitte überweise " + total + " € auf das folgende Vereinskonto:",
-        "Kontoinhaber: " + PAYMENT_ACCOUNT_HOLDER,
-        "IBAN: " + PAYMENT_IBAN,
+        "Kontoinhaber: " + settings.accountHolder,
+        "IBAN: " + settings.iban,
         "Verwendungszweck: " + reference
       ];
   const paymentEn = hardship
     ? ["Please do not transfer anything yet. The board will review your hardship request and contact you personally."]
     : [
         "Please transfer €" + total + " to the following club account:",
-        "Account holder: " + PAYMENT_ACCOUNT_HOLDER,
-        "IBAN: " + PAYMENT_IBAN,
+        "Account holder: " + settings.accountHolder,
+        "IBAN: " + settings.iban,
         "Payment reference: " + reference
       ];
   const body = [
@@ -199,8 +203,8 @@ function sendApplicantConfirmation_(data, applicationId) {
     "",
     paymentEn.join("\n"),
     "",
-    "NFT Munich e.V.",
-    "www.nftmunich.club"
+    settings.clubName,
+    settings.website
   ].join("\n");
 
   MailApp.sendEmail({
@@ -210,6 +214,81 @@ function sendApplicantConfirmation_(data, applicationId) {
     name: "NFT Munich e.V.",
     replyTo: REGISTRATION_EMAIL
   });
+}
+
+function defaultClubSettings_() {
+  return {
+    clubName: "NFT Munich e.V.",
+    address: "Titurelstrasse 8, 81925 Munich",
+    email: "nftmunich@gmail.com",
+    website: "www.nftmunich.club",
+    accountHolder: PAYMENT_ACCOUNT_HOLDER,
+    iban: PAYMENT_IBAN,
+    memberFee: "10",
+    playerStudentFee: "50",
+    playerOtherFee: "100"
+  };
+}
+
+function getSettingsSheet_(spreadsheet) {
+  let sheet = spreadsheet.getSheetByName(SETTINGS_TAB);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(SETTINGS_TAB);
+    sheet.appendRow(["Key", "Value"]);
+    const defaults = defaultClubSettings_();
+    Object.keys(defaults).forEach(function(key) { sheet.appendRow([key, defaults[key]]); });
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function readClubSettings_(spreadsheet) {
+  const settings = defaultClubSettings_();
+  const sheet = getSettingsSheet_(spreadsheet);
+  if (sheet.getLastRow() < 2) return settings;
+  sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues().forEach(function(row) {
+    const key = String(row[0] || "");
+    if (Object.prototype.hasOwnProperty.call(settings, key)) settings[key] = String(row[1] || "");
+  });
+  return settings;
+}
+
+function publicClubSettings_(payload) {
+  const spreadsheet = SpreadsheetApp.openById(payload.spreadsheetId || DEFAULT_MEMBERSHIP_SHEET_ID);
+  return json_({ status: 200, settings: readClubSettings_(spreadsheet) });
+}
+
+function adminDashboard_(payload) {
+  const spreadsheet = SpreadsheetApp.openById(payload.spreadsheetId || DEFAULT_MEMBERSHIP_SHEET_ID);
+  const counts = {
+    members: applicationCount_(spreadsheet, APPLICATION_TABS.member),
+    players: applicationCount_(spreadsheet, APPLICATION_TABS.player),
+    management: applicationCount_(spreadsheet, APPLICATION_TABS.management)
+  };
+  counts.total = counts.members + counts.players + counts.management;
+  return json_({ status: 200, settings: readClubSettings_(spreadsheet), counts: counts });
+}
+
+function applicationCount_(spreadsheet, tabName) {
+  const sheet = spreadsheet.getSheetByName(tabName);
+  return sheet ? Math.max(0, sheet.getLastRow() - 1) : 0;
+}
+
+function updateClubSettings_(payload) {
+  const spreadsheet = SpreadsheetApp.openById(payload.spreadsheetId || DEFAULT_MEMBERSHIP_SHEET_ID);
+  const current = readClubSettings_(spreadsheet);
+  const incoming = payload.settings || {};
+  Object.keys(current).forEach(function(key) {
+    if (incoming[key] != null) current[key] = String(incoming[key]).replace(/[<>\r\n]/g, " ").trim().slice(0, 300);
+  });
+  if (!current.clubName || !current.email || !current.accountHolder || !current.iban) {
+    return json_({ status: 400, message: "Club name, email, account holder and IBAN are required." });
+  }
+  const sheet = getSettingsSheet_(spreadsheet);
+  if (sheet.getLastRow() > 1) sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).clearContent();
+  const rows = Object.keys(current).map(function(key) { return [key, safeSpreadsheetValue_(current[key])]; });
+  sheet.getRange(2, 1, rows.length, 2).setValues(rows);
+  return json_({ status: 200, settings: current });
 }
 
 function safeSpreadsheetValue_(value) {
