@@ -20,9 +20,10 @@ interface CarouselImage {
 const CACHE_KEY = "carouselImages";
 const CACHE_TIME_KEY = "carouselImagesCacheTime";
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in ms
+const FALLBACK_IMAGE: CarouselImage = { original: "/about_us_images/intro.jpg" };
 
 export default function Carousel() {
-  const [images, setImages] = useState<CarouselImage[]>([]);
+  const [images, setImages] = useState<CarouselImage[]>([FALLBACK_IMAGE]);
 
   useEffect(() => {
     const now = Date.now();
@@ -34,7 +35,8 @@ export default function Carousel() {
       cachedTime &&
       now - parseInt(cachedTime, 10) < CACHE_DURATION
     ) {
-      setImages(JSON.parse(cachedImages));
+      const parsedImages = JSON.parse(cachedImages) as CarouselImage[];
+      setImages(parsedImages.length ? parsedImages : [FALLBACK_IMAGE]);
       return;
     }
 
@@ -47,7 +49,7 @@ export default function Carousel() {
           original: image.url,
         }));
 
-        setImages(fetchedImages || []);
+        setImages(fetchedImages?.length ? fetchedImages : [FALLBACK_IMAGE]);
         localStorage.setItem(CACHE_KEY, JSON.stringify(fetchedImages || []));
         localStorage.setItem(CACHE_TIME_KEY, now.toString());
       } catch (error) {

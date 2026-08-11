@@ -20,14 +20,12 @@
 @media (max-width: 767px) {
   .mySwiper {
     width: 100%;
-    height: clamp(270px, 58vw, 420px);
+    height: clamp(220px, 59vw, 320px);
     border-radius: 12px;
   }
 
   .carousel-image {
-    object-fit: contain;
-    /* Ensure the entire image fits on mobile */
+    object-fit: cover;
     object-position: center;
-    /* Center the image */
   }
 }
