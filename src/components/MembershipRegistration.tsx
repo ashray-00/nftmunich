@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
 import LoginGate from "./LoginGate";
@@ -11,8 +11,8 @@ type RouteType = "member" | "player" | "management";
 type FeeCategory = "student" | "other" | "hardship";
 type UploadState = { photo?: string; id?: string; insurance?: string };
 
-const IBAN = "1234XXXX";
-const ACCOUNT_HOLDER = "NFT Munich e.V.";
+type ClubSettings = { clubName: string; accountHolder: string; iban: string; memberFee: string; playerStudentFee: string; playerOtherFee: string };
+const DEFAULT_CLUB_SETTINGS: ClubSettings = { clubName: "NFT Munich e.V.", accountHolder: "NFT Munich e.V.", iban: "1234XXXX", memberFee: "10", playerStudentFee: "50", playerOtherFee: "100" };
 
 const copy = {
   de: {
@@ -158,6 +158,7 @@ export default function MembershipRegistration() {
   const [feeCategory, setFeeCategory] = useState<FeeCategory | null>(null);
   const [applicationId, setApplicationId] = useState("");
   const [confirmationSent, setConfirmationSent] = useState(true);
+  const [clubSettings, setClubSettings] = useState<ClubSettings>(DEFAULT_CLUB_SETTINGS);
   const [uploading, setUploading] = useState<string | null>(null);
   const [uploadFailed, setUploadFailed] = useState(false);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
@@ -178,8 +179,23 @@ export default function MembershipRegistration() {
     }
   }, []);
 
-  const fee = useMemo(() => selected ? t[`${selected}Fee` as keyof typeof t] : "", [selected, t]);
-  const amount = selected === "member" ? 10 : feeCategory === "student" ? 60 : feeCategory === "other" ? 110 : null;
+  useEffect(() => {
+    fetch("/api/club-settings")
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => { if (data?.settings) setClubSettings({ ...DEFAULT_CLUB_SETTINGS, ...data.settings }); })
+      .catch(() => undefined);
+  }, []);
+
+  const memberFee = Number(clubSettings.memberFee) || 0;
+  const studentTotal = memberFee + (Number(clubSettings.playerStudentFee) || 0);
+  const otherTotal = memberFee + (Number(clubSettings.playerOtherFee) || 0);
+  const feeLines = (route: RouteType) => route === "member"
+    ? [language === "de" ? `${memberFee} € pro Jahr` : `€${memberFee} per year`]
+    : language === "de"
+      ? [`${studentTotal} € gesamt – Studierende/Azubis`, `${otherTotal} € gesamt – Sonstige`]
+      : [`€${studentTotal} total – students/trainees`, `€${otherTotal} total – others`];
+  const fee = selected ? feeLines(selected).join(" · ") : "";
+  const amount = selected === "member" ? memberFee : feeCategory === "student" ? studentTotal : feeCategory === "other" ? otherTotal : null;
   const categoryLabel = selected ? t[selected] : "";
 
   async function uploadDocument(file: File, fieldType: keyof UploadState, fullName: string) {
@@ -247,7 +263,7 @@ export default function MembershipRegistration() {
               <h2>{t[route]}</h2>
               <p>{t[`${route}Text` as keyof typeof t]}</p>
               <div style={{ display: "grid", gap: ".55rem", margin: "auto 0 1.5rem", fontWeight: 800 }}>
-                {String(t[`${route}Fee` as keyof typeof t]).split(" · ").map((line) => (
+                {feeLines(route).map((line) => (
                   <span key={line} style={{ display: "block", paddingBottom: ".55rem", borderBottom: "1px solid currentColor" }}>
                     {line}
                   </span>
@@ -267,7 +283,7 @@ export default function MembershipRegistration() {
             <p>{fee}</p>
           </div>
 
-          {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}{applicationId ? ` · ${applicationId}` : ""}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
+          {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}{applicationId ? ` · ${applicationId}` : ""}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
             <>
               {protectedRoute && !loading && !user && <div><h3>{t.loginTitle}</h3><LoginGate /></div>}
               {selected === "management" && user && !managementAllowed && <div className={styles.notice}>{t.notManager}</div>}
@@ -285,7 +301,7 @@ export default function MembershipRegistration() {
                       <Field label={t.city} name="city" />
                       <Field label={t.phone} name="phone" type="tel" wide />
                     </div>
-                    {protectedRoute && <label className={styles.selectLabel}>{t.feeChoice}<select name="feeCategory" required value={feeCategory || ""} onChange={(event) => setFeeCategory(event.target.value as FeeCategory)}><option value="" disabled>—</option><option value="student">{t.studentTotal}</option><option value="other">{t.otherTotal}</option><option value="hardship">{t.special}</option></select></label>}
+                    {protectedRoute && <label className={styles.selectLabel}>{t.feeChoice}<select name="feeCategory" required value={feeCategory || ""} onChange={(event) => setFeeCategory(event.target.value as FeeCategory)}><option value="" disabled>—</option><option value="student">{language === "de" ? `Studierende / Azubis – ${studentTotal} € gesamt` : `Students / trainees – €${studentTotal} total`}</option><option value="other">{language === "de" ? `Sonstige – ${otherTotal} € gesamt` : `Others – €${otherTotal} total`}</option><option value="hardship">{t.special}</option></select></label>}
                   </fieldset>
 
                   {protectedRoute && <fieldset><legend><span>02</span>{t.playerDetails}</legend><div className={styles.grid}><Field label={t.position} name="position" /><Field label={t.emergencyName} name="emergencyName" /><Field label={t.emergencyPhone} name="emergencyPhone" type="tel" /></div></fieldset>}
@@ -302,7 +318,7 @@ export default function MembershipRegistration() {
                     {uploadFailed && <p className={styles.error}>{t.uploadError}</p>}
                   </fieldset>
 
-                  <fieldset><legend><span>{selected === "member" ? "03" : selected === "player" ? "04" : "05"}</span>{t.payment}</legend><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /></fieldset>
+                  <fieldset><legend><span>{selected === "member" ? "03" : selected === "player" ? "04" : "05"}</span>{t.payment}</legend><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /></fieldset>
                   <fieldset><legend><span>{selected === "member" ? "04" : selected === "player" ? "05" : "06"}</span>{t.declaration}</legend><div className={styles.checks}><Check name="truth" label={t.truth} /><Check name="statutes" label={<>{t.statutes} <Link href="/satzung.pdf" target="_blank">Satzung ↗</Link></>} /><Check name="privacy" label={<>{t.privacy} <Link href="/privacy-policy" target="_blank">Privacy ↗</Link></>} /></div></fieldset>
                   {status === "error" && <p className={styles.error}>{t.error}</p>}
                   <button className={styles.submit} disabled={status === "sending" || Boolean(uploading)}>{status === "sending" ? t.sending : t.submit}</button>
@@ -328,14 +344,14 @@ function Check({ name, label }: { name: string; label: React.ReactNode }) {
   return <label><input type="checkbox" name={name} value="accepted" required /><span>{label}</span></label>;
 }
 
-function PaymentSummary({ t, amount, hardship }: { t: (typeof copy)[Language]; amount: number | null; hardship: boolean }) {
+function PaymentSummary({ t, amount, hardship, settings }: { t: (typeof copy)[Language]; amount: number | null; hardship: boolean; settings: ClubSettings }) {
   return <div className={styles.payment} aria-live="polite">
     <p>{hardship ? t.hardshipPayment : amount === null ? t.chooseFeeFirst : t.transferNow}</p>
     {!hardship && amount !== null && <>
       <strong>{t.total}: {amount} €</strong>
       <dl style={{ display: "grid", gap: ".7rem", margin: "1rem 0 0" }}>
-        <BankDetail label={t.accountHolder} value={ACCOUNT_HOLDER} />
-        <BankDetail label="IBAN" value={IBAN} />
+        <BankDetail label={t.accountHolder} value={settings.accountHolder} />
+        <BankDetail label="IBAN" value={settings.iban} />
         <BankDetail label={t.paymentReference} value={t.paymentReferenceValue} />
       </dl>
     </>}

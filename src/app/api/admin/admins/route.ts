@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ownerAuthorization } from "../../../../lib/adminAuth";
 
 const SERVER_URL = process.env.SERVER_URL;
 
@@ -8,6 +9,7 @@ function missingConfig() {
 
 export async function GET(req: NextRequest) {
   if (!SERVER_URL) return missingConfig();
+  if (!ownerAuthorization(req).allowed) return NextResponse.json({ detail: "Forbidden." }, { status: 403 });
 
   const authorization = req.headers.get("authorization") ?? "";
   try {
@@ -23,6 +25,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   if (!SERVER_URL) return missingConfig();
+  if (!ownerAuthorization(req).allowed) return NextResponse.json({ detail: "Forbidden." }, { status: 403 });
 
   const authorization = req.headers.get("authorization") ?? "";
   let body: unknown;
