@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const membershipFee = feeCategory === "hardship" ? "" : 10;
     const playerFee = registrationType === "member" || feeCategory === "hardship"
       ? ""
-      : feeCategory === "student" ? 55 : 100;
+      : feeCategory === "student" ? 50 : 100;
 
     const registration = {
       registrationType,
