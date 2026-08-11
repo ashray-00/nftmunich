@@ -306,14 +306,18 @@ export default function MembershipRegistration() {
         <section className={styles.formShell}>
           <button className={styles.back} type="button" onClick={() => { setSelected(null); setFeeCategory(null); setApplicationId(""); setConfirmationSent(true); setStatus("idle"); }}>← {t.back}</button>
           <div className={styles.formHeading}>
-            <div><span>01</span><h2>{t[selected]}</h2></div>
+            <div style={{ display: "grid", gap: ".35rem" }}>
+              <small style={{ textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 800, opacity: .78 }}>{language === "de" ? "Du registrierst dich als" : "You are registering as"}</small>
+              <h2>{t[selected]}</h2>
+            </div>
             <div style={{ display: "grid", gap: ".55rem", minWidth: "min(100%, 320px)" }} aria-label={language === "de" ? "Beiträge" : "Fees"}>
               {selected === "member" ? (
                 <strong>{language === "de" ? `${memberFee} € pro Jahr` : `€${memberFee} per year`}</strong>
               ) : (
                 <>
-                  <span style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: ".8rem", alignItems: "center", borderBottom: "1px solid #ffffff66", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{studentTotal} € gesamt</strong><small>{language === "de" ? "Studierende / Azubis" : "Students / trainees"}</small></span>
-                  <span style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: ".8rem", alignItems: "center", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{otherTotal} € gesamt</strong><small>{language === "de" ? "Sonstige" : "Others"}</small></span>
+                  <span style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: ".8rem", alignItems: "center", borderBottom: "1px solid #ffffff66", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{clubSettings.playerStudentFee} €</strong><small>{language === "de" ? "für Studierende / Azubis" : "for students / trainees"}</small></span>
+                  <span style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: ".8rem", alignItems: "center", borderBottom: "1px solid #ffffff66", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{clubSettings.playerOtherFee} €</strong><small>{language === "de" ? "für Sonstige" : "for others"}</small></span>
+                  <span style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: ".8rem", alignItems: "center", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>+ {memberFee} €</strong><small>{language === "de" ? "Mitgliedsgebühr" : "membership fee"}</small></span>
                 </>
               )}
             </div>
