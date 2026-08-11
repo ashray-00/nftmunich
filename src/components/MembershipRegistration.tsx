@@ -8,7 +8,11 @@ import styles from "../styles/MembershipRegistration.module.css";
 
 type Language = "de" | "en";
 type RouteType = "member" | "player" | "management";
+type FeeCategory = "student" | "other" | "hardship";
 type UploadState = { photo?: string; id?: string; insurance?: string };
+
+const IBAN = "1234XXXX";
+const ACCOUNT_HOLDER = "NFT Munich e.V.";
 
 const copy = {
   de: {
@@ -20,10 +24,10 @@ const copy = {
     memberFee: "10 € pro Jahr",
     player: "Player",
     playerText: "Nur für Spieler mit einer bereits freigegebenen E-Mail-Adresse.",
-    playerFee: "50 € für Studierende/Azubis · 100 € für Sonstige · + 10 € Mitgliedsgebühr",
+    playerFee: "60 € gesamt – Studierende/Azubis (50 € + 10 € Mitgliedsgebühr) · 110 € gesamt – Sonstige (100 € + 10 € Mitgliedsgebühr)",
     management: "Management and Player",
     managementText: "Für freigegebene Personen, die spielen und zugleich eine Vereinsaufgabe übernehmen.",
-    managementFee: "50 € für Studierende/Azubis · 100 € für Sonstige · + 10 € Mitgliedsgebühr",
+    managementFee: "60 € gesamt – Studierende/Azubis (50 € + 10 € Mitgliedsgebühr) · 110 € gesamt – Sonstige (100 € + 10 € Mitgliedsgebühr)",
     choose: "Auswählen",
     back: "Zurück zur Auswahl",
     personal: "Persönliche Angaben",
@@ -52,15 +56,27 @@ const copy = {
     insurance: "Versicherungsnachweis",
     uploadHelp: "PDF, JPG oder PNG, maximal 2 MB. Bitte nur die erforderlichen Unterlagen hochladen.",
     payment: "Beitrag & Zahlung",
-    paymentText: "Nach dem Absenden erhältst du die endgültige Zahlungsinformation. Bankverbindung: IBAN 1234XXXX. Bitte noch keine Zahlung leisten, falls du einen Härtefall beantragst.",
+    transferNow: "Bitte überweise nach dem Absenden den unten angegebenen Betrag.",
+    chooseFeeFirst: "Wähle oben deinen Spielerbeitrag aus. Danach erscheint hier der genaue Gesamtbetrag.",
+    hardshipPayment: "Bitte noch nichts überweisen. Der Vorstand prüft deinen Härtefall und informiert dich persönlich.",
+    total: "Zu zahlender Gesamtbetrag",
+    accountHolder: "Kontoinhaber",
+    paymentReference: "Verwendungszweck",
+    paymentReferenceValue: "Mitgliedschaft – Vorname Nachname",
+    feeChoice: "Welcher Spielerbeitrag gilt für dich?",
+    studentTotal: "Studierende / Azubis – 60 € gesamt",
+    otherTotal: "Sonstige – 110 € gesamt",
     declaration: "Erklärungen",
     truth: "Meine Angaben sind vollständig und richtig.",
     statutes: "Ich erkenne die Satzung von NFT Munich e.V. an.",
     privacy: "Ich habe die Datenschutzerklärung gelesen und stimme der Verarbeitung meiner Angaben und hochgeladenen Dokumente für das Aufnahmeverfahren zu.",
     submit: "Antrag verbindlich absenden",
     sending: "Wird gesendet …",
-    success: "Vielen Dank. Dein Antrag wurde übermittelt. Wir melden uns per E-Mail.",
+    successTitle: "Vielen Dank für deine Anmeldung",
+    successEmail: "Eine Bestätigung mit diesen Zahlungsangaben wurde an deine E-Mail-Adresse gesendet.",
+    emailWarning: "Dein Antrag wurde gespeichert, aber die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte speichere die Zahlungsangaben auf dieser Seite.",
     error: "Der Antrag konnte nicht übermittelt werden. Bitte versuche es erneut oder schreibe an nftmunich@gmail.com.",
+    uploadError: "Das Dokument konnte nicht hochgeladen werden. Bitte prüfe Dateityp und Dateigröße und versuche es erneut.",
     loginTitle: "Freigegebene E-Mail erforderlich",
     notManager: "Diese Anmeldung ist nur für freigegebene Management-Mitglieder verfügbar.",
     required: "Pflichtfeld",
@@ -74,10 +90,10 @@ const copy = {
     memberFee: "€10 per year",
     player: "Player",
     playerText: "Only for players whose email address has already been approved.",
-    playerFee: "€50 for students/trainees · €100 for others · + €10 membership fee",
+    playerFee: "€60 total – students/trainees (€50 + €10 membership fee) · €110 total – others (€100 + €10 membership fee)",
     management: "Management and Player",
     managementText: "For approved people who play and also hold a club responsibility.",
-    managementFee: "€50 for students/trainees · €100 for others · + €10 membership fee",
+    managementFee: "€60 total – students/trainees (€50 + €10 membership fee) · €110 total – others (€100 + €10 membership fee)",
     choose: "Select",
     back: "Back to selection",
     personal: "Personal details",
@@ -106,15 +122,27 @@ const copy = {
     insurance: "Proof of insurance",
     uploadHelp: "PDF, JPG or PNG, maximum 2 MB. Upload only the documents requested.",
     payment: "Fee & payment",
-    paymentText: "After submitting, you will receive the final payment information. Bank account: IBAN 1234XXXX. Do not pay yet if you request a hardship review.",
+    transferNow: "Please transfer the amount shown below after submitting.",
+    chooseFeeFirst: "Select your player fee above. Your exact total will then appear here.",
+    hardshipPayment: "Please do not transfer anything yet. The board will review your hardship request and contact you personally.",
+    total: "Total amount to pay",
+    accountHolder: "Account holder",
+    paymentReference: "Payment reference",
+    paymentReferenceValue: "Membership – First name Last name",
+    feeChoice: "Which player fee applies to you?",
+    studentTotal: "Students / trainees – €60 total",
+    otherTotal: "Others – €110 total",
     declaration: "Declarations",
     truth: "The information I have provided is complete and correct.",
     statutes: "I accept the statutes (Satzung) of NFT Munich e.V.",
     privacy: "I have read the privacy policy and consent to the processing of my information and uploaded documents for the application procedure.",
     submit: "Submit binding application",
     sending: "Submitting …",
-    success: "Thank you. Your application has been submitted. We will contact you by email.",
+    successTitle: "Thank you for your registration",
+    successEmail: "A confirmation containing these payment details has been sent to your email address.",
+    emailWarning: "Your application was saved, but the confirmation email could not be sent. Please save the payment details shown on this page.",
     error: "The application could not be submitted. Please try again or contact nftmunich@gmail.com.",
+    uploadError: "The document could not be uploaded. Check the file type and size, then try again.",
     loginTitle: "Approved email required",
     notManager: "This registration is only available to approved management members.",
     required: "Required",
@@ -127,25 +155,37 @@ export default function MembershipRegistration() {
   const [language, setLanguage] = useState<Language>("de");
   const [selected, setSelected] = useState<RouteType | null>(null);
   const [uploads, setUploads] = useState<UploadState>({});
+  const [feeCategory, setFeeCategory] = useState<FeeCategory | null>(null);
+  const [applicationId, setApplicationId] = useState("");
+  const [confirmationSent, setConfirmationSent] = useState(true);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [uploadFailed, setUploadFailed] = useState(false);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const { user, loading } = useAuth();
   const t = copy[language];
 
   const fee = useMemo(() => selected ? t[`${selected}Fee` as keyof typeof t] : "", [selected, t]);
+  const amount = selected === "member" ? 10 : feeCategory === "student" ? 60 : feeCategory === "other" ? 110 : null;
+  const categoryLabel = selected ? t[selected] : "";
 
   async function uploadDocument(file: File, fieldType: keyof UploadState, fullName: string) {
     setUploading(fieldType);
-    const body = new FormData();
-    body.append("file", file);
-    body.append("fieldType", fieldType);
-    body.append("fileIndex", "0");
-    body.append("fullName", fullName || "applicant");
-    const response = await fetch("/api/upload-documents", { method: "POST", body });
-    const result = await response.json();
-    if (!response.ok || !result.fileUrl) throw new Error(result.message || "Upload failed");
-    setUploads((current) => ({ ...current, [fieldType]: result.fileUrl }));
-    setUploading(null);
+    setUploadFailed(false);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      body.append("fieldType", fieldType);
+      body.append("fileIndex", "0");
+      body.append("fullName", fullName || "applicant");
+      const response = await fetch("/api/upload-documents", { method: "POST", body });
+      const result = await response.json();
+      if (!response.ok || !result.fileUrl) throw new Error(result.message || "Upload failed");
+      setUploads((current) => ({ ...current, [fieldType]: result.fileUrl }));
+    } catch {
+      setUploadFailed(true);
+    } finally {
+      setUploading(null);
+    }
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -157,8 +197,13 @@ export default function MembershipRegistration() {
     const response = await fetch("/api/membership-registration", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...payload, ...uploads, registrationType: selected, language }),
+      body: JSON.stringify({ ...payload, ...uploads, feeCategory: selected === "member" ? "standard" : feeCategory, registrationType: selected, language }),
     });
+    const result = await response.json().catch(() => ({}));
+    if (response.ok) {
+      setApplicationId(result.applicationId || "");
+      setConfirmationSent(result.emailSent !== false);
+    }
     setStatus(response.ok ? "success" : "error");
     if (response.ok) window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -194,7 +239,7 @@ export default function MembershipRegistration() {
                   </span>
                 ))}
               </div>
-              <button onClick={() => setSelected(route)} type="button">{t.choose}</button>
+              <button onClick={() => { setSelected(route); setFeeCategory(route === "member" ? "other" : null); }} type="button">{t.choose}</button>
             </article>
           ))}
         </section>
@@ -202,13 +247,13 @@ export default function MembershipRegistration() {
 
       {selected && (
         <section className={styles.formShell}>
-          <button className={styles.back} type="button" onClick={() => { setSelected(null); setStatus("idle"); }}>← {t.back}</button>
+          <button className={styles.back} type="button" onClick={() => { setSelected(null); setFeeCategory(null); setApplicationId(""); setConfirmationSent(true); setStatus("idle"); }}>← {t.back}</button>
           <div className={styles.formHeading}>
             <div><span>01</span><h2>{t[selected]}</h2></div>
             <p>{fee}</p>
           </div>
 
-          {status === "success" ? <div className={styles.success}>{t.success}</div> : (
+          {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}{applicationId ? ` · ${applicationId}` : ""}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
             <>
               {protectedRoute && !loading && !user && <div><h3>{t.loginTitle}</h3><LoginGate /></div>}
               {selected === "management" && user && !managementAllowed && <div className={styles.notice}>{t.notManager}</div>}
@@ -226,7 +271,7 @@ export default function MembershipRegistration() {
                       <Field label={t.city} name="city" />
                       <Field label={t.phone} name="phone" type="tel" wide />
                     </div>
-                    <label className={styles.selectLabel}>{t.status}<select name="feeCategory" required defaultValue=""><option value="" disabled>—</option><option value="student">{t.student}</option><option value="other">{t.other}</option><option value="hardship">{t.special}</option></select></label>
+                    {protectedRoute && <label className={styles.selectLabel}>{t.feeChoice}<select name="feeCategory" required value={feeCategory || ""} onChange={(event) => setFeeCategory(event.target.value as FeeCategory)}><option value="" disabled>—</option><option value="student">{t.studentTotal}</option><option value="other">{t.otherTotal}</option><option value="hardship">{t.special}</option></select></label>}
                   </fieldset>
 
                   {protectedRoute && <fieldset><legend><span>02</span>{t.playerDetails}</legend><div className={styles.grid}><Field label={t.position} name="position" /><Field label={t.emergencyName} name="emergencyName" /><Field label={t.emergencyPhone} name="emergencyPhone" type="tel" /></div></fieldset>}
@@ -240,9 +285,10 @@ export default function MembershipRegistration() {
                       <Upload label={t.identity} name="id" busy={uploading === "id"} done={Boolean(uploads.id)} onFile={(file, form) => uploadDocument(file, "id", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`)} />
                       {protectedRoute && <Upload label={t.insurance} name="insurance" busy={uploading === "insurance"} done={Boolean(uploads.insurance)} onFile={(file, form) => uploadDocument(file, "insurance", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`)} />}
                     </div>
+                    {uploadFailed && <p className={styles.error}>{t.uploadError}</p>}
                   </fieldset>
 
-                  <fieldset><legend><span>{selected === "member" ? "03" : selected === "player" ? "04" : "05"}</span>{t.payment}</legend><div className={styles.payment}><strong>{fee}</strong><p>{t.paymentText}</p></div></fieldset>
+                  <fieldset><legend><span>{selected === "member" ? "03" : selected === "player" ? "04" : "05"}</span>{t.payment}</legend><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /></fieldset>
                   <fieldset><legend><span>{selected === "member" ? "04" : selected === "player" ? "05" : "06"}</span>{t.declaration}</legend><div className={styles.checks}><Check name="truth" label={t.truth} /><Check name="statutes" label={<>{t.statutes} <Link href="/satzung.pdf" target="_blank">Satzung ↗</Link></>} /><Check name="privacy" label={<>{t.privacy} <Link href="/privacy-policy" target="_blank">Privacy ↗</Link></>} /></div></fieldset>
                   {status === "error" && <p className={styles.error}>{t.error}</p>}
                   <button className={styles.submit} disabled={status === "sending" || Boolean(uploading)}>{status === "sending" ? t.sending : t.submit}</button>
@@ -266,4 +312,22 @@ function Upload({ label, name, busy, done, onFile }: { label: string; name: stri
 
 function Check({ name, label }: { name: string; label: React.ReactNode }) {
   return <label><input type="checkbox" name={name} value="accepted" required /><span>{label}</span></label>;
+}
+
+function PaymentSummary({ t, amount, hardship }: { t: (typeof copy)[Language]; amount: number | null; hardship: boolean }) {
+  return <div className={styles.payment} aria-live="polite">
+    <p>{hardship ? t.hardshipPayment : amount === null ? t.chooseFeeFirst : t.transferNow}</p>
+    {!hardship && amount !== null && <>
+      <strong>{t.total}: {amount} €</strong>
+      <dl style={{ display: "grid", gap: ".7rem", margin: "1rem 0 0" }}>
+        <BankDetail label={t.accountHolder} value={ACCOUNT_HOLDER} />
+        <BankDetail label="IBAN" value={IBAN} />
+        <BankDetail label={t.paymentReference} value={t.paymentReferenceValue} />
+      </dl>
+    </>}
+  </div>;
+}
+
+function BankDetail({ label, value }: { label: string; value: string }) {
+  return <div style={{ display: "grid", gridTemplateColumns: "minmax(120px, .55fr) 1fr", gap: "1rem", borderTop: "1px solid #d4d0c5", paddingTop: ".7rem" }}><dt style={{ fontWeight: 700, color: "#5e665f" }}>{label}</dt><dd style={{ margin: 0, fontWeight: 850, overflowWrap: "anywhere" }}>{value}</dd></div>;
 }

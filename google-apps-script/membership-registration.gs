@@ -7,6 +7,8 @@
 const DEFAULT_MEMBERSHIP_SHEET_ID = "1VpURRDCv_PRP82A8mOsvFwt7dXd94mPcT1oFTv5ibOs";
 const UPLOAD_FOLDER = "NFT Munich e.V. — Private Membership Uploads";
 const REGISTRATION_EMAIL = "nftmunich@gmail.com";
+const PAYMENT_IBAN = "1234XXXX";
+const PAYMENT_ACCOUNT_HOLDER = "NFT Munich e.V.";
 const APPLICATION_TABS = {
   member: "Club Members",
   player: "Registered Players",
@@ -92,7 +94,70 @@ function saveMembershipRegistration_(payload) {
   ];
 
   sheet.appendRow(row.map(safeSpreadsheetValue_));
-  return json_({ status: 200, applicationId: applicationId });
+  let emailSent = true;
+  try {
+    sendApplicantConfirmation_(data, applicationId);
+  } catch (emailError) {
+    emailSent = false;
+    console.error("Applicant confirmation email failed", emailError);
+  }
+  return json_({ status: 200, applicationId: applicationId, emailSent: emailSent });
+}
+
+function sendApplicantConfirmation_(data, applicationId) {
+  const labels = {
+    member: "Vereinsmitglied / Club member",
+    player: "Player",
+    management: "Management and Player"
+  };
+  const category = labels[data.registrationType] || data.registrationType;
+  const hardship = data.feeCategory === "hardship";
+  const total = hardship ? "" : Number(data.totalFee || 0);
+  const reference = "Mitgliedschaft " + applicationId + " " + data.firstName + " " + data.lastName;
+  const paymentDe = hardship
+    ? ["Bitte überweise noch nichts. Der Vorstand prüft deinen Härtefall und meldet sich persönlich bei dir."]
+    : [
+        "Bitte überweise " + total + " € auf das folgende Vereinskonto:",
+        "Kontoinhaber: " + PAYMENT_ACCOUNT_HOLDER,
+        "IBAN: " + PAYMENT_IBAN,
+        "Verwendungszweck: " + reference
+      ];
+  const paymentEn = hardship
+    ? ["Please do not transfer anything yet. The board will review your hardship request and contact you personally."]
+    : [
+        "Please transfer €" + total + " to the following club account:",
+        "Account holder: " + PAYMENT_ACCOUNT_HOLDER,
+        "IBAN: " + PAYMENT_IBAN,
+        "Payment reference: " + reference
+      ];
+  const body = [
+    "Hallo " + data.firstName + ",",
+    "",
+    "vielen Dank für deine Anmeldung als " + category + ".",
+    "Antragsnummer: " + applicationId,
+    "",
+    paymentDe.join("\n"),
+    "",
+    "--- English ---",
+    "",
+    "Hello " + data.firstName + ",",
+    "",
+    "Thank you for registering as " + category + ".",
+    "Application ID: " + applicationId,
+    "",
+    paymentEn.join("\n"),
+    "",
+    "NFT Munich e.V.",
+    "www.nftmunich.club"
+  ].join("\n");
+
+  MailApp.sendEmail({
+    to: data.email,
+    subject: "NFT Munich e.V. – Anmeldung bestätigt / Registration confirmed",
+    body: body,
+    name: "NFT Munich e.V.",
+    replyTo: REGISTRATION_EMAIL
+  });
 }
 
 function safeSpreadsheetValue_(value) {
