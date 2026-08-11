@@ -13,6 +13,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "crypto";
 
 export const maxDuration = 60;
 
@@ -51,8 +52,6 @@ export async function POST(req: NextRequest) {
 
     const file = formData.get("file") as File | null;
     const fieldType = String(formData.get("fieldType") ?? "").slice(0, 20).replace(/[^a-z0-9_]/g, "");
-    const fileIndexRaw = String(formData.get("fileIndex") ?? "0");
-    const fileIndex = parseInt(fileIndexRaw, 10) || 0;
     const fullName = String(formData.get("fullName") ?? "").slice(0, 150);
     const email = String(formData.get("email") ?? "").trim().toLowerCase().slice(0, 254);
     const registrationType = String(formData.get("registrationType") ?? "member").slice(0, 20);
@@ -77,13 +76,11 @@ export async function POST(req: NextRequest) {
 
     const sanitizedName = sanitizeFullName(fullName) || "player";
     const ext = getExtension(file.type);
-    const filename =
-      fileIndex > 0
-        ? `${sanitizedName}_${fieldType}_${fileIndex}.${ext}`
-        : `${sanitizedName}_${fieldType}.${ext}`;
-
     const arrayBuffer = await file.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString("base64");
+    const fileBuffer = Buffer.from(arrayBuffer);
+    const base64 = fileBuffer.toString("base64");
+    const contentHash = createHash("sha256").update(fileBuffer).digest("hex").slice(0, 16);
+    const durableFilename = `${sanitizedName}_${fieldType}_${contentHash}.${ext}`;
 
     const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
     if (!scriptUrl) {
@@ -100,7 +97,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         action: "uploadFile",
         sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
-        filename,
+        filename: durableFilename,
         base64,
         mimeType: file.type,
         fullName,
