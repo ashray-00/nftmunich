@@ -162,6 +162,7 @@ export default function MembershipRegistration() {
   const [uploading, setUploading] = useState<string | null>(null);
   const [uploadFailed, setUploadFailed] = useState(false);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [submissionError, setSubmissionError] = useState("");
   const [showStatutes, setShowStatutes] = useState(false);
   const { user, loading } = useAuth();
   const t = copy[language];
@@ -236,6 +237,7 @@ export default function MembershipRegistration() {
     event.preventDefault();
     if (!selected) return;
     setStatus("sending");
+    setSubmissionError("");
     const form = new FormData(event.currentTarget);
     const payload = Object.fromEntries(form.entries());
     const response = await fetch("/api/membership-registration", {
@@ -247,6 +249,17 @@ export default function MembershipRegistration() {
     if (response.ok) {
       setApplicationId(result.applicationId || "");
       setConfirmationSent(result.emailSent !== false);
+    } else {
+      const messages: Record<string, { de: string; en: string }> = {
+        "Invalid registration category.": { de: "Bitte wähle deine Registrierungskategorie erneut aus.", en: "Please select your registration category again." },
+        "All personal details and a valid email address are required.": { de: "Bitte prüfe alle persönlichen Angaben und deine E-Mail-Adresse.", en: "Please check all personal details and your email address." },
+        "All player details are required.": { de: "Bitte fülle alle Spielerangaben aus.", en: "Please complete all player details." },
+        "All management details are required.": { de: "Bitte fülle alle Managementangaben aus.", en: "Please complete all management details." },
+        "All declarations must be accepted.": { de: "Bitte bestätige alle drei Erklärungen.", en: "Please accept all three declarations." },
+        "Required documents have not been uploaded.": { de: "Mindestens ein Dokument wurde nicht vollständig hochgeladen. Bitte lade die Dokumente erneut hoch.", en: "At least one document was not fully uploaded. Please upload the documents again." },
+      };
+      const serverMessage = String(result.message || "");
+      setSubmissionError(messages[serverMessage]?.[language] || t.error);
     }
     setStatus(response.ok ? "success" : "error");
     if (response.ok) window.scrollTo({ top: 0, behavior: "smooth" });
@@ -343,7 +356,7 @@ export default function MembershipRegistration() {
 
                   <fieldset><legend><span>{selected === "member" ? "03" : selected === "player" ? "04" : "05"}</span>{t.payment}</legend><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /></fieldset>
                   <fieldset><legend><span>{selected === "member" ? "04" : selected === "player" ? "05" : "06"}</span>{t.declaration}</legend><div className={styles.checks}><Check name="truth" label={t.truth} /><Check name="statutes" label={<>{t.statutes} <button style={{ border: 0, background: "transparent", color: "#176b43", font: "inherit", fontWeight: 800, padding: 0, textDecoration: "underline", cursor: "pointer" }} type="button" onClick={() => setShowStatutes(true)}>Satzung</button></>} /><Check name="privacy" label={<>{t.privacy} <Link href="/privacy-policy" target="_blank">Privacy ↗</Link></>} /></div></fieldset>
-                  {status === "error" && <p className={styles.error}>{t.error}</p>}
+                  {status === "error" && <p className={styles.error} role="alert">{submissionError || t.error}</p>}
                   <button className={styles.submit} disabled={status === "sending" || Boolean(uploading)}>{status === "sending" ? t.sending : t.submit}</button>
                 </form>
               )}
