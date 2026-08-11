@@ -88,15 +88,14 @@ export default function Header() {
           { id: "about", label: "About Us" },
           { id: "news", label: "News" },
           { id: "achievements", label: "Achievements" },
-          { id: "player-registration", label: "Player Registration" },
-          { id: "tournament-registration", label: "Tournament Registration" },
+          { id: "registration", label: "Player Registration" },
           { id: "shop", label: "Shop" },
           { id: "contact", label: "Contact" },
         ].map((section) => (
           <Link
             key={section.id}
-            href={`/#${section.id}`}
-            onClick={() => scrollToSection(section.id)}
+            href={section.id === "registration" ? "/registration" : `/#${section.id}`}
+            onClick={() => section.id !== "registration" && scrollToSection(section.id)}
             className={`block mt-4 md:inline-block md:mt-0 md:ml-6 cursor-pointer ${activeSection === section.id ? "text-yellow-700" : ""
               }`}
           >
@@ -160,14 +159,13 @@ export default function Header() {
               { id: "about", label: "About Us" },
               { id: "news", label: "News" },
               { id: "achievements", label: "Achievements" },
-              { id: "player-registration", label: "Player Registration" },
-              { id: "tournament-registration", label: "Tournament Registration" },
+              { id: "registration", label: "Player Registration" },
               { id: "shop", label: "Shop" },
               { id: "contact", label: "Contact" },
             ].map((section) => (
               <Link
                 key={section.id}
-                href={`/#${section.id}`}
+                href={section.id === "registration" ? "/registration" : `/#${section.id}`}
                 onClick={toggleMenu}
                 className="text-2xl text-bavarian-blue"
               >
