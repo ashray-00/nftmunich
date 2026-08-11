@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
 import LoginGate from "./LoginGate";
@@ -163,6 +163,20 @@ export default function MembershipRegistration() {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const { user, loading } = useAuth();
   const t = copy[language];
+
+  useEffect(() => {
+    const requestedType = new URLSearchParams(window.location.search).get("type");
+    const typeMap: Record<string, RouteType> = {
+      member: "member",
+      player: "player",
+      management: "management",
+    };
+    const route = requestedType ? typeMap[requestedType] : undefined;
+    if (route) {
+      setSelected(route);
+      setFeeCategory(route === "member" ? "other" : null);
+    }
+  }, []);
 
   const fee = useMemo(() => selected ? t[`${selected}Fee` as keyof typeof t] : "", [selected, t]);
   const amount = selected === "member" ? 10 : feeCategory === "student" ? 60 : feeCategory === "other" ? 110 : null;
