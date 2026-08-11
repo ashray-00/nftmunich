@@ -10,6 +10,7 @@ type Language = "de" | "en";
 type RouteType = "member" | "player" | "management";
 type FeeCategory = "student" | "other" | "hardship";
 type UploadState = { photo?: string; id?: string; insurance?: string };
+type UploadProgress = Partial<Record<keyof UploadState, "uploading" | "done" | "error">>;
 
 type ClubSettings = { clubName: string; accountHolder: string; iban: string; memberFee: string; playerStudentFee: string; playerOtherFee: string };
 const DEFAULT_CLUB_SETTINGS: ClubSettings = { clubName: "NFT Munich e.V.", accountHolder: "NFT Munich e.V.", iban: "1234XXXX", memberFee: "10", playerStudentFee: "50", playerOtherFee: "100" };
@@ -159,8 +160,7 @@ export default function MembershipRegistration() {
   const [applicationId, setApplicationId] = useState("");
   const [confirmationSent, setConfirmationSent] = useState(true);
   const [clubSettings, setClubSettings] = useState<ClubSettings>(DEFAULT_CLUB_SETTINGS);
-  const [uploading, setUploading] = useState<string | null>(null);
-  const [uploadFailed, setUploadFailed] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({});
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [submissionError, setSubmissionError] = useState("");
   const [showStatutes, setShowStatutes] = useState(false);
@@ -212,25 +212,33 @@ export default function MembershipRegistration() {
   const categoryLabel = selected ? t[selected] : "";
 
   async function uploadDocument(file: File, fieldType: keyof UploadState, fullName: string, email: string) {
-    setUploading(fieldType);
-    setUploadFailed(false);
-    try {
-      const body = new FormData();
-      body.append("file", file);
-      body.append("fieldType", fieldType);
-      body.append("fileIndex", "0");
-      body.append("fullName", fullName || "applicant");
-      body.append("email", email || "");
-      body.append("registrationType", selected || "member");
-      const response = await fetch("/api/upload-documents", { method: "POST", body });
-      const result = await response.json();
-      if (!response.ok || !result.fileUrl) throw new Error(result.message || "Upload failed");
-      setUploads((current) => ({ ...current, [fieldType]: result.fileUrl }));
-    } catch {
-      setUploadFailed(true);
-    } finally {
-      setUploading(null);
+    setUploadProgress((current) => ({ ...current, [fieldType]: "uploading" }));
+    setUploads((current) => {
+      const next = { ...current };
+      delete next[fieldType];
+      return next;
+    });
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const body = new FormData();
+        body.append("file", file);
+        body.append("fieldType", fieldType);
+        body.append("fileIndex", "0");
+        body.append("fullName", fullName || "applicant");
+        body.append("email", email || "");
+        body.append("registrationType", selected || "member");
+        const response = await fetch("/api/upload-documents", { method: "POST", body });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.fileUrl) throw new Error(result.message || "Upload failed");
+        setUploads((current) => ({ ...current, [fieldType]: result.fileUrl }));
+        setUploadProgress((current) => ({ ...current, [fieldType]: "done" }));
+        return true;
+      } catch {
+        if (attempt === 0) await new Promise((resolve) => window.setTimeout(resolve, 800));
+      }
     }
+    setUploadProgress((current) => ({ ...current, [fieldType]: "error" }));
+    return false;
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -351,17 +359,17 @@ export default function MembershipRegistration() {
                     <legend><span>{selected === "member" ? "02" : selected === "player" ? "03" : "04"}</span>{t.documents}</legend>
                     <p className={styles.help}>{t.uploadHelp}</p>
                     <div className={styles.uploadGrid}>
-                      <Upload label={t.photo} name="photo" busy={uploading === "photo"} done={Boolean(uploads.photo)} onFile={(file, form) => uploadDocument(file, "photo", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
-                      <Upload label={t.identity} name="id" busy={uploading === "id"} done={Boolean(uploads.id)} onFile={(file, form) => uploadDocument(file, "id", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
-                      {protectedRoute && <Upload label={t.insurance} name="insurance" busy={uploading === "insurance"} done={Boolean(uploads.insurance)} onFile={(file, form) => uploadDocument(file, "insurance", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />}
+                      <Upload label={t.photo} name="photo" status={uploadProgress.photo} done={Boolean(uploads.photo)} language={language} onFile={(file, form) => uploadDocument(file, "photo", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
+                      <Upload label={t.identity} name="id" status={uploadProgress.id} done={Boolean(uploads.id)} language={language} onFile={(file, form) => uploadDocument(file, "id", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
+                      {protectedRoute && <Upload label={t.insurance} name="insurance" status={uploadProgress.insurance} done={Boolean(uploads.insurance)} language={language} onFile={(file, form) => uploadDocument(file, "insurance", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />}
                     </div>
-                    {uploadFailed && <p className={styles.error}>{t.uploadError}</p>}
+                    {Object.values(uploadProgress).includes("error") && <p className={styles.error} role="alert">{language === "de" ? "Der Upload konnte nicht bestätigt werden. Bitte wähle die betreffende Datei erneut aus." : "The upload could not be confirmed. Please select that file again."}</p>}
                   </fieldset>
 
                   <fieldset><legend><span>{selected === "member" ? "03" : selected === "player" ? "04" : "05"}</span>{t.payment}</legend><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /></fieldset>
                   <fieldset><legend><span>{selected === "member" ? "04" : selected === "player" ? "05" : "06"}</span>{t.declaration}</legend><div className={styles.checks}><Check name="truth" label={t.truth} /><Check name="statutes" label={<>{t.statutes} <button style={{ border: 0, background: "transparent", color: "#176b43", font: "inherit", fontWeight: 800, padding: 0, textDecoration: "underline", cursor: "pointer" }} type="button" onClick={() => setShowStatutes(true)}>Satzung</button></>} /><Check name="privacy" label={<>{t.privacy} <Link href="/privacy-policy" target="_blank">Privacy ↗</Link></>} /></div></fieldset>
                   {status === "error" && <p className={styles.error} role="alert">{submissionError || t.error}</p>}
-                  <button className={styles.submit} disabled={status === "sending" || Boolean(uploading)}>{status === "sending" ? t.sending : t.submit}</button>
+                  <button className={styles.submit} disabled={status === "sending" || Object.values(uploadProgress).includes("uploading")}>{status === "sending" ? t.sending : t.submit}</button>
                 </form>
               )}
             </>
@@ -384,8 +392,16 @@ function Field({ label, name, type = "text", wide, defaultValue, readOnly, place
   return <label className={wide ? styles.wide : ""}>{label}<input name={name} type={type} required defaultValue={defaultValue} readOnly={readOnly} placeholder={placeholder} /></label>;
 }
 
-function Upload({ label, name, busy, done, onFile }: { label: string; name: string; busy: boolean; done: boolean; onFile: (file: File, form: FormData) => Promise<void> }) {
-  return <label className={styles.upload}>{label}<input name={`${name}File`} type="file" accept=".pdf,.jpg,.jpeg,.png" required={!done} disabled={busy} onChange={async (event) => { const file = event.target.files?.[0]; if (file) await onFile(file, new FormData(event.currentTarget.form || undefined)); }} /><span>{busy ? "Uploading …" : done ? "✓ Uploaded" : "PDF / JPG / PNG"}</span></label>;
+function Upload({ label, name, status, done, language, onFile }: { label: string; name: string; status?: "uploading" | "done" | "error"; done: boolean; language: Language; onFile: (file: File, form: FormData) => Promise<boolean> }) {
+  const busy = status === "uploading";
+  const message = busy
+    ? (language === "de" ? "Wird hochgeladen …" : "Uploading …")
+    : done
+      ? (language === "de" ? "✓ Erfolgreich hochgeladen" : "✓ Uploaded successfully")
+      : status === "error"
+        ? (language === "de" ? "Erneut auswählen" : "Select again")
+        : "PDF / JPG / PNG";
+  return <label className={styles.upload}>{label}<input name={`${name}File`} type="file" accept=".pdf,.jpg,.jpeg,.png" required={!done} disabled={busy} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; const form = new FormData(input.form || undefined); const successful = await onFile(file, form); if (!successful) input.value = ""; }} /><span aria-live="polite">{message}</span></label>;
 }
 
 function Check({ name, label }: { name: string; label: React.ReactNode }) {

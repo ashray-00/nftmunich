@@ -245,8 +245,13 @@ function uploadMembershipFile_(payload) {
   const categoryFolder = getOrCreateChildFolder_(rootFolder, categoryName);
   const applicantName = safeFolderName_((payload.fullName || "Applicant") + "_" + (payload.email || "no-email"));
   const folder = getOrCreateChildFolder_(categoryFolder, applicantName);
+  const safeFilename = safeFileName_(payload.filename);
+  const existingFiles = folder.getFilesByName(safeFilename);
+  if (existingFiles.hasNext()) {
+    return json_({ status: 200, fileUrl: existingFiles.next().getUrl(), reused: true });
+  }
   const bytes = Utilities.base64Decode(payload.base64);
-  const blob = Utilities.newBlob(bytes, payload.mimeType, safeFileName_(payload.filename));
+  const blob = Utilities.newBlob(bytes, payload.mimeType, safeFilename);
   const file = folder.createFile(blob);
   file.setDescription("Private NFT Munich membership application document. Category: " + categoryName);
 
@@ -280,19 +285,25 @@ function saveMembershipRegistration_(payload) {
   if (!tabName) return json_({ status: 400, message: "Unknown registration type." });
   const sheet = getOrCreateApplicationSheet_(spreadsheet, tabName);
 
-  const applicationId = "NFT-" + Utilities.formatDate(new Date(), "Europe/Berlin", "yyyyMMdd-HHmmss") + "-" + Math.floor(1000 + Math.random() * 9000);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  let applicationId;
   const now = Utilities.formatDate(new Date(), "Europe/Berlin", "yyyy-MM-dd HH:mm:ss");
-  const row = [
-    applicationId, now, data.registrationType, data.language,
-    data.firstName, data.lastName, data.birthDate, data.street, data.postalCode,
-    data.city, data.email, data.phone, data.feeCategory, data.membershipFee,
-    data.playerFee, data.position, data.emergencyName, data.emergencyPhone,
-    data.managementRole, data.responsibility, safeSpreadsheetValue_(data.photo),
-    safeSpreadsheetValue_(data.id), safeSpreadsheetValue_(data.insurance),
-    data.truth, data.statutes, data.privacy, "Pending", "New", ""
-  ];
-
-  sheet.appendRow(row.map(safeSpreadsheetValue_));
+  try {
+    applicationId = createApplicationId_(spreadsheet);
+    const row = [
+      applicationId, now, data.registrationType, data.language,
+      data.firstName, data.lastName, data.birthDate, data.street, data.postalCode,
+      data.city, data.email, data.phone, data.feeCategory, data.membershipFee,
+      data.playerFee, data.position, data.emergencyName, data.emergencyPhone,
+      data.managementRole, data.responsibility, safeSpreadsheetValue_(data.photo),
+      safeSpreadsheetValue_(data.id), safeSpreadsheetValue_(data.insurance),
+      data.truth, data.statutes, data.privacy, "Pending", "New", ""
+    ];
+    sheet.appendRow(row.map(safeSpreadsheetValue_));
+  } finally {
+    lock.releaseLock();
+  }
   let emailSent = true;
   try {
     sendApplicantConfirmation_(data, applicationId, settings);
@@ -301,6 +312,19 @@ function saveMembershipRegistration_(payload) {
     console.error("Applicant confirmation email failed", emailError);
   }
   return json_({ status: 200, applicationId: applicationId, totalFee: data.totalFee, emailSent: emailSent });
+}
+
+function createApplicationId_(spreadsheet) {
+  let highest = 0;
+  Object.keys(APPLICATION_TABS).forEach(function(key) {
+    const sheet = spreadsheet.getSheetByName(APPLICATION_TABS[key]);
+    if (!sheet || sheet.getLastRow() < 2) return;
+    sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().forEach(function(row) {
+      const match = String(row[0] || "").match(/^NFT-(\d{4})$/);
+      if (match) highest = Math.max(highest, Number(match[1]));
+    });
+  });
+  return "NFT-" + String(highest + 1).padStart(4, "0");
 }
 
 function getOrCreateApplicationSheet_(spreadsheet, tabName) {
@@ -332,7 +356,7 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
   const category = labels[data.registrationType] || data.registrationType;
   const hardship = data.feeCategory === "hardship";
   const total = hardship ? "" : Number(data.totalFee || 0);
-  const reference = "Mitgliedschaft " + applicationId + " " + data.firstName + " " + data.lastName;
+  const reference = applicationId;
   const paymentEn = hardship
     ? ["Please do not transfer anything yet. The board will review your hardship request and contact you personally."]
     : [
@@ -353,13 +377,41 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
     settings.clubName
   ].join("\n");
 
+  const htmlPayment = hardship
+    ? "<p><strong>Amount:</strong> No payment now. The board will contact you.</p>"
+    : [
+        "<p><strong>Amount: €" + total + "</strong></p>",
+        "<p>Account holder: " + escapeHtml_(settings.accountHolder) + "<br>",
+        "<strong>IBAN: " + escapeHtml_(settings.iban) + "</strong><br>",
+        "Payment reference: <strong>" + escapeHtml_(reference) + "</strong></p>"
+      ].join("");
+  const htmlBody = [
+    "<p>Hi " + escapeHtml_(data.firstName) + ",</p>",
+    "<p>Your registration was received.</p>",
+    "<p><strong>Category: " + escapeHtml_(category) + "</strong><br>",
+    "Application ID: <strong>" + escapeHtml_(applicationId) + "</strong></p>",
+    htmlPayment,
+    "<p>Questions? Contact <a href=\"mailto:" + REGISTRATION_EMAIL + "\">" + REGISTRATION_EMAIL + "</a><br>",
+    escapeHtml_(settings.clubName) + "</p>"
+  ].join("");
+
   MailApp.sendEmail({
     to: data.email,
     subject: "NFT Munich registration received",
     body: body,
+    htmlBody: htmlBody,
     name: "NFT Munich e.V.",
     replyTo: REGISTRATION_EMAIL
   });
+}
+
+function escapeHtml_(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function defaultClubSettings_() {
