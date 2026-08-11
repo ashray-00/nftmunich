@@ -21,11 +21,14 @@ jobs:
         run: npm install -g vercel@latest
 
       - name: Connect Google membership automation
-        run: printf '%s' "$GOOGLE_SCRIPT_URL" | vercel env add GOOGLE_SCRIPT_URL production --force --token=${{ secrets.VERCEL_TOKEN }}
+        run: |
+          printf '%s' "$GOOGLE_SCRIPT_URL" | vercel env add GOOGLE_SCRIPT_URL production --force --token=${{ secrets.VERCEL_TOKEN }}
+          printf '%s' "$GOOGLE_SCRIPT_SHARED_SECRET" | vercel env add GOOGLE_SCRIPT_SHARED_SECRET production --force --sensitive --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           GOOGLE_SCRIPT_URL: https://script.google.com/macros/s/AKfycbxgGGV5UfABGnNrMoLZqjosM0w1ITVDMTOfHtJc6Xtq8LxfZ5NZDL0TfhJXUquxzVvmnA/exec
+          GOOGLE_SCRIPT_SHARED_SECRET: ${{ secrets.GOOGLE_SCRIPT_SHARED_SECRET }}
 
       - name: Pull Vercel environment info
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}

@@ -97,6 +97,7 @@ export async function POST(request: NextRequest) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "membershipRegistration",
+        sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
         spreadsheetId,
         registration,
       }),

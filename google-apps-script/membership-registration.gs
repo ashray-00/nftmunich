@@ -21,6 +21,11 @@ const APPLICATION_TABS = {
 function doPost(e) {
   try {
     const payload = JSON.parse(e.postData.contents || "{}");
+    const publicActions = { publicClubSettings: true };
+    const expectedSecret = PropertiesService.getScriptProperties().getProperty("WEBSITE_SHARED_SECRET");
+    if (!publicActions[payload.action] && (!expectedSecret || payload.sharedSecret !== expectedSecret)) {
+      return json_({ status: 403, message: "Forbidden." });
+    }
     if (payload.action === "uploadFile") return uploadMembershipFile_(payload);
     if (payload.action === "membershipRegistration") return saveMembershipRegistration_(payload);
     if (payload.action === "registrationInterest") return sendRegistrationInterest_(payload);
@@ -62,26 +67,17 @@ function sendRegistrationInterest_(payload) {
   if (!isApproved) {
     savePendingPlayerRequest_(name, email, requestedType);
     const pendingBody = [
-      "Hallo " + name + ",",
+      "Hi " + name + ",",
       "",
-      "vielen Dank für deine Anfrage als " + registrationType + ".",
-      "Deine E-Mail-Adresse ist noch nicht für die Spielerregistrierung freigeschaltet.",
-      "Wir prüfen deine Anfrage. Sobald du freigeschaltet wurdest, erhältst du den Registrierungslink.",
+      "We received your " + registrationType + " request.",
+      "We will email your registration link after approval.",
       "",
-      "--- English ---",
-      "",
-      "Hello " + name + ",",
-      "",
-      "Thank you for your request as " + registrationType + ".",
-      "Your email address is not yet approved for player registration.",
-      "We will review your request. You will receive the registration link after approval.",
-      "",
-      "NFT Munich e.V.",
-      "www.nftmunich.club"
+      "Questions? Contact " + REGISTRATION_EMAIL,
+      "NFT Munich e.V."
     ].join("\n");
     MailApp.sendEmail({
       to: email,
-      subject: "NFT Munich e.V. – Anfrage erhalten / Request received",
+      subject: "NFT Munich registration request received",
       body: pendingBody,
       name: "NFT Munich e.V.",
       replyTo: REGISTRATION_EMAIL
@@ -96,32 +92,13 @@ function sendRegistrationInterest_(payload) {
   }
 
   const applicantBody = [
-    "Hallo " + name + ",",
+    "Hi " + name + ",",
     "",
-    "vielen Dank für dein Interesse an NFT Munich e.V.",
-    "Gewählte Kategorie: " + registrationType,
-    "",
-    "Bitte fülle deinen vollständigen Antrag über diesen Link aus:",
+    "Complete your " + registrationType + " registration here:",
     registrationLink,
     "",
-    "Im Formular siehst du den Beitrag und die Zahlungsinformationen für deine Kategorie.",
-    "Nach dem vollständigen Absenden erhältst du die Zahlungsinformationen nochmals per E-Mail.",
-    "",
-    "--- English ---",
-    "",
-    "Hello " + name + ",",
-    "",
-    "Thank you for your interest in NFT Munich e.V.",
-    "Selected category: " + registrationType,
-    "",
-    "Please complete your full application using this link:",
-    registrationLink,
-    "",
-    "The form shows the fee and payment information for your category.",
-    "After submitting the complete form, the payment information will also be emailed to you.",
-    "",
-    "NFT Munich e.V.",
-    "www.nftmunich.club"
+    "Questions? Contact " + REGISTRATION_EMAIL,
+    "NFT Munich e.V."
   ].join("\n");
 
   const adminSubject = "New NFT Munich registration request — " + name;
@@ -139,7 +116,7 @@ function sendRegistrationInterest_(payload) {
 
   MailApp.sendEmail({
     to: email,
-    subject: "NFT Munich e.V. – Dein Registrierungslink / Your registration link",
+    subject: "Your NFT Munich registration link",
     body: applicantBody,
     name: "NFT Munich e.V.",
     replyTo: REGISTRATION_EMAIL
@@ -232,25 +209,18 @@ function sendApprovedRegistrationLink_(email, fallbackName) {
     const path = row[2] === "management-player" ? "management" : "player";
     const label = path === "management" ? "Management and Player" : "Player";
     const body = [
-      "Hallo " + (row[0] || fallbackName || "") + ",",
+      "Hi " + (row[0] || fallbackName || "") + ",",
       "",
-      "deine E-Mail-Adresse wurde für die Registrierung als " + label + " freigeschaltet.",
-      "Bitte fülle jetzt das Formular aus:",
+      "Your " + label + " registration is approved.",
+      "Complete the form here:",
       "https://www.nftmunich.club/registration?type=" + path,
       "",
-      "--- English ---",
-      "",
-      "Your email address has been approved for registration as " + label + ".",
-      "Please complete the form now:",
-      "https://www.nftmunich.club/registration?type=" + path,
-      "",
-      "The form contains the fee and payment information for your category.",
-      "",
+      "Questions? Contact " + REGISTRATION_EMAIL,
       "NFT Munich e.V."
     ].join("\n");
     MailApp.sendEmail({
       to: normalized,
-      subject: "NFT Munich e.V. – Registrierung freigeschaltet / Registration approved",
+      subject: "Your NFT Munich registration is approved",
       body: body,
       name: "NFT Munich e.V.",
       replyTo: REGISTRATION_EMAIL
@@ -348,7 +318,7 @@ function getOrCreateApplicationSheet_(spreadsheet, tabName) {
 
 function sendApplicantConfirmation_(data, applicationId, settings) {
   const labels = {
-    member: "Vereinsmitglied / Club member",
+    member: "Club member",
     player: "Player",
     management: "Management and Player"
   };
@@ -356,14 +326,6 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
   const hardship = data.feeCategory === "hardship";
   const total = hardship ? "" : Number(data.totalFee || 0);
   const reference = "Mitgliedschaft " + applicationId + " " + data.firstName + " " + data.lastName;
-  const paymentDe = hardship
-    ? ["Bitte überweise noch nichts. Der Vorstand prüft deinen Härtefall und meldet sich persönlich bei dir."]
-    : [
-        "Bitte überweise " + total + " € auf das folgende Vereinskonto:",
-        "Kontoinhaber: " + settings.accountHolder,
-        "IBAN: " + settings.iban,
-        "Verwendungszweck: " + reference
-      ];
   const paymentEn = hardship
     ? ["Please do not transfer anything yet. The board will review your hardship request and contact you personally."]
     : [
@@ -373,29 +335,20 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
         "Payment reference: " + reference
       ];
   const body = [
-    "Hallo " + data.firstName + ",",
+    "Hi " + data.firstName + ",",
     "",
-    "vielen Dank für deine Anmeldung als " + category + ".",
-    "Antragsnummer: " + applicationId,
-    "",
-    paymentDe.join("\n"),
-    "",
-    "--- English ---",
-    "",
-    "Hello " + data.firstName + ",",
-    "",
-    "Thank you for registering as " + category + ".",
+    "Your " + category + " registration was received.",
     "Application ID: " + applicationId,
     "",
     paymentEn.join("\n"),
     "",
-    settings.clubName,
-    settings.website
+    "Questions? Contact " + REGISTRATION_EMAIL,
+    settings.clubName
   ].join("\n");
 
   MailApp.sendEmail({
     to: data.email,
-    subject: "NFT Munich e.V. – Anmeldung bestätigt / Registration confirmed",
+    subject: "NFT Munich registration received",
     body: body,
     name: "NFT Munich e.V.",
     replyTo: REGISTRATION_EMAIL

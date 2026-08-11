@@ -11,6 +11,7 @@ async function syncApprovedPlayers(players: unknown[]) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       action: "syncApprovedPlayers",
+      sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
       spreadsheetId: process.env.GOOGLE_MEMBERSHIP_SHEET_ID,
       players,
     }),

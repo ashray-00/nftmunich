@@ -11,6 +11,7 @@ async function callScript(payload: Record<string, unknown>) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       spreadsheetId: process.env.GOOGLE_MEMBERSHIP_SHEET_ID,
+      sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
       ...payload,
     }),
     cache: "no-store",
