@@ -25,6 +25,16 @@ body {
   background-size: cover;
 }
 
+.homeGradient section {
+  scroll-margin-top: 154px;
+}
+
+@media (max-width: 1023px) {
+  .homeGradient section {
+    scroll-margin-top: 92px;
+  }
+}
+
 .container {
   padding: 20px;
   max-width: 800px;
