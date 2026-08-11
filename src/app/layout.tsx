@@ -52,7 +52,7 @@ export default function RootLayout({
             <body>
                 <AuthProvider>
                     <Header />
-                    <main style={{ paddingTop: "80px" }}>{children}</main>
+                    <main className="pt-[79px] lg:pt-[138px]">{children}</main>
                     <CookieBanner />
                 </AuthProvider>
                 <Analytics />
