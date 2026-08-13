@@ -278,42 +278,33 @@ export default function MembershipRegistration() {
       </section>
 
       {!selected && (
-        preview ? (
-          <section className={styles.categoryPreview}>
-            <button className={styles.back} type="button" onClick={() => setPreview(null)}>← {t.back}</button>
-            <article className={preview === "core" ? styles.previewCore : styles.previewMember}>
-              <p className={styles.eyebrow}>{preview === "member" ? t.member : t.core}</p>
-              <h2>{preview === "member" ? t.member : t.core}</h2>
-              <p>{preview === "member" ? t.memberText : t.coreText}</p>
-              {preview === "core" && <p>{language === "de" ? "Falls du im letzten Jahr nicht registriert warst, kontaktiere bitte NFT Munich." : "If you were not registered last year, please contact NFT Munich."}</p>}
-              <button onClick={() => {
-                if (preview === "member") {
-                  setSelected("member");
-                  setFeeCategory("other");
-                } else {
-                  setSelected("player");
-                  setCoreRole("player");
-                  setFeeCategory(null);
-                }
-              }} type="button">{t.choose}</button>
-            </article>
-          </section>
-        ) : (
-          <section className={`${styles.cards} ${styles.twoCards}`} aria-label={t.title}>
-            <article className={styles.card}>
-              <div className={styles.cardNumber}>01</div>
-              <h2>{t.member}</h2>
-              <p>{language === "de" ? "Für Supporter und Mitglieder." : "For supporters and members."}</p>
-              <button onClick={() => setPreview("member")} type="button">{language === "de" ? "Mehr erfahren" : "Learn more"}</button>
-            </article>
-            <article className={styles.card}>
-              <div className={styles.cardNumber}>02</div>
-              <h2>{t.core}</h2>
-              <p>{language === "de" ? "Für Spieler und das Management-Team." : "For players and the management team."}</p>
-              <button onClick={() => setPreview("core")} type="button">{language === "de" ? "Mehr erfahren" : "Learn more"}</button>
-            </article>
-          </section>
-        )
+        <section className={`${styles.cards} ${styles.twoCards}`} aria-label={t.title}>
+          <article className={`${styles.card} ${preview === "member" ? styles.expandedCard : ""}`}>
+            <div className={styles.cardNumber}>01</div>
+            <h2>{t.member}</h2>
+            <p>{language === "de" ? "Für Supporter und Mitglieder." : "For supporters and members."}</p>
+            <button className={styles.detailsToggle} aria-expanded={preview === "member"} onClick={() => setPreview(preview === "member" ? null : "member")} type="button">
+              {preview === "member" ? (language === "de" ? "Details schließen" : "Close details") : (language === "de" ? "Mehr erfahren" : "Learn more")}
+            </button>
+            {preview === "member" && <div className={styles.expandedDetails}>
+              <p>{t.memberText}</p>
+              <button onClick={() => { setSelected("member"); setFeeCategory("other"); }} type="button">{t.choose}</button>
+            </div>}
+          </article>
+          <article className={`${styles.card} ${preview === "core" ? styles.expandedCard : ""}`}>
+            <div className={styles.cardNumber}>02</div>
+            <h2>{t.core}</h2>
+            <p>{language === "de" ? "Für Spieler und das Management-Team." : "For players and the management team."}</p>
+            <button className={styles.detailsToggle} aria-expanded={preview === "core"} onClick={() => setPreview(preview === "core" ? null : "core")} type="button">
+              {preview === "core" ? (language === "de" ? "Details schließen" : "Close details") : (language === "de" ? "Mehr erfahren" : "Learn more")}
+            </button>
+            {preview === "core" && <div className={styles.expandedDetails}>
+              <p>{t.coreText}</p>
+              <p>{language === "de" ? "Falls du im letzten Jahr nicht registriert warst, kontaktiere bitte NFT Munich." : "If you were not registered last year, please contact NFT Munich."}</p>
+              <button onClick={() => { setSelected("player"); setCoreRole("player"); setFeeCategory(null); }} type="button">{t.choose}</button>
+            </div>}
+          </article>
+        </section>
       )}
 
       {selected && (
