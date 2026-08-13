@@ -30,6 +30,7 @@ function doPost(e) {
     if (payload.action === "membershipRegistration") return saveMembershipRegistration_(payload);
     if (payload.action === "registrationInterest") return sendRegistrationInterest_(payload);
     if (payload.action === "syncApprovedPlayers") return syncApprovedPlayers_(payload);
+    if (payload.action === "checkApprovedPlayerEmail") return checkApprovedPlayerEmail_(payload);
     if (payload.action === "publicClubSettings") return publicClubSettings_(payload);
     if (payload.action === "adminDashboard") return adminDashboard_(payload);
     if (payload.action === "updateClubSettings") return updateClubSettings_(payload);
@@ -147,6 +148,12 @@ function isApprovedPlayerEmail_(email) {
   return sheet.getRange(2, 2, sheet.getLastRow() - 1, 1).getValues().some(function(row) {
     return String(row[0] || "").trim().toLowerCase() === normalized;
   });
+}
+
+function checkApprovedPlayerEmail_(payload) {
+  const email = String(payload.email || "").trim().toLowerCase();
+  if (!email || email.indexOf("@") < 1) return json_({ status: 400, approved: false });
+  return json_({ status: 200, approved: isApprovedPlayerEmail_(email) });
 }
 
 function syncApprovedPlayers_(payload) {

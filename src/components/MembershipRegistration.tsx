@@ -286,7 +286,6 @@ export default function MembershipRegistration() {
           <article className={styles.card}>
             <div className={styles.cardNumber}>02</div>
             <h2>{t.core}</h2><p>{t.coreText}</p>
-            <div className={styles.extraInfo}>{language === "de" ? "Zugang nur mit einer E-Mail-Adresse aus der freigegebenen Spielerliste." : "Access requires an email address from the approved-player list."}</div>
             <button onClick={() => { setSelected("player"); setCoreRole("player"); setFeeCategory(null); }} type="button">{t.choose}</button>
           </article>
         </section>
@@ -316,7 +315,7 @@ export default function MembershipRegistration() {
 
           {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}{applicationId ? ` · ${applicationId}` : ""}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
             <>
-              {protectedRoute && !loading && !user && <div><h3>{t.loginTitle}</h3><LoginGate /></div>}
+              {protectedRoute && !loading && !user && <div><h3>{t.loginTitle}</h3><LoginGate coreMember language={language} /></div>}
               {(!protectedRoute || user) && (
                 <form onSubmit={submit} className={styles.form}>
                   <fieldset>
