@@ -302,12 +302,12 @@ export default function MembershipRegistration() {
             </div>
               <div className={styles.feePanel} aria-label={language === "de" ? "Beiträge" : "Fees"}>
               {selected === "member" ? (
-                <div className={styles.feeRow}><strong>{supporterFee} €</strong><span>{language === "de" ? "einmalige Beitrittsgebühr" : "one-time joining fee"}</span></div>
+                <div className={styles.feeRow}><strong>{language === "de" ? `${supporterFee} € Aufnahmegebühr` : `€${supporterFee} joining fee`}</strong></div>
               ) : (
                 <>
-                  <div className={styles.feeRow}><strong>{clubSettings.playerStudentFee} €</strong><span>{language === "de" ? "für Studierende / Azubis" : "for students / trainees"}</span></div>
-                  <div className={styles.feeRow}><strong>{clubSettings.playerOtherFee} €</strong><span>{language === "de" ? "für Sonstige" : "for others"}</span></div>
-                  <div className={styles.feeRow}><strong>+ {supporterFee} €</strong><span>{language === "de" ? "einmalige Beitrittsgebühr" : "one-time joining fee"}</span></div>
+                  <div className={styles.feeRow}><strong>{language === "de" ? `${clubSettings.playerStudentFee} € für Studierende/Azubis` : `€${clubSettings.playerStudentFee} for students/trainees`}</strong></div>
+                  <div className={styles.feeRow}><strong>{language === "de" ? `${clubSettings.playerOtherFee} € für Sonstige` : `€${clubSettings.playerOtherFee} for others`}</strong></div>
+                  <div className={styles.feeRow}><strong>{language === "de" ? `+ ${supporterFee} € Aufnahmegebühr` : `+ €${supporterFee} joining fee`}</strong></div>
                 </>
               )}
             </div>
