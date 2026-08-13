@@ -2,4 +2,7 @@
 .cards.twoCards{grid-template-columns:repeat(2,minmax(0,1fr))}
 .card p{font-size:1.05rem;line-height:1.7;margin:0 0 2rem;padding:1rem 1.1rem;border-left:4px solid #df5b35;border-radius:0 10px 10px 0;background:#f7f3ec;color:#25372e}
 .card:nth-child(2) p{background:#ffffff14;color:inherit}
+.feePanel{display:grid;gap:.55rem;min-width:min(100%,320px);align-self:center;background:#ffffff14;border:1px solid #ffffff30;border-radius:12px;padding:.9rem 1.1rem;font-size:1.05rem;line-height:1.45}
+.uploadPair{grid-column:span 2;border:1px solid #b8c9bf;border-radius:14px;background:#f7faf8;padding:1rem}.uploadPair>strong{display:block;margin-bottom:.8rem;font-size:1rem}.uploadPairGrid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:760px){.uploadPair{grid-column:auto}.uploadPairGrid{grid-template-columns:1fr}.feePanel{width:100%;box-sizing:border-box}}
 @media(max-width:760px){.cards.twoCards{grid-template-columns:1fr}}
