@@ -396,7 +396,7 @@ function Upload({ label, name, status, done, language, onFile }: { label: string
       ? (language === "de" ? "✓ Erfolgreich hochgeladen" : "✓ Uploaded successfully")
       : status === "error"
         ? (language === "de" ? "Erneut auswählen" : "Select again")
-        : "PDF / JPG / PNG";
+        : "JPG / PNG";
   return <label className={styles.upload}>{label}<input name={`${name}File`} type="file" accept=".jpg,.jpeg,.png" required={!done} disabled={busy} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; const form = new FormData(input.form || undefined); const successful = await onFile(file, form); if (!successful) input.value = ""; }} /><span aria-live="polite">{message}</span></label>;
 }
 
