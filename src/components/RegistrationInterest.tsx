@@ -7,6 +7,7 @@ import styles from "../styles/RegistrationInterest.module.css";
 export default function RegistrationInterest() {
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [requestResult, setRequestResult] = useState<"link-sent" | "pending">("link-sent");
+  const [category, setCategory] = useState<"" | "supporter" | "core">("");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,19 +33,8 @@ export default function RegistrationInterest() {
         <Link href="/" className={styles.back}>← NFT Munich</Link>
         <p className={styles.eyebrow}>NFT Munich e.V.</p>
         <h1>Registration</h1>
-        <p className={styles.intro}>
-          Möchtest du Mitglied werden oder als Spieler teilnehmen? Wähle deine Kategorie und du erhältst den passenden Registrierungslink automatisch per E-Mail.
-        </p>
-        <p className={styles.english}>
-          Choose your category and we will automatically email you the appropriate registration link.
-        </p>
-
-        <div className="my-7 rounded-xl border border-blue-900/10 bg-blue-50/80 p-5 text-sm leading-6 text-slate-700">
-          <strong className="block text-base text-bavarian-blue">What happens next?</strong>
-          <p className="mt-2"><strong>1.</strong> Choose your category and send your request.</p>
-          <p><strong>2.</strong> Open the registration link sent by email.</p>
-          <p><strong>3.</strong> Complete the form and receive payment details.</p>
-        </div>
+        <p className={styles.intro}>Wähle Member / Supporter oder Core Member.</p>
+        <p className={styles.english}>Choose Member / Supporter or Core Member.</p>
 
         {status === "success" ? (
           <div className={styles.success}>
@@ -66,14 +56,15 @@ export default function RegistrationInterest() {
             <label>Name<input name="name" required maxLength={150} autoComplete="name" /></label>
             <label>E-Mail / Email<input name="email" type="email" required maxLength={254} autoComplete="email" /></label>
             <label>
-              Gewünschte Registrierung / Registration type
-              <select name="registrationType" required defaultValue="">
+              Kategorie / Category
+              <select required value={category} onChange={(event) => setCategory(event.target.value as "" | "supporter" | "core")}>
                 <option value="" disabled>Bitte auswählen / Please select</option>
-                <option value="supporter">Supporter / Club member</option>
-                <option value="player">Player</option>
-                <option value="management-player">Management and Player</option>
+                <option value="supporter">Member / Supporter</option>
+                <option value="core">Core Member</option>
               </select>
             </label>
+            {category === "supporter" && <input type="hidden" name="registrationType" value="supporter" />}
+            {category === "core" && <label>Core Member type<select name="registrationType" required defaultValue=""><option value="" disabled>Please select</option><option value="player">Player</option><option value="management-player">Player + Management</option></select></label>}
             <label className={styles.honeypot} aria-hidden="true">Website<input name="website" tabIndex={-1} autoComplete="off" /></label>
             {status === "error" && <p className={styles.error}>Die Anfrage konnte nicht gesendet werden. Bitte schreibe an nftmunich@gmail.com.</p>}
             <button disabled={status === "sending"}>{status === "sending" ? "Wird gesendet …" : "Anfrage senden / Send request"}</button>
