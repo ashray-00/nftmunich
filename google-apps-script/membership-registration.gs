@@ -276,7 +276,9 @@ function saveMembershipRegistration_(payload) {
   const spreadsheet = SpreadsheetApp.openById(payload.spreadsheetId || DEFAULT_MEMBERSHIP_SHEET_ID);
   const settings = readClubSettings_(spreadsheet);
   const hardship = data.feeCategory === "hardship";
-  data.membershipFee = hardship ? "" : Number(settings.memberFee) || 0;
+  data.membershipFee = hardship ? "" : data.registrationType === "member"
+    ? Number(settings.supporterFee) || 15
+    : Number(settings.memberFee) || 0;
   data.playerFee = data.registrationType === "member" || hardship
     ? ""
     : data.feeCategory === "student" ? Number(settings.playerStudentFee) || 0 : Number(settings.playerOtherFee) || 0;
@@ -518,6 +520,7 @@ function defaultClubSettings_() {
     website: "www.nftmunich.club",
     accountHolder: PAYMENT_ACCOUNT_HOLDER,
     iban: PAYMENT_IBAN,
+    supporterFee: "15",
     memberFee: "10",
     playerStudentFee: "50",
     playerOtherFee: "100"

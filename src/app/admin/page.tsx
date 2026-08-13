@@ -26,6 +26,7 @@ interface ClubSettings {
   website: string;
   accountHolder: string;
   iban: string;
+  supporterFee: string;
   memberFee: string;
   playerStudentFee: string;
   playerOtherFee: string;
@@ -46,6 +47,7 @@ const DEFAULT_SETTINGS: ClubSettings = {
   website: "www.nftmunich.club",
   accountHolder: "NFT Munich e.V.",
   iban: "1234XXXX",
+  supporterFee: "15",
   memberFee: "10",
   playerStudentFee: "50",
   playerOtherFee: "100",
@@ -699,7 +701,8 @@ export default function AdminPage() {
         <div className="grid gap-4 md:grid-cols-2">
           {([
             ["Club name", "clubName"], ["Club email", "email"], ["Address", "address"], ["Website", "website"],
-            ["Bank account holder", "accountHolder"], ["IBAN", "iban"], ["Membership fee (€)", "memberFee"],
+            ["Bank account holder", "accountHolder"], ["IBAN", "iban"], ["Member one-time admission fee (€)", "supporterFee"],
+            ["Core membership fee (€)", "memberFee"],
             ["Player fee – students/Azubis (€)", "playerStudentFee"], ["Player fee – others (€)", "playerOtherFee"],
           ] as Array<[string, keyof ClubSettings]>).map(([label, key]) => (
             <label key={key} style={labelStyle} className={key === "address" ? "md:col-span-2" : ""}>{label}
