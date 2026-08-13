@@ -9,7 +9,7 @@ import styles from "../styles/MembershipRegistration.module.css";
 type Language = "de" | "en";
 type RouteType = "member" | "player" | "management";
 type FeeCategory = "student" | "other" | "hardship";
-type UploadState = { photo?: string; id?: string; insurance?: string };
+type UploadState = { photo?: string; idFront?: string; idBack?: string; insuranceFront?: string; insuranceBack?: string };
 type UploadProgress = Partial<Record<keyof UploadState, "uploading" | "done" | "error">>;
 
 type ClubSettings = { clubName: string; accountHolder: string; iban: string; memberFee: string; playerStudentFee: string; playerOtherFee: string };
@@ -20,13 +20,15 @@ const copy = {
     eyebrow: "NFT Munich e.V.",
     title: "Registrierung & Mitgliedschaft",
     intro: "Wähle die passende Anmeldung. Du kannst die Sprache jederzeit wechseln.",
-    member: "Vereinsmitglied",
+    member: "Member / Supporter",
     memberText: "Für alle, die NFT Munich e.V. unterstützen und Mitglied werden möchten.",
+    core: "Core Member",
+    coreText: "Für freigegebene Spieler und Mitglieder mit zusätzlicher Managementaufgabe.",
     memberFee: "10 € pro Jahr",
-    player: "Player",
+    player: "Core Member – Player",
     playerText: "Nur für Spieler mit einer bereits freigegebenen E-Mail-Adresse.",
     playerFee: "60 € gesamt – Studierende/Azubis (50 € + 10 € Mitgliedsgebühr) · 110 € gesamt – Sonstige (100 € + 10 € Mitgliedsgebühr)",
-    management: "Management and Player",
+    management: "Core Member – Player + Management",
     managementText: "Für freigegebene Personen, die spielen und zugleich eine Vereinsaufgabe übernehmen.",
     managementFee: "60 € gesamt – Studierende/Azubis (50 € + 10 € Mitgliedsgebühr) · 110 € gesamt – Sonstige (100 € + 10 € Mitgliedsgebühr)",
     choose: "Auswählen",
@@ -55,7 +57,7 @@ const copy = {
     photo: "Aktuelles Foto",
     identity: "Amtlicher Identitätsnachweis",
     insurance: "Versicherungsnachweis",
-    uploadHelp: "PDF, JPG oder PNG, maximal 2 MB. Bitte nur die erforderlichen Unterlagen hochladen.",
+    uploadHelp: "JPG oder PNG, maximal 2 MB je Seite. Vorder- und Rückseiten werden sicher zu einer PDF zusammengeführt.",
     payment: "Beitrag & Zahlung",
     transferNow: "Bitte überweise nach dem Absenden den unten angegebenen Betrag.",
     chooseFeeFirst: "Wähle oben deinen Spielerbeitrag aus. Danach erscheint hier der genaue Gesamtbetrag.",
@@ -86,13 +88,15 @@ const copy = {
     eyebrow: "NFT Munich e.V.",
     title: "Registration & Membership",
     intro: "Choose the registration that applies to you. You can change the language at any time.",
-    member: "Club member",
+    member: "Member / Supporter",
     memberText: "For anyone who wants to support and become a member of NFT Munich e.V.",
     memberFee: "€10 per year",
-    player: "Player",
+    core: "Core Member",
+    coreText: "For approved players and members who also have a management responsibility.",
+    player: "Core Member – Player",
     playerText: "Only for players whose email address has already been approved.",
     playerFee: "€60 total – students/trainees (€50 + €10 membership fee) · €110 total – others (€100 + €10 membership fee)",
-    management: "Management and Player",
+    management: "Core Member – Player + Management",
     managementText: "For approved people who play and also hold a club responsibility.",
     managementFee: "€60 total – students/trainees (€50 + €10 membership fee) · €110 total – others (€100 + €10 membership fee)",
     choose: "Select",
@@ -121,7 +125,7 @@ const copy = {
     photo: "Current photo",
     identity: "Official proof of identity",
     insurance: "Proof of insurance",
-    uploadHelp: "PDF, JPG or PNG, maximum 2 MB. Upload only the documents requested.",
+    uploadHelp: "JPG or PNG, maximum 2 MB per side. Front and back sides are securely combined into one PDF.",
     payment: "Fee & payment",
     transferNow: "Please transfer the amount shown below after submitting.",
     chooseFeeFirst: "Select your player fee above. Your exact total will then appear here.",
@@ -150,11 +154,10 @@ const copy = {
   },
 } as const;
 
-const routes = ["member", "player", "management"] as const;
-
 export default function MembershipRegistration() {
   const [language, setLanguage] = useState<Language>("de");
   const [selected, setSelected] = useState<RouteType | null>(null);
+  const [showCoreOptions, setShowCoreOptions] = useState(false);
   const [uploads, setUploads] = useState<UploadState>({});
   const [feeCategory, setFeeCategory] = useState<FeeCategory | null>(null);
   const [applicationId, setApplicationId] = useState("");
@@ -163,21 +166,8 @@ export default function MembershipRegistration() {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({});
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [submissionError, setSubmissionError] = useState("");
-  const [showStatutes, setShowStatutes] = useState(false);
   const { user, loading } = useAuth();
   const t = copy[language];
-
-  useEffect(() => {
-    if (!showStatutes) return;
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape") setShowStatutes(false); };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [showStatutes]);
 
   useEffect(() => {
     const requestedType = new URLSearchParams(window.location.search).get("type");
@@ -189,6 +179,7 @@ export default function MembershipRegistration() {
     const route = requestedType ? typeMap[requestedType] : undefined;
     if (route) {
       setSelected(route);
+      setShowCoreOptions(false);
       setFeeCategory(route === "member" ? "other" : null);
     }
   }, []);
@@ -203,11 +194,6 @@ export default function MembershipRegistration() {
   const memberFee = Number(clubSettings.memberFee) || 0;
   const studentTotal = memberFee + (Number(clubSettings.playerStudentFee) || 0);
   const otherTotal = memberFee + (Number(clubSettings.playerOtherFee) || 0);
-  const feeLines = (route: RouteType) => route === "member"
-    ? [language === "de" ? `${memberFee} € pro Jahr` : `€${memberFee} per year`]
-    : language === "de"
-      ? [`${studentTotal} € gesamt – Studierende/Azubis`, `${otherTotal} € gesamt – Sonstige`]
-      : [`€${studentTotal} total – students/trainees`, `€${otherTotal} total – others`];
   const amount = selected === "member" ? memberFee : feeCategory === "student" ? studentTotal : feeCategory === "other" ? otherTotal : null;
   const categoryLabel = selected ? t[selected] : "";
 
@@ -290,29 +276,45 @@ export default function MembershipRegistration() {
         </div>
       </section>
 
-      {!selected && (
-        <section className={styles.cards} aria-label={t.title}>
-          {routes.map((route) => (
-            <article className={styles.card} key={route}>
-              <div className={styles.cardNumber}>0{routes.indexOf(route) + 1}</div>
-              <h2>{t[route]}</h2>
-              <p>{t[`${route}Text` as keyof typeof t]}</p>
-              <div style={{ display: "grid", gap: ".55rem", margin: "auto 0 1.5rem", fontWeight: 800 }}>
-                {feeLines(route).map((line) => (
-                  <span key={line} style={{ display: "block", paddingBottom: ".55rem", borderBottom: "1px solid currentColor" }}>
-                    {line}
-                  </span>
-                ))}
-              </div>
-              <button onClick={() => { setSelected(route); setFeeCategory(route === "member" ? "other" : null); }} type="button">{t.choose}</button>
-            </article>
-          ))}
+      {!selected && !showCoreOptions && (
+        <section className={`${styles.cards} ${styles.twoCards}`} aria-label={t.title}>
+          <article className={styles.card}>
+            <div className={styles.cardNumber}>01</div>
+            <h2>{t.member}</h2><p>{t.memberText}</p>
+            <div style={{ margin: "auto 0 1.5rem", fontWeight: 800 }}>{memberFee} € {language === "de" ? "pro Jahr" : "per year"}</div>
+            <button onClick={() => { setSelected("member"); setFeeCategory("other"); }} type="button">{t.choose}</button>
+          </article>
+          <article className={styles.card}>
+            <div className={styles.cardNumber}>02</div>
+            <h2>{t.core}</h2><p>{t.coreText}</p>
+            <div style={{ display: "grid", gap: ".45rem", margin: "auto 0 1.5rem", fontWeight: 800 }}>
+              <span>{clubSettings.playerStudentFee} € + {memberFee} € {language === "de" ? "Mitgliedsgebühr" : "membership fee"}</span>
+              <span>{clubSettings.playerOtherFee} € + {memberFee} € {language === "de" ? "Mitgliedsgebühr" : "membership fee"}</span>
+            </div>
+            <button onClick={() => setShowCoreOptions(true)} type="button">{t.choose}</button>
+          </article>
+        </section>
+      )}
+
+      {!selected && showCoreOptions && (
+        <section className={styles.formShell}>
+          <button className={styles.back} type="button" onClick={() => setShowCoreOptions(false)}>← {t.back}</button>
+          <div className={styles.formHeading}><div style={{ display: "grid", gap: ".35rem" }}><small style={{ textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 800, opacity: .78 }}>{language === "de" ? "Core Member auswählen" : "Choose Core Member type"}</small><h2>{t.core}</h2></div></div>
+          <div className={styles.payment} style={{ marginTop: "1rem" }}>
+            <strong>{clubSettings.playerStudentFee} € {language === "de" ? "für Studierende/Azubis" : "for students/trainees"}</strong><br />
+            <strong>{clubSettings.playerOtherFee} € {language === "de" ? "für Sonstige" : "for others"}</strong><br />
+            <strong>+ {memberFee} € {language === "de" ? "Mitgliedsgebühr" : "membership fee"}</strong>
+          </div>
+          <div className={`${styles.cards} ${styles.twoCards}`} style={{ marginTop: "1rem" }}>
+            <article className={styles.card}><h2>{language === "de" ? "Player" : "Player"}</h2><p>{language === "de" ? "Für freigegebene Spieler." : "For approved players."}</p><button type="button" onClick={() => { setSelected("player"); setFeeCategory(null); setShowCoreOptions(false); }}>{t.choose}</button></article>
+            <article className={styles.card}><h2>Player + Management</h2><p>{language === "de" ? "Für Spieler mit zusätzlicher Vereinsaufgabe." : "For players with an additional club responsibility."}</p><button type="button" onClick={() => { setSelected("management"); setFeeCategory(null); setShowCoreOptions(false); }}>{t.choose}</button></article>
+          </div>
         </section>
       )}
 
       {selected && (
         <section className={styles.formShell}>
-          <button className={styles.back} type="button" onClick={() => { setSelected(null); setFeeCategory(null); setApplicationId(""); setConfirmationSent(true); setStatus("idle"); }}>← {t.back}</button>
+          <button className={styles.back} type="button" onClick={() => { const wasCore = selected !== "member"; setSelected(null); setShowCoreOptions(wasCore); setFeeCategory(null); setApplicationId(""); setConfirmationSent(true); setStatus("idle"); }}>← {t.back}</button>
           <div className={styles.formHeading}>
             <div style={{ display: "grid", gap: ".35rem" }}>
               <small style={{ textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 800, opacity: .78 }}>{language === "de" ? "Du registrierst dich als" : "You are registering as"}</small>
@@ -360,14 +362,16 @@ export default function MembershipRegistration() {
                     <p className={styles.help}>{t.uploadHelp}</p>
                     <div className={styles.uploadGrid}>
                       <Upload label={t.photo} name="photo" status={uploadProgress.photo} done={Boolean(uploads.photo)} language={language} onFile={(file, form) => uploadDocument(file, "photo", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
-                      <Upload label={t.identity} name="id" status={uploadProgress.id} done={Boolean(uploads.id)} language={language} onFile={(file, form) => uploadDocument(file, "id", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
-                      {protectedRoute && <Upload label={t.insurance} name="insurance" status={uploadProgress.insurance} done={Boolean(uploads.insurance)} language={language} onFile={(file, form) => uploadDocument(file, "insurance", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />}
+                      <Upload label={`${t.identity} – ${language === "de" ? "Vorderseite" : "front"}`} name="idFront" status={uploadProgress.idFront} done={Boolean(uploads.idFront)} language={language} onFile={(file, form) => uploadDocument(file, "idFront", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
+                      <Upload label={`${t.identity} – ${language === "de" ? "Rückseite" : "back"}`} name="idBack" status={uploadProgress.idBack} done={Boolean(uploads.idBack)} language={language} onFile={(file, form) => uploadDocument(file, "idBack", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
+                      {protectedRoute && <Upload label={`${t.insurance} – ${language === "de" ? "Vorderseite" : "front"}`} name="insuranceFront" status={uploadProgress.insuranceFront} done={Boolean(uploads.insuranceFront)} language={language} onFile={(file, form) => uploadDocument(file, "insuranceFront", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />}
+                      {protectedRoute && <Upload label={`${t.insurance} – ${language === "de" ? "Rückseite" : "back"}`} name="insuranceBack" status={uploadProgress.insuranceBack} done={Boolean(uploads.insuranceBack)} language={language} onFile={(file, form) => uploadDocument(file, "insuranceBack", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />}
                     </div>
                     {Object.values(uploadProgress).includes("error") && <p className={styles.error} role="alert">{language === "de" ? "Der Upload konnte nicht bestätigt werden. Bitte wähle die betreffende Datei erneut aus." : "The upload could not be confirmed. Please select that file again."}</p>}
                   </fieldset>
 
                   <fieldset><legend><span>{selected === "member" ? "03" : selected === "player" ? "04" : "05"}</span>{t.payment}</legend><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /></fieldset>
-                  <fieldset><legend><span>{selected === "member" ? "04" : selected === "player" ? "05" : "06"}</span>{t.declaration}</legend><div className={styles.checks}><Check name="truth" label={t.truth} /><Check name="statutes" label={<>{t.statutes} <button style={{ border: 0, background: "transparent", color: "#176b43", font: "inherit", fontWeight: 800, padding: 0, textDecoration: "underline", cursor: "pointer" }} type="button" onClick={() => setShowStatutes(true)}>Satzung</button></>} /><Check name="privacy" label={<>{t.privacy} <Link href="/privacy-policy" target="_blank">Privacy ↗</Link></>} /></div></fieldset>
+                  <fieldset><legend><span>{selected === "member" ? "04" : selected === "player" ? "05" : "06"}</span>{t.declaration}</legend><div className={styles.checks}><Check name="truth" label={t.truth} /><Check name="statutes" label={<>{t.statutes} <Link href="/satzung.pdf" target="_blank" rel="noopener noreferrer">Satzung ↗</Link></>} /><Check name="privacy" label={<>{t.privacy} <Link href="/privacy-policy" target="_blank">Privacy ↗</Link></>} /></div></fieldset>
                   {status === "error" && <p className={styles.error} role="alert">{submissionError || t.error}</p>}
                   <button className={styles.submit} disabled={status === "sending" || Object.values(uploadProgress).includes("uploading")}>{status === "sending" ? t.sending : t.submit}</button>
                 </form>
@@ -375,14 +379,6 @@ export default function MembershipRegistration() {
             </>
           )}
         </section>
-      )}
-      {showStatutes && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "#07130dbf", display: "grid", placeItems: "center", padding: ".75rem" }} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowStatutes(false); }}>
-          <section style={{ width: "min(980px, 96vw)", height: "min(92vh, 900px)", background: "white", borderRadius: 16, overflow: "hidden", display: "grid", gridTemplateRows: "auto 1fr", boxShadow: "0 24px 80px #0006" }} role="dialog" aria-modal="true" aria-labelledby="statutes-title">
-            <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", padding: "1rem 1.25rem", background: "#173e2b", color: "white" }}><h2 id="statutes-title" style={{ fontSize: "1.15rem", margin: 0 }}>NFT Munich e.V. Satzung</h2><button style={{ border: 0, background: "transparent", color: "white", fontSize: "2rem", lineHeight: 1, cursor: "pointer" }} type="button" onClick={() => setShowStatutes(false)} aria-label="Close Satzung">×</button></header>
-            <iframe style={{ width: "100%", height: "100%", border: 0, background: "#eee" }} src="/satzung.pdf#toolbar=0&navpanes=0" title="NFT Munich e.V. Satzung" />
-          </section>
-        </div>
       )}
     </main>
   );
@@ -401,7 +397,7 @@ function Upload({ label, name, status, done, language, onFile }: { label: string
       : status === "error"
         ? (language === "de" ? "Erneut auswählen" : "Select again")
         : "PDF / JPG / PNG";
-  return <label className={styles.upload}>{label}<input name={`${name}File`} type="file" accept=".pdf,.jpg,.jpeg,.png" required={!done} disabled={busy} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; const form = new FormData(input.form || undefined); const successful = await onFile(file, form); if (!successful) input.value = ""; }} /><span aria-live="polite">{message}</span></label>;
+  return <label className={styles.upload}>{label}<input name={`${name}File`} type="file" accept=".jpg,.jpeg,.png" required={!done} disabled={busy} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; const form = new FormData(input.form || undefined); const successful = await onFile(file, form); if (!successful) input.value = ""; }} /><span aria-live="polite">{message}</span></label>;
 }
 
 function Check({ name, label }: { name: string; label: React.ReactNode }) {

@@ -63,14 +63,17 @@ export async function POST(request: NextRequest) {
       managementRole: clean(body.managementRole, 150),
       responsibility: clean(body.responsibility, 1000),
       photo: clean(body.photo, 1000),
-      id: clean(body.id, 1000),
-      insurance: clean(body.insurance, 1000),
+      idFront: clean(body.idFront, 1000),
+      idBack: clean(body.idBack, 1000),
+      insuranceFront: clean(body.insuranceFront, 1000),
+      insuranceBack: clean(body.insuranceBack, 1000),
       truth: "accepted",
       statutes: "accepted",
       privacy: "accepted",
     };
 
-    if (!registration.photo || !registration.id || (registrationType !== "member" && !registration.insurance)) {
+    if (!registration.photo || !registration.idFront || !registration.idBack ||
+      (registrationType !== "member" && (!registration.insuranceFront || !registration.insuranceBack))) {
       return NextResponse.json({ message: "Required documents have not been uploaded." }, { status: 400 });
     }
 

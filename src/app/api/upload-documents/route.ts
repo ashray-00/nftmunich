@@ -18,12 +18,13 @@ import { createHash } from "crypto";
 export const maxDuration = 60;
 
 const ACCEPTED_MIME_TYPES = [
-  "application/pdf",
   "image/jpeg",
   "image/png",
 ];
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+const ALLOWED_FIELD_TYPES = new Set(["photo", "idFront", "idBack", "insuranceFront", "insuranceBack"]);
+const ALLOWED_REGISTRATION_TYPES = new Set(["member", "player", "management"]);
 
 function sanitizeFullName(name: string): string {
   return name
@@ -56,13 +57,17 @@ export async function POST(req: NextRequest) {
     const email = String(formData.get("email") ?? "").trim().toLowerCase().slice(0, 254);
     const registrationType = String(formData.get("registrationType") ?? "member").slice(0, 20);
 
+    if (!ALLOWED_FIELD_TYPES.has(fieldType) || !ALLOWED_REGISTRATION_TYPES.has(registrationType)) {
+      return NextResponse.json({ message: "Invalid upload category." }, { status: 400 });
+    }
+
     if (!file || file.size === 0) {
       return NextResponse.json({ message: "No file provided." }, { status: 400 });
     }
 
     if (!ACCEPTED_MIME_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { message: "Invalid file type. Only PDF, JPG, and PNG are accepted." },
+        { message: "Invalid file type. Only JPG and PNG are accepted." },
         { status: 400 }
       );
     }

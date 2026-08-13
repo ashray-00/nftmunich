@@ -44,9 +44,9 @@ function sendRegistrationInterest_(payload) {
   const name = String(payload.name || "").replace(/[\r\n<>]/g, "").trim().slice(0, 150);
   const email = String(payload.email || "").replace(/[\r\n<>]/g, "").trim().slice(0, 254);
   const typeLabels = {
-    supporter: "Supporter / Club member",
-    player: "Player",
-    "management-player": "Management and Player"
+    supporter: "Member / Supporter",
+    player: "Core Member - Player",
+    "management-player": "Core Member - Player + Management"
   };
   const typePaths = {
     supporter: "member",
@@ -291,16 +291,20 @@ function saveMembershipRegistration_(payload) {
   const now = Utilities.formatDate(new Date(), "Europe/Berlin", "yyyy-MM-dd HH:mm:ss");
   try {
     applicationId = createApplicationId_(spreadsheet);
+    const documentsPdf = createDocumentsPdf_(data, applicationId);
+    const applicationPdf = createApplicationPdf_(data, applicationId, documentsPdf);
     const row = [
       applicationId, now, data.registrationType, data.language,
       data.firstName, data.lastName, data.birthDate, data.street, data.postalCode,
       data.city, data.email, data.phone, data.feeCategory, data.membershipFee,
       data.playerFee, data.position, data.emergencyName, data.emergencyPhone,
       data.managementRole, data.responsibility, safeSpreadsheetValue_(data.photo),
-      safeSpreadsheetValue_(data.id), safeSpreadsheetValue_(data.insurance),
+      safeSpreadsheetValue_(documentsPdf), safeSpreadsheetValue_(documentsPdf),
       data.truth, data.statutes, data.privacy, "Pending", "New", ""
+      , safeSpreadsheetValue_(applicationPdf)
     ];
     sheet.appendRow(row.map(safeSpreadsheetValue_));
+    sheet.getRange(1, 30).setValue("Application PDF");
   } finally {
     lock.releaseLock();
   }
@@ -312,6 +316,87 @@ function saveMembershipRegistration_(payload) {
     console.error("Applicant confirmation email failed", emailError);
   }
   return json_({ status: 200, applicationId: applicationId, totalFee: data.totalFee, emailSent: emailSent });
+}
+
+function createDocumentsPdf_(data, applicationId) {
+  const items = [
+    ["ID - front", data.idFront],
+    ["ID - back", data.idBack]
+  ];
+  if (data.registrationType !== "member") {
+    items.push(["Insurance - front", data.insuranceFront]);
+    items.push(["Insurance - back", data.insuranceBack]);
+  }
+  const sourceFiles = items.map(function(item) { return driveFileFromUrl_(item[1]); });
+  const folder = firstParentFolder_(sourceFiles[0]);
+  const doc = DocumentApp.create(applicationId + " Documents");
+  const body = doc.getBody();
+  body.appendParagraph("NFT Munich e.V. - Applicant documents").setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  body.appendParagraph("Application ID: " + applicationId);
+  items.forEach(function(item, index) {
+    body.appendPageBreak();
+    body.appendParagraph(item[0]).setHeading(DocumentApp.ParagraphHeading.HEADING2);
+    const image = body.appendImage(sourceFiles[index].getBlob());
+    const width = image.getWidth();
+    if (width > 500) image.setWidth(500).setHeight(Math.round(image.getHeight() * 500 / width));
+  });
+  doc.saveAndClose();
+  const tempFile = DriveApp.getFileById(doc.getId());
+  const pdf = folder.createFile(tempFile.getAs(MimeType.PDF).setName(applicationId + "_ID_Insurance.pdf"));
+  pdf.setDescription("Private combined ID and insurance document for " + applicationId);
+  tempFile.setTrashed(true);
+  sourceFiles.forEach(function(file) { file.setTrashed(true); });
+  return pdf.getUrl();
+}
+
+function createApplicationPdf_(data, applicationId, documentsPdf) {
+  const photoFile = driveFileFromUrl_(data.photo);
+  const folder = firstParentFolder_(photoFile);
+  const doc = DocumentApp.create(applicationId + " Application");
+  const body = doc.getBody();
+  body.appendParagraph("NFT Munich e.V. - Membership application").setHeading(DocumentApp.ParagraphHeading.HEADING1);
+  const fields = [
+    ["Application ID", applicationId], ["Category", data.registrationType],
+    ["Name", data.firstName + " " + data.lastName], ["Date of birth", data.birthDate],
+    ["Address", data.street + ", " + data.postalCode + " " + data.city],
+    ["Email", data.email], ["Phone", data.phone], ["Fee category", data.feeCategory],
+    ["Membership fee", data.membershipFee], ["Player fee", data.playerFee], ["Total fee", data.totalFee],
+    ["Position", data.position], ["Emergency contact", data.emergencyName],
+    ["Emergency phone", data.emergencyPhone], ["Management role", data.managementRole],
+    ["Responsibility", data.responsibility], ["Documents", documentsPdf]
+  ];
+  fields.forEach(function(field) { if (field[1] !== "" && field[1] != null) body.appendParagraph(field[0] + ": " + field[1]); });
+  body.appendParagraph("Accepted declarations").setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  body.appendListItem("Information is complete and correct: accepted");
+  body.appendListItem("NFT Munich e.V. statutes: accepted");
+  body.appendListItem("Privacy policy and data processing: accepted");
+  doc.saveAndClose();
+  const tempFile = DriveApp.getFileById(doc.getId());
+  const pdf = folder.createFile(tempFile.getAs(MimeType.PDF).setName(applicationId + "_Application.pdf"));
+  pdf.setDescription("Private membership application summary for " + applicationId);
+  tempFile.setTrashed(true);
+  return pdf.getUrl();
+}
+
+function driveFileFromUrl_(url) {
+  const match = String(url || "").match(/[-\w]{25,}/);
+  if (!match) throw new Error("Invalid private Drive file URL.");
+  const file = DriveApp.getFileById(match[0]);
+  const applicantParents = file.getParents();
+  if (!applicantParents.hasNext()) throw new Error("Upload folder not found.");
+  const categoryParents = applicantParents.next().getParents();
+  if (!categoryParents.hasNext()) throw new Error("Upload category not found.");
+  const rootParents = categoryParents.next().getParents();
+  if (!rootParents.hasNext() || rootParents.next().getName() !== UPLOAD_FOLDER) {
+    throw new Error("The file is outside the private upload folder.");
+  }
+  return file;
+}
+
+function firstParentFolder_(file) {
+  const parents = file.getParents();
+  if (!parents.hasNext()) throw new Error("Applicant folder not found.");
+  return parents.next();
 }
 
 function createApplicationId_(spreadsheet) {
@@ -349,9 +434,9 @@ function getOrCreateApplicationSheet_(spreadsheet, tabName) {
 
 function sendApplicantConfirmation_(data, applicationId, settings) {
   const labels = {
-    member: "Club member",
-    player: "Player",
-    management: "Management and Player"
+    member: "Member / Supporter",
+    player: "Core Member - Player",
+    management: "Core Member - Player + Management"
   };
   const category = labels[data.registrationType] || data.registrationType;
   const hardship = data.feeCategory === "hardship";
