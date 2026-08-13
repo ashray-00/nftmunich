@@ -302,12 +302,12 @@ export default function MembershipRegistration() {
             </div>
               <div className={styles.feePanel} aria-label={language === "de" ? "Beiträge" : "Fees"}>
               {selected === "member" ? (
-                <strong>{language === "de" ? `${supporterFee} € einmalige Beitrittsgebühr` : `€${supporterFee} one-time joining fee`}</strong>
+                <div className={styles.feeRow}><strong>{supporterFee} €</strong><span>{language === "de" ? "einmalige Beitrittsgebühr" : "one-time joining fee"}</span></div>
               ) : (
                 <>
-                  <div style={{ display: "flex", gap: ".55rem", alignItems: "baseline", borderBottom: "1px solid #ffffff66", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{clubSettings.playerStudentFee} €</strong><small>{language === "de" ? "für Studierende / Azubis" : "for students / trainees"}</small></div>
-                  <div style={{ display: "flex", gap: ".55rem", alignItems: "baseline", borderBottom: "1px solid #ffffff66", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{clubSettings.playerOtherFee} €</strong><small>{language === "de" ? "für Sonstige" : "for others"}</small></div>
-                  <div style={{ display: "flex", gap: ".55rem", alignItems: "baseline", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>+ {supporterFee} €</strong><small>{language === "de" ? "einmalige Beitrittsgebühr" : "one-time joining fee"}</small></div>
+                  <div className={styles.feeRow}><strong>{clubSettings.playerStudentFee} €</strong><span>{language === "de" ? "für Studierende / Azubis" : "for students / trainees"}</span></div>
+                  <div className={styles.feeRow}><strong>{clubSettings.playerOtherFee} €</strong><span>{language === "de" ? "für Sonstige" : "for others"}</span></div>
+                  <div className={styles.feeRow}><strong>+ {supporterFee} €</strong><span>{language === "de" ? "einmalige Beitrittsgebühr" : "one-time joining fee"}</span></div>
                 </>
               )}
             </div>
@@ -340,12 +340,12 @@ export default function MembershipRegistration() {
                     <legend><span>{selected === "member" ? "02" : selected === "player" ? "03" : "04"}</span>{t.documents}</legend>
                     <p className={styles.help}>{t.uploadHelp}</p>
                     <div className={styles.uploadGrid}>
-                      <Upload label={t.photo} name="photo" status={uploadProgress.photo} done={Boolean(uploads.photo)} language={language} onFile={(file, form) => uploadDocument(file, "photo", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
-                      <div className={styles.uploadPair}><strong>{t.identity}</strong><div className={styles.uploadPairGrid}>
+                      <div className={`${styles.documentGroup} ${styles.photoGroup}`}><strong>{t.photo}</strong><Upload label={language === "de" ? "Foto auswählen" : "Select photo"} name="photo" status={uploadProgress.photo} done={Boolean(uploads.photo)} language={language} onFile={(file, form) => uploadDocument(file, "photo", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} /></div>
+                      <div className={`${styles.documentGroup} ${styles.identityGroup}`}><strong>{t.identity}</strong><div className={styles.uploadPairGrid}>
                         <Upload label={language === "de" ? "Vorderseite" : "Front side"} name="idFront" status={uploadProgress.idFront} done={Boolean(uploads.idFront)} language={language} onFile={(file, form) => uploadDocument(file, "idFront", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
                         <Upload label={language === "de" ? "Rückseite" : "Back side"} name="idBack" status={uploadProgress.idBack} done={Boolean(uploads.idBack)} language={language} onFile={(file, form) => uploadDocument(file, "idBack", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
                       </div></div>
-                      {protectedRoute && <div className={styles.uploadPair}><strong>{t.insurance}</strong><div className={styles.uploadPairGrid}>
+                      {protectedRoute && <div className={`${styles.documentGroup} ${styles.insuranceGroup}`}><strong>{t.insurance}</strong><div className={styles.uploadPairGrid}>
                         <Upload label={language === "de" ? "Vorderseite" : "Front side"} name="insuranceFront" status={uploadProgress.insuranceFront} done={Boolean(uploads.insuranceFront)} language={language} onFile={(file, form) => uploadDocument(file, "insuranceFront", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
                         <Upload label={language === "de" ? "Rückseite" : "Back side"} name="insuranceBack" status={uploadProgress.insuranceBack} done={Boolean(uploads.insuranceBack)} language={language} onFile={(file, form) => uploadDocument(file, "insuranceBack", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
                       </div></div>}
@@ -353,7 +353,7 @@ export default function MembershipRegistration() {
                     {Object.values(uploadProgress).includes("error") && <p className={styles.error} role="alert">{language === "de" ? "Der Upload konnte nicht bestätigt werden. Bitte wähle die betreffende Datei erneut aus." : "The upload could not be confirmed. Please select that file again."}</p>}
                   </fieldset>
 
-                  <fieldset><legend><span>{selected === "member" ? "03" : selected === "player" ? "04" : "05"}</span>{t.payment}</legend><div className={styles.payment}><strong>{language === "de" ? "Die Zahlungsinformationen erhältst du nach der Registrierung per E-Mail." : "You will receive the payment information by email after registration."}</strong></div></fieldset>
+                  <fieldset><legend><span>{selected === "member" ? "03" : selected === "player" ? "04" : "05"}</span>{t.payment}</legend><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /><p className={styles.paymentEmailNote}>{language === "de" ? "Nach der Registrierung erhältst du diese Zahlungsinformationen zusätzlich per E-Mail." : "After registration, you will also receive these payment details by email."}</p></fieldset>
                   <fieldset><legend><span>{selected === "member" ? "04" : selected === "player" ? "05" : "06"}</span>{t.declaration}</legend><div className={styles.checks}><Check name="truth" label={t.truth} /><Check name="statutes" label={<>{t.statutes} <Link href="/satzung.pdf" target="_blank" rel="noopener noreferrer">Satzung ↗</Link></>} /><Check name="privacy" label={<>{t.privacy} <Link href="/privacy-policy" target="_blank">Privacy ↗</Link></>} /></div></fieldset>
                   {status === "error" && <p className={styles.error} role="alert">{submissionError || t.error}</p>}
                   <button className={styles.submit} disabled={status === "sending" || Object.values(uploadProgress).includes("uploading")}>{status === "sending" ? t.sending : t.submit}</button>
