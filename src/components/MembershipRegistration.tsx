@@ -279,20 +279,8 @@ export default function MembershipRegistration() {
 
       {!selected && (
         <section className={`${styles.cards} ${styles.twoCards}`} aria-label={t.title}>
-          <article className={`${styles.card} ${preview === "member" ? styles.expandedCard : ""}`}>
+          <article className={`${styles.card} ${styles.coreCard} ${preview === "core" ? styles.expandedCard : ""}`}>
             <div className={styles.cardNumber}>01</div>
-            <h2>{t.member}</h2>
-            <p>{language === "de" ? "Für Supporter und Mitglieder." : "For supporters and members."}</p>
-            <button className={styles.detailsToggle} aria-expanded={preview === "member"} onClick={() => setPreview(preview === "member" ? null : "member")} type="button">
-              {preview === "member" ? (language === "de" ? "Details schließen" : "Close details") : (language === "de" ? "Mehr erfahren" : "Learn more")}
-            </button>
-            {preview === "member" && <div className={styles.expandedDetails}>
-              <p>{t.memberText}</p>
-              <button onClick={() => { setSelected("member"); setFeeCategory("other"); }} type="button">{t.choose}</button>
-            </div>}
-          </article>
-          <article className={`${styles.card} ${preview === "core" ? styles.expandedCard : ""}`}>
-            <div className={styles.cardNumber}>02</div>
             <h2>{t.core}</h2>
             <p>{language === "de" ? "Für Spieler und das Management-Team." : "For players and the management team."}</p>
             <button className={styles.detailsToggle} aria-expanded={preview === "core"} onClick={() => setPreview(preview === "core" ? null : "core")} type="button">
@@ -302,6 +290,18 @@ export default function MembershipRegistration() {
               <p>{t.coreText}</p>
               <p>{language === "de" ? "Falls du im letzten Jahr nicht registriert warst, kontaktiere bitte NFT Munich." : "If you were not registered last year, please contact NFT Munich."}</p>
               <button onClick={() => { setSelected("player"); setCoreRole("player"); setFeeCategory(null); }} type="button">{t.choose}</button>
+            </div>}
+          </article>
+          <article className={`${styles.card} ${styles.memberCard} ${preview === "member" ? styles.expandedCard : ""}`}>
+            <div className={styles.cardNumber}>02</div>
+            <h2>{t.member}</h2>
+            <p>{language === "de" ? "Für Supporter und Mitglieder." : "For supporters and members."}</p>
+            <button className={styles.detailsToggle} aria-expanded={preview === "member"} onClick={() => setPreview(preview === "member" ? null : "member")} type="button">
+              {preview === "member" ? (language === "de" ? "Details schließen" : "Close details") : (language === "de" ? "Mehr erfahren" : "Learn more")}
+            </button>
+            {preview === "member" && <div className={styles.expandedDetails}>
+              <p>{t.memberText}</p>
+              <button onClick={() => { setSelected("member"); setFeeCategory("other"); }} type="button">{t.choose}</button>
             </div>}
           </article>
         </section>
