@@ -162,15 +162,36 @@ function syncApprovedPlayers_(payload) {
     const email = String(player && player.email || "").trim().toLowerCase();
     const name = String(player && player.name || "").trim();
     if (!email || email.indexOf("@") < 1) return;
-    if (existing[email]) {
+    const isNew = !existing[email];
+    if (!isNew) {
       sheet.getRange(existing[email], 1, 1, 3).setValues([[name, email, new Date()]]);
     } else {
       sheet.appendRow([name, email, new Date()]);
       existing[email] = sheet.getLastRow();
     }
-    sendApprovedRegistrationLink_(email, name);
+    if (payload.sendLinks && isNew) sendCoreRegistrationLink_(email, name);
   });
   return json_({ status: 200, synced: players.length });
+}
+
+function sendCoreRegistrationLink_(email, name) {
+  const body = [
+    "Hi " + (name || ""),
+    "",
+    "You are approved to register as a Core Member of NFT Munich e.V.",
+    "Complete your registration here:",
+    "https://www.nftmunich.club/registration?type=player",
+    "",
+    "Questions? Contact " + REGISTRATION_EMAIL,
+    "NFT Munich e.V."
+  ].join("\n");
+  MailApp.sendEmail({
+    to: email,
+    subject: "Your NFT Munich Core Member registration link",
+    body: body,
+    name: "NFT Munich e.V.",
+    replyTo: REGISTRATION_EMAIL
+  });
 }
 
 function pendingRequestsSheet_() {

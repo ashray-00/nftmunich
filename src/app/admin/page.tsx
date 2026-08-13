@@ -645,7 +645,7 @@ export default function AdminPage() {
       </div>
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[["Club members", counts.members], ["Registered players", counts.players], ["Management + players", counts.management], ["Total applications", counts.total]].map(([label, value]) => (
+        {[["Members", counts.members], ["Players", counts.players], ["Management + Players", counts.management], ["Total applications", counts.total]].map(([label, value]) => (
           <div key={String(label)} className="rounded-2xl border border-blue-950/10 bg-white p-5 shadow-sm">
             <p className="text-sm font-semibold text-slate-500">{label}</p>
             <p className="mt-2 text-3xl font-bold text-bavarian-blue">{clubLoading ? "—" : value}</p>

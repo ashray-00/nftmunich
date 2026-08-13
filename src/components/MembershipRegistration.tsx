@@ -286,7 +286,7 @@ export default function MembershipRegistration() {
           <article className={styles.card}>
             <div className={styles.cardNumber}>02</div>
             <h2>{t.core}</h2><p>{t.coreText}</p>
-            <div className={styles.extraInfo}>{language === "de" ? "Hinweis: Falls du im letzten Jahr nicht registriert warst, kontaktiere bitte NFT Munich." : "Note: If you were not registered last year, please contact NFT Munich."}</div>
+            <div className={styles.extraInfo}>{language === "de" ? "Zugang nur mit einer E-Mail-Adresse aus der freigegebenen Spielerliste." : "Access requires an email address from the approved-player list."}</div>
             <button onClick={() => { setSelected("player"); setCoreRole("player"); setFeeCategory(null); }} type="button">{t.choose}</button>
           </article>
         </section>
@@ -299,6 +299,7 @@ export default function MembershipRegistration() {
             <div style={{ display: "grid", gap: ".35rem" }}>
               <small style={{ textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 800, opacity: .78 }}>{language === "de" ? "Du registrierst dich als" : "You are registering as"}</small>
               <h2>{selected === "member" ? t.member : t.core}</h2>
+              {selected === "member" && <p className={styles.memberFormText}>{t.memberText}</p>}
             </div>
               <div className={styles.feePanel} aria-label={language === "de" ? "Beiträge" : "Fees"}>
               {selected === "member" ? (

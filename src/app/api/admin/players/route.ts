@@ -3,7 +3,7 @@ import { ownerAuthorization } from "../../../../lib/adminAuth";
 
 const SERVER_URL = process.env.SERVER_URL;
 
-async function syncApprovedPlayers(players: unknown[]) {
+async function syncApprovedPlayers(players: unknown[], sendLinks = false) {
   const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
   if (!scriptUrl) return;
   await fetch(scriptUrl, {
@@ -14,6 +14,7 @@ async function syncApprovedPlayers(players: unknown[]) {
       sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
       spreadsheetId: process.env.GOOGLE_MEMBERSHIP_SHEET_ID,
       players,
+      sendLinks,
     }),
     cache: "no-store",
   });
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
       const submitted = body && typeof body === "object" ? body as Record<string, unknown> : {};
-      await syncApprovedPlayers([{ name: submitted.name, email: submitted.email }]).catch(() => undefined);
+      await syncApprovedPlayers([{ name: submitted.name, email: submitted.email }], true).catch(() => undefined);
     }
     return NextResponse.json(data, { status: res.status });
   } catch {
