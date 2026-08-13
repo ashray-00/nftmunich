@@ -8,6 +8,7 @@ import styles from "../styles/MembershipRegistration.module.css";
 
 type Language = "de" | "en";
 type RouteType = "member" | "player" | "management";
+type CoreRole = "player" | "management";
 type FeeCategory = "student" | "other" | "hardship";
 type UploadState = { photo?: string; idFront?: string; idBack?: string; insuranceFront?: string; insuranceBack?: string };
 type UploadProgress = Partial<Record<keyof UploadState, "uploading" | "done" | "error">>;
@@ -23,7 +24,7 @@ const copy = {
     member: "Member",
     memberText: "Für alle, die das Team unterstützen möchten. Du erhältst Einladungen zu Vereinsevents, Mannschaftsspielen und gemeinsamen Reisen.",
     core: "Core Member",
-    coreText: "Nur für registrierte Spieler und Mitglieder des Managements. Falls du im letzten Jahr nicht registriert warst, kontaktiere bitte NFT Munich.",
+    coreText: "Nur für registrierte Spieler und Mitglieder des Managements.",
     memberFee: "10 € pro Jahr",
     player: "Core Member – Player",
     playerText: "Nur für Spieler mit einer bereits freigegebenen E-Mail-Adresse.",
@@ -92,7 +93,7 @@ const copy = {
     memberText: "For everyone who wants to support the team. You will receive invitations to club events, team matches and trips.",
     memberFee: "€10 per year",
     core: "Core Member",
-    coreText: "Only for registered players and management members. If you were not registered last year, please contact NFT Munich.",
+    coreText: "Only for registered players and management members.",
     player: "Core Member – Player",
     playerText: "Only for players whose email address has already been approved.",
     playerFee: "€60 total – students/trainees (€50 + €10 membership fee) · €110 total – others (€100 + €10 membership fee)",
@@ -157,7 +158,7 @@ const copy = {
 export default function MembershipRegistration() {
   const [language, setLanguage] = useState<Language>("de");
   const [selected, setSelected] = useState<RouteType | null>(null);
-  const [showCoreOptions, setShowCoreOptions] = useState(false);
+  const [coreRole, setCoreRole] = useState<CoreRole>("player");
   const [uploads, setUploads] = useState<UploadState>({});
   const [feeCategory, setFeeCategory] = useState<FeeCategory | null>(null);
   const [applicationId, setApplicationId] = useState("");
@@ -178,8 +179,8 @@ export default function MembershipRegistration() {
     };
     const route = requestedType ? typeMap[requestedType] : undefined;
     if (route) {
-      setSelected(route);
-      setShowCoreOptions(false);
+      setSelected(route === "management" ? "management" : route);
+      if (route !== "member") setCoreRole(route === "management" ? "management" : "player");
       setFeeCategory(route === "member" ? "other" : null);
     }
   }, []);
@@ -192,9 +193,8 @@ export default function MembershipRegistration() {
   }, []);
 
   const supporterFee = Number(clubSettings.supporterFee) || 15;
-  const memberFee = Number(clubSettings.memberFee) || 0;
-  const studentTotal = memberFee + (Number(clubSettings.playerStudentFee) || 0);
-  const otherTotal = memberFee + (Number(clubSettings.playerOtherFee) || 0);
+  const studentTotal = supporterFee + (Number(clubSettings.playerStudentFee) || 0);
+  const otherTotal = supporterFee + (Number(clubSettings.playerOtherFee) || 0);
   const amount = selected === "member" ? supporterFee : feeCategory === "student" ? studentTotal : feeCategory === "other" ? otherTotal : null;
   const categoryLabel = selected ? t[selected] : "";
 
@@ -261,7 +261,6 @@ export default function MembershipRegistration() {
   }
 
   const protectedRoute = selected === "player" || selected === "management";
-  const managementAllowed = user?.role === "admin" || user?.role === "super_admin";
 
   return (
     <main className={styles.page}>
@@ -277,7 +276,7 @@ export default function MembershipRegistration() {
         </div>
       </section>
 
-      {!selected && !showCoreOptions && (
+      {!selected && (
         <section className={`${styles.cards} ${styles.twoCards}`} aria-label={t.title}>
           <article className={styles.card}>
             <div className={styles.cardNumber}>01</div>
@@ -287,29 +286,19 @@ export default function MembershipRegistration() {
           <article className={styles.card}>
             <div className={styles.cardNumber}>02</div>
             <h2>{t.core}</h2><p>{t.coreText}</p>
-            <button onClick={() => setShowCoreOptions(true)} type="button">{t.choose}</button>
+            <div className={styles.extraInfo}>{language === "de" ? "Hinweis: Falls du im letzten Jahr nicht registriert warst, kontaktiere bitte NFT Munich." : "Note: If you were not registered last year, please contact NFT Munich."}</div>
+            <button onClick={() => { setSelected("player"); setCoreRole("player"); setFeeCategory(null); }} type="button">{t.choose}</button>
           </article>
-        </section>
-      )}
-
-      {!selected && showCoreOptions && (
-        <section className={styles.formShell}>
-          <button className={styles.back} type="button" onClick={() => setShowCoreOptions(false)}>← {t.back}</button>
-          <div className={styles.formHeading}><div style={{ display: "grid", gap: ".35rem" }}><small style={{ textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 800, opacity: .78 }}>{language === "de" ? "Core Member auswählen" : "Choose Core Member type"}</small><h2>{t.core}</h2></div></div>
-          <div className={`${styles.cards} ${styles.twoCards}`} style={{ marginTop: "1rem" }}>
-            <article className={styles.card}><h2>{language === "de" ? "Player" : "Player"}</h2><p>{language === "de" ? "Für freigegebene Spieler." : "For approved players."}</p><button type="button" onClick={() => { setSelected("player"); setFeeCategory(null); setShowCoreOptions(false); }}>{t.choose}</button></article>
-            <article className={styles.card}><h2>Player + Management</h2><p>{language === "de" ? "Für Spieler mit zusätzlicher Vereinsaufgabe." : "For players with an additional club responsibility."}</p><button type="button" onClick={() => { setSelected("management"); setFeeCategory(null); setShowCoreOptions(false); }}>{t.choose}</button></article>
-          </div>
         </section>
       )}
 
       {selected && (
         <section className={styles.formShell}>
-          <button className={styles.back} type="button" onClick={() => { const wasCore = selected !== "member"; setSelected(null); setShowCoreOptions(wasCore); setFeeCategory(null); setApplicationId(""); setConfirmationSent(true); setStatus("idle"); }}>← {t.back}</button>
+          <button className={styles.back} type="button" onClick={() => { setSelected(null); setFeeCategory(null); setUploads({}); setUploadProgress({}); setApplicationId(""); setConfirmationSent(true); setStatus("idle"); }}>← {t.back}</button>
           <div className={styles.formHeading}>
             <div style={{ display: "grid", gap: ".35rem" }}>
               <small style={{ textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 800, opacity: .78 }}>{language === "de" ? "Du registrierst dich als" : "You are registering as"}</small>
-              <h2>{t[selected]}</h2>
+              <h2>{selected === "member" ? t.member : t.core}</h2>
             </div>
               <div className={styles.feePanel} aria-label={language === "de" ? "Beiträge" : "Fees"}>
               {selected === "member" ? (
@@ -318,7 +307,7 @@ export default function MembershipRegistration() {
                 <>
                   <div style={{ display: "flex", gap: ".55rem", alignItems: "baseline", borderBottom: "1px solid #ffffff66", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{clubSettings.playerStudentFee} €</strong><small>{language === "de" ? "für Studierende / Azubis" : "for students / trainees"}</small></div>
                   <div style={{ display: "flex", gap: ".55rem", alignItems: "baseline", borderBottom: "1px solid #ffffff66", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{clubSettings.playerOtherFee} €</strong><small>{language === "de" ? "für Sonstige" : "for others"}</small></div>
-                  <div style={{ display: "flex", gap: ".55rem", alignItems: "baseline", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>+ {memberFee} €</strong><small>{language === "de" ? "Mitgliedsgebühr" : "membership fee"}</small></div>
+                  <div style={{ display: "flex", gap: ".55rem", alignItems: "baseline", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>+ {supporterFee} €</strong><small>{language === "de" ? "einmalige Beitrittsgebühr" : "one-time joining fee"}</small></div>
                 </>
               )}
             </div>
@@ -327,8 +316,7 @@ export default function MembershipRegistration() {
           {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}{applicationId ? ` · ${applicationId}` : ""}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
             <>
               {protectedRoute && !loading && !user && <div><h3>{t.loginTitle}</h3><LoginGate /></div>}
-              {selected === "management" && user && !managementAllowed && <div className={styles.notice}>{t.notManager}</div>}
-              {(!protectedRoute || (user && (selected !== "management" || managementAllowed))) && (
+              {(!protectedRoute || user) && (
                 <form onSubmit={submit} className={styles.form}>
                   <fieldset>
                     <legend><span>01</span>{t.personal}</legend>
@@ -342,7 +330,7 @@ export default function MembershipRegistration() {
                       <Field label={t.city} name="city" />
                       <Field label={t.phone} name="phone" type="tel" wide />
                     </div>
-                    {protectedRoute && <label className={styles.selectLabel}>{t.feeChoice}<select name="feeCategory" required value={feeCategory || ""} onChange={(event) => setFeeCategory(event.target.value as FeeCategory)}><option value="" disabled>—</option><option value="student">{language === "de" ? `Studierende / Azubis – ${studentTotal} € gesamt` : `Students / trainees – €${studentTotal} total`}</option><option value="other">{language === "de" ? `Sonstige – ${otherTotal} € gesamt` : `Others – €${otherTotal} total`}</option><option value="hardship">{t.special}</option></select></label>}
+                    {protectedRoute && <><label className={styles.selectLabel}>{language === "de" ? "Deine Rolle" : "Your role"}<select required value={coreRole} onChange={(event) => { const role = event.target.value as CoreRole; setCoreRole(role); setSelected(role === "management" ? "management" : "player"); }}><option value="player">Player</option><option value="management">Player + Management</option></select></label><label className={styles.selectLabel}>{t.feeChoice}<select name="feeCategory" required value={feeCategory || ""} onChange={(event) => setFeeCategory(event.target.value as FeeCategory)}><option value="" disabled>—</option><option value="student">{language === "de" ? `Studierende / Azubis – ${studentTotal} € gesamt` : `Students / trainees – €${studentTotal} total`}</option><option value="other">{language === "de" ? `Sonstige – ${otherTotal} € gesamt` : `Others – €${otherTotal} total`}</option><option value="hardship">{t.special}</option></select></label></>}
                   </fieldset>
 
                   {protectedRoute && <fieldset><legend><span>02</span>{t.playerDetails}</legend><div className={styles.grid}><Field label={t.position} name="position" /><Field label={t.emergencyName} name="emergencyName" /><Field label={t.emergencyPhone} name="emergencyPhone" type="tel" /></div></fieldset>}
