@@ -233,6 +233,9 @@ function uploadMembershipFile_(payload) {
   if (!payload.base64 || !payload.filename || !payload.mimeType) {
     return json_({ status: 400, message: "Missing file information." });
   }
+  if (payload.registrationType !== "member" && !isApprovedPlayerEmail_(payload.email)) {
+    return json_({ status: 403, message: "This Core Member email is not approved." });
+  }
 
   const folders = DriveApp.getFoldersByName(UPLOAD_FOLDER);
   const rootFolder = folders.hasNext() ? folders.next() : DriveApp.createFolder(UPLOAD_FOLDER);
@@ -273,12 +276,13 @@ function safeFolderName_(value) {
 
 function saveMembershipRegistration_(payload) {
   const data = payload.registration || {};
+  if (data.registrationType !== "member" && !isApprovedPlayerEmail_(data.email)) {
+    return json_({ status: 403, message: "This Core Member email is not approved." });
+  }
   const spreadsheet = SpreadsheetApp.openById(payload.spreadsheetId || DEFAULT_MEMBERSHIP_SHEET_ID);
   const settings = readClubSettings_(spreadsheet);
   const hardship = data.feeCategory === "hardship";
-  data.membershipFee = hardship ? "" : data.registrationType === "member"
-    ? Number(settings.supporterFee) || 15
-    : Number(settings.memberFee) || 0;
+  data.membershipFee = hardship ? "" : Number(settings.supporterFee) || 15;
   data.playerFee = data.registrationType === "member" || hardship
     ? ""
     : data.feeCategory === "student" ? Number(settings.playerStudentFee) || 0 : Number(settings.playerOtherFee) || 0;

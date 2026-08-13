@@ -701,8 +701,7 @@ export default function AdminPage() {
         <div className="grid gap-4 md:grid-cols-2">
           {([
             ["Club name", "clubName"], ["Club email", "email"], ["Address", "address"], ["Website", "website"],
-            ["Bank account holder", "accountHolder"], ["IBAN", "iban"], ["Member one-time admission fee (€)", "supporterFee"],
-            ["Core membership fee (€)", "memberFee"],
+            ["Bank account holder", "accountHolder"], ["IBAN", "iban"], ["One-time joining fee for all (€)", "supporterFee"],
             ["Player fee – students/Azubis (€)", "playerStudentFee"], ["Player fee – others (€)", "playerOtherFee"],
           ] as Array<[string, keyof ClubSettings]>).map(([label, key]) => (
             <label key={key} style={labelStyle} className={key === "address" ? "md:col-span-2" : ""}>{label}
