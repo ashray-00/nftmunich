@@ -108,14 +108,14 @@ export default function Header() {
           { id: "about", label: "About Us" },
           { id: "news", label: "News" },
           { id: "achievements", label: "Achievements" },
-          { id: "registration-request", label: "Registration" },
+          { id: "registration", label: "Registration" },
           { id: "shop", label: "Shop" },
           { id: "contact", label: "Contact" },
         ].map((section) => (
           <Link
             key={section.id}
-            href={section.id === "registration-request" ? "/registration-request" : `/#${section.id}`}
-            onClick={() => section.id !== "registration-request" && scrollToSection(section.id)}
+            href={section.id === "registration" ? "/registration" : `/#${section.id}`}
+            onClick={() => section.id !== "registration" && scrollToSection(section.id)}
             className={`h-full inline-flex items-center px-3 xl:px-4 text-sm xl:text-[15px] font-bold border-b-[3px] transition-colors cursor-pointer ${activeSection === section.id ? "border-amber-400 text-amber-300" : "border-transparent hover:border-white/55 hover:bg-white/10"
               }`}
           >
@@ -147,13 +147,13 @@ export default function Header() {
               { id: "about", label: "About Us" },
               { id: "news", label: "News" },
               { id: "achievements", label: "Achievements" },
-              { id: "registration-request", label: "Registration" },
+              { id: "registration", label: "Registration" },
               { id: "shop", label: "Shop" },
               { id: "contact", label: "Contact" },
             ].map((section) => (
               <Link
                 key={section.id}
-                href={section.id === "registration-request" ? "/registration-request" : `/#${section.id}`}
+                href={section.id === "registration" ? "/registration" : `/#${section.id}`}
                 onClick={toggleMenu}
                 className="text-2xl font-bold text-bavarian-blue px-6 py-2 rounded-full hover:bg-blue-50"
               >

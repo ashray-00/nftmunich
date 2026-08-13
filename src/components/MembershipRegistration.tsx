@@ -20,10 +20,10 @@ const copy = {
     eyebrow: "NFT Munich e.V.",
     title: "Registrierung & Mitgliedschaft",
     intro: "Wähle die passende Anmeldung. Du kannst die Sprache jederzeit wechseln.",
-    member: "Member / Supporter",
-    memberText: "Für alle, die NFT Munich e.V. unterstützen und Mitglied werden möchten.",
+    member: "Member",
+    memberText: "Erhalte Einladungen zu Vereinsevents und gemeinsamen Teamreisen.",
     core: "Core Member",
-    coreText: "Für freigegebene Spieler und Mitglieder mit zusätzlicher Managementaufgabe.",
+    coreText: "Für Spieler und Mitglieder im Management.",
     memberFee: "10 € pro Jahr",
     player: "Core Member – Player",
     playerText: "Nur für Spieler mit einer bereits freigegebenen E-Mail-Adresse.",
@@ -88,11 +88,11 @@ const copy = {
     eyebrow: "NFT Munich e.V.",
     title: "Registration & Membership",
     intro: "Choose the registration that applies to you. You can change the language at any time.",
-    member: "Member / Supporter",
-    memberText: "For anyone who wants to support and become a member of NFT Munich e.V.",
+    member: "Member",
+    memberText: "Receive invitations to club events and team trips.",
     memberFee: "€10 per year",
     core: "Core Member",
-    coreText: "For approved players and members who also have a management responsibility.",
+    coreText: "For players and members in management.",
     player: "Core Member – Player",
     playerText: "Only for players whose email address has already been approved.",
     playerFee: "€60 total – students/trainees (€50 + €10 membership fee) · €110 total – others (€100 + €10 membership fee)",
@@ -281,16 +281,11 @@ export default function MembershipRegistration() {
           <article className={styles.card}>
             <div className={styles.cardNumber}>01</div>
             <h2>{t.member}</h2><p>{t.memberText}</p>
-            <div style={{ margin: "auto 0 1.5rem", fontWeight: 800 }}>{memberFee} € {language === "de" ? "pro Jahr" : "per year"}</div>
             <button onClick={() => { setSelected("member"); setFeeCategory("other"); }} type="button">{t.choose}</button>
           </article>
           <article className={styles.card}>
             <div className={styles.cardNumber}>02</div>
             <h2>{t.core}</h2><p>{t.coreText}</p>
-            <div style={{ display: "grid", gap: ".45rem", margin: "auto 0 1.5rem", fontWeight: 800 }}>
-              <span>{clubSettings.playerStudentFee} € + {memberFee} € {language === "de" ? "Mitgliedsgebühr" : "membership fee"}</span>
-              <span>{clubSettings.playerOtherFee} € + {memberFee} € {language === "de" ? "Mitgliedsgebühr" : "membership fee"}</span>
-            </div>
             <button onClick={() => setShowCoreOptions(true)} type="button">{t.choose}</button>
           </article>
         </section>
@@ -300,11 +295,6 @@ export default function MembershipRegistration() {
         <section className={styles.formShell}>
           <button className={styles.back} type="button" onClick={() => setShowCoreOptions(false)}>← {t.back}</button>
           <div className={styles.formHeading}><div style={{ display: "grid", gap: ".35rem" }}><small style={{ textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 800, opacity: .78 }}>{language === "de" ? "Core Member auswählen" : "Choose Core Member type"}</small><h2>{t.core}</h2></div></div>
-          <div className={styles.payment} style={{ marginTop: "1rem" }}>
-            <strong>{clubSettings.playerStudentFee} € {language === "de" ? "für Studierende/Azubis" : "for students/trainees"}</strong><br />
-            <strong>{clubSettings.playerOtherFee} € {language === "de" ? "für Sonstige" : "for others"}</strong><br />
-            <strong>+ {memberFee} € {language === "de" ? "Mitgliedsgebühr" : "membership fee"}</strong>
-          </div>
           <div className={`${styles.cards} ${styles.twoCards}`} style={{ marginTop: "1rem" }}>
             <article className={styles.card}><h2>{language === "de" ? "Player" : "Player"}</h2><p>{language === "de" ? "Für freigegebene Spieler." : "For approved players."}</p><button type="button" onClick={() => { setSelected("player"); setFeeCategory(null); setShowCoreOptions(false); }}>{t.choose}</button></article>
             <article className={styles.card}><h2>Player + Management</h2><p>{language === "de" ? "Für Spieler mit zusätzlicher Vereinsaufgabe." : "For players with an additional club responsibility."}</p><button type="button" onClick={() => { setSelected("management"); setFeeCategory(null); setShowCoreOptions(false); }}>{t.choose}</button></article>
