@@ -12,8 +12,8 @@ type FeeCategory = "student" | "other" | "hardship";
 type UploadState = { photo?: string; idFront?: string; idBack?: string; insuranceFront?: string; insuranceBack?: string };
 type UploadProgress = Partial<Record<keyof UploadState, "uploading" | "done" | "error">>;
 
-type ClubSettings = { clubName: string; accountHolder: string; iban: string; memberFee: string; playerStudentFee: string; playerOtherFee: string };
-const DEFAULT_CLUB_SETTINGS: ClubSettings = { clubName: "NFT Munich e.V.", accountHolder: "NFT Munich e.V.", iban: "1234XXXX", memberFee: "10", playerStudentFee: "50", playerOtherFee: "100" };
+type ClubSettings = { clubName: string; accountHolder: string; iban: string; supporterFee: string; memberFee: string; playerStudentFee: string; playerOtherFee: string };
+const DEFAULT_CLUB_SETTINGS: ClubSettings = { clubName: "NFT Munich e.V.", accountHolder: "NFT Munich e.V.", iban: "1234XXXX", supporterFee: "15", memberFee: "10", playerStudentFee: "50", playerOtherFee: "100" };
 
 const copy = {
   de: {
@@ -191,10 +191,11 @@ export default function MembershipRegistration() {
       .catch(() => undefined);
   }, []);
 
+  const supporterFee = Number(clubSettings.supporterFee) || 15;
   const memberFee = Number(clubSettings.memberFee) || 0;
   const studentTotal = memberFee + (Number(clubSettings.playerStudentFee) || 0);
   const otherTotal = memberFee + (Number(clubSettings.playerOtherFee) || 0);
-  const amount = selected === "member" ? memberFee : feeCategory === "student" ? studentTotal : feeCategory === "other" ? otherTotal : null;
+  const amount = selected === "member" ? supporterFee : feeCategory === "student" ? studentTotal : feeCategory === "other" ? otherTotal : null;
   const categoryLabel = selected ? t[selected] : "";
 
   async function uploadDocument(file: File, fieldType: keyof UploadState, fullName: string, email: string) {
@@ -312,7 +313,7 @@ export default function MembershipRegistration() {
             </div>
             <div style={{ display: "grid", gap: ".55rem", minWidth: "min(100%, 320px)" }} aria-label={language === "de" ? "Beiträge" : "Fees"}>
               {selected === "member" ? (
-                <strong>{language === "de" ? `${memberFee} € pro Jahr` : `€${memberFee} per year`}</strong>
+                <strong>{language === "de" ? `${supporterFee} € einmalige Aufnahmegebühr` : `€${supporterFee} one-time admission fee`}</strong>
               ) : (
                 <>
                   <div style={{ display: "flex", gap: ".55rem", alignItems: "baseline", borderBottom: "1px solid #ffffff66", padding: ".4rem 0" }}><strong style={{ whiteSpace: "nowrap" }}>{clubSettings.playerStudentFee} €</strong><small>{language === "de" ? "für Studierende / Azubis" : "for students / trainees"}</small></div>
