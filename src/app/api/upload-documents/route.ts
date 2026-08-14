@@ -52,7 +52,9 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
 
     const file = formData.get("file") as File | null;
-    const fieldType = String(formData.get("fieldType") ?? "").slice(0, 20).replace(/[^a-z0-9_]/g, "");
+    // Keep the exact camelCase field name. The strict allowlist below provides
+    // validation; stripping capitals would turn `idFront` into `idront`.
+    const fieldType = String(formData.get("fieldType") ?? "").slice(0, 20);
     const fullName = String(formData.get("fullName") ?? "").slice(0, 150);
     const email = String(formData.get("email") ?? "").trim().toLowerCase().slice(0, 254);
     const registrationType = String(formData.get("registrationType") ?? "member").slice(0, 20);
