@@ -323,10 +323,16 @@ function saveMembershipRegistration_(payload) {
   lock.waitLock(30000);
   let applicationId;
   const now = Utilities.formatDate(new Date(), "Europe/Berlin", "yyyy-MM-dd HH:mm:ss");
+  data.submittedAt = now;
   try {
     applicationId = createApplicationId_(spreadsheet);
+    const photoFile = driveFileFromUrl_(data.photo);
+    const applicantFolder = firstParentFolder_(photoFile);
+    applicantFolder.setName(safeFolderName_(applicationId + "_" + data.firstName + "_" + data.lastName));
+    photoFile.setName(applicationId + "_Photo." + fileExtension_(photoFile));
     const documentsPdf = createDocumentsPdf_(data, applicationId);
     const applicationPdf = createApplicationPdf_(data, applicationId, documentsPdf);
+    const accepted = "✓ Accepted — " + now;
     const row = [
       applicationId, now, data.registrationType, data.language,
       data.firstName, data.lastName, data.birthDate, data.street, data.postalCode,
@@ -334,7 +340,7 @@ function saveMembershipRegistration_(payload) {
       data.playerFee, data.position, data.emergencyName, data.emergencyPhone,
       data.managementRole, data.responsibility, safeSpreadsheetValue_(data.photo),
       safeSpreadsheetValue_(documentsPdf), safeSpreadsheetValue_(documentsPdf),
-      data.truth, data.statutes, data.privacy, "Pending", "New", ""
+      accepted, accepted, accepted, "Pending", "New", ""
       , safeSpreadsheetValue_(applicationPdf)
     ];
     sheet.appendRow(row.map(safeSpreadsheetValue_));
@@ -390,7 +396,7 @@ function createApplicationPdf_(data, applicationId, documentsPdf) {
   const body = doc.getBody();
   body.appendParagraph("NFT Munich e.V. - Membership application").setHeading(DocumentApp.ParagraphHeading.HEADING1);
   const fields = [
-    ["Application ID", applicationId], ["Category", data.registrationType],
+    ["Application ID", applicationId], ["Submitted at", data.submittedAt], ["Category", data.registrationType],
     ["Name", data.firstName + " " + data.lastName], ["Date of birth", data.birthDate],
     ["Address", data.street + ", " + data.postalCode + " " + data.city],
     ["Email", data.email], ["Phone", data.phone], ["Fee category", data.feeCategory],
@@ -401,9 +407,10 @@ function createApplicationPdf_(data, applicationId, documentsPdf) {
   ];
   fields.forEach(function(field) { if (field[1] !== "" && field[1] != null) body.appendParagraph(field[0] + ": " + field[1]); });
   body.appendParagraph("Accepted declarations").setHeading(DocumentApp.ParagraphHeading.HEADING2);
-  body.appendListItem("Information is complete and correct: accepted");
-  body.appendListItem("NFT Munich e.V. statutes: accepted");
-  body.appendListItem("Privacy policy and data processing: accepted");
+  const accepted = "✓ Accepted — " + data.submittedAt;
+  body.appendListItem("Declaration / confirmation: " + accepted);
+  body.appendListItem("NFT Munich e.V. statutes: " + accepted);
+  body.appendListItem("Privacy policy and data processing: " + accepted);
   doc.saveAndClose();
   const tempFile = DriveApp.getFileById(doc.getId());
   const pdf = folder.createFile(tempFile.getAs(MimeType.PDF).setName(applicationId + "_Application.pdf"));
@@ -431,6 +438,12 @@ function firstParentFolder_(file) {
   const parents = file.getParents();
   if (!parents.hasNext()) throw new Error("Applicant folder not found.");
   return parents.next();
+}
+
+function fileExtension_(file) {
+  const nameMatch = String(file.getName() || "").match(/\.([a-z0-9]{2,5})$/i);
+  if (nameMatch) return nameMatch[1].toLowerCase();
+  return file.getMimeType() === MimeType.PNG ? "png" : "jpg";
 }
 
 function createApplicationId_(spreadsheet) {
@@ -489,7 +502,7 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
   const body = [
     "Hi " + data.firstName + ",",
     "",
-    "Your " + category + " registration was received.",
+    "Thank you for registering as " + category + ". Your registration was received successfully.",
     "Application ID: " + applicationId,
     "",
     paymentEn.join("\n"),
@@ -508,7 +521,7 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
       ].join("");
   const htmlBody = [
     "<p>Hi " + escapeHtml_(data.firstName) + ",</p>",
-    "<p>Your registration was received.</p>",
+    "<p>Thank you for registering. Your registration was received successfully.</p>",
     "<p><strong>Category: " + escapeHtml_(category) + "</strong><br>",
     "Application ID: <strong>" + escapeHtml_(applicationId) + "</strong></p>",
     htmlPayment,

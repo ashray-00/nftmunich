@@ -12,6 +12,7 @@ type CoreRole = "player" | "management";
 type FeeCategory = "student" | "other" | "hardship";
 type UploadState = { photo?: string; idFront?: string; idBack?: string; insuranceFront?: string; insuranceBack?: string };
 type UploadProgress = Partial<Record<keyof UploadState, "uploading" | "done" | "error">>;
+type UploadErrors = Partial<Record<keyof UploadState, string>>;
 
 type ClubSettings = { clubName: string; accountHolder: string; iban: string; supporterFee: string; memberFee: string; playerStudentFee: string; playerOtherFee: string };
 const DEFAULT_CLUB_SETTINGS: ClubSettings = { clubName: "NFT Munich e.V.", accountHolder: "NFT Munich e.V.", iban: "1234XXXX", supporterFee: "15", memberFee: "10", playerStudentFee: "50", playerOtherFee: "100" };
@@ -158,7 +159,6 @@ const copy = {
 export default function MembershipRegistration() {
   const [language, setLanguage] = useState<Language>("de");
   const [selected, setSelected] = useState<RouteType | null>(null);
-  const [preview, setPreview] = useState<"member" | "core" | null>(null);
   const [coreRole, setCoreRole] = useState<CoreRole>("player");
   const [uploads, setUploads] = useState<UploadState>({});
   const [feeCategory, setFeeCategory] = useState<FeeCategory | null>(null);
@@ -166,6 +166,7 @@ export default function MembershipRegistration() {
   const [confirmationSent, setConfirmationSent] = useState(true);
   const [clubSettings, setClubSettings] = useState<ClubSettings>(DEFAULT_CLUB_SETTINGS);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({});
+  const [uploadErrors, setUploadErrors] = useState<UploadErrors>({});
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [submissionError, setSubmissionError] = useState("");
   const [coreAccess, setCoreAccess] = useState<"idle" | "checking" | "approved" | "denied">("idle");
@@ -197,7 +198,15 @@ export default function MembershipRegistration() {
 
   useEffect(() => {
     const protectedSelection = selected === "player" || selected === "management";
-    if (!protectedSelection || !user?.email) {
+    if (!protectedSelection) {
+      setCoreAccess("idle");
+      return;
+    }
+    if (verifiedCoreEmail) {
+      setCoreAccess("approved");
+      return;
+    }
+    if (!user?.email) {
       setCoreAccess("idle");
       return;
     }
@@ -215,7 +224,7 @@ export default function MembershipRegistration() {
         if (active) setCoreAccess("denied");
       });
     return () => { active = false; };
-  }, [selected, user?.email]);
+  }, [selected, user?.email, verifiedCoreEmail]);
 
   const supporterFee = Number(clubSettings.supporterFee) || 15;
   const studentTotal = supporterFee + (Number(clubSettings.playerStudentFee) || 0);
@@ -224,13 +233,34 @@ export default function MembershipRegistration() {
   const categoryLabel = selected ? t[selected] : "";
 
   async function uploadDocument(file: File, fieldType: keyof UploadState, fullName: string, email: string) {
+    const fail = (message: string) => {
+      setUploadProgress((current) => ({ ...current, [fieldType]: "error" }));
+      setUploadErrors((current) => ({ ...current, [fieldType]: message }));
+      return false;
+    };
+    if (!fullName.trim() || !email.trim()) {
+      return fail(language === "de" ? "Bitte fülle zuerst Vorname, Nachname und E-Mail-Adresse aus." : "Complete your first name, last name and email address before uploading.");
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      return fail(language === "de" ? "Bitte gib zuerst eine gültige E-Mail-Adresse ein." : "Enter a valid email address before uploading.");
+    }
+    if (!(["image/jpeg", "image/png"].includes(file.type))) {
+      return fail(language === "de" ? "Nur JPG- und PNG-Dateien sind erlaubt." : "Only JPG and PNG files are allowed.");
+    }
+    if (file.size <= 0 || file.size > 2 * 1024 * 1024) {
+      return fail(language === "de" ? "Die Datei muss kleiner als 2 MB sein." : "The file must be smaller than 2 MB.");
+    }
     setUploadProgress((current) => ({ ...current, [fieldType]: "uploading" }));
+    setUploadErrors((current) => ({ ...current, [fieldType]: undefined }));
     setUploads((current) => {
       const next = { ...current };
       delete next[fieldType];
       return next;
     });
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    let finalMessage = language === "de" ? "Der Upload ist fehlgeschlagen. Bitte versuche es erneut." : "The upload failed. Please try again.";
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 45000);
       try {
         const body = new FormData();
         body.append("file", file);
@@ -239,23 +269,35 @@ export default function MembershipRegistration() {
         body.append("fullName", fullName || "applicant");
         body.append("email", email || "");
         body.append("registrationType", selected || "member");
-        const response = await fetch("/api/upload-documents", { method: "POST", body });
+        const response = await fetch("/api/upload-documents", { method: "POST", body, signal: controller.signal });
         const result = await response.json().catch(() => ({}));
         if (!response.ok || !result.fileUrl) throw new Error(result.message || "Upload failed");
         setUploads((current) => ({ ...current, [fieldType]: result.fileUrl }));
         setUploadProgress((current) => ({ ...current, [fieldType]: "done" }));
+        setUploadErrors((current) => ({ ...current, [fieldType]: undefined }));
+        window.clearTimeout(timeout);
         return true;
-      } catch {
-        if (attempt === 0) await new Promise((resolve) => window.setTimeout(resolve, 800));
+      } catch (error) {
+        window.clearTimeout(timeout);
+        const message = error instanceof Error ? error.message : "";
+        if (message && message !== "Upload failed") finalMessage = message;
+        if (attempt < 2) await new Promise((resolve) => window.setTimeout(resolve, 800 * (attempt + 1)));
       }
     }
-    setUploadProgress((current) => ({ ...current, [fieldType]: "error" }));
-    return false;
+    return fail(finalMessage);
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selected) return;
+    if (!selected || status === "sending") return;
+    const requiredUploads = selected === "member"
+      ? [uploads.photo, uploads.idFront, uploads.idBack]
+      : [uploads.photo, uploads.idFront, uploads.idBack, uploads.insuranceFront, uploads.insuranceBack];
+    if (Object.values(uploadProgress).includes("uploading") || requiredUploads.some((value) => !value)) {
+      setSubmissionError(language === "de" ? "Bitte warte, bis alle erforderlichen Dateien erfolgreich hochgeladen wurden." : "Wait until all required files have uploaded successfully.");
+      setStatus("error");
+      return;
+    }
     setStatus("sending");
     setSubmissionError("");
     const form = new FormData(event.currentTarget);
@@ -286,6 +328,9 @@ export default function MembershipRegistration() {
   }
 
   const protectedRoute = selected === "player" || selected === "management";
+  const requiredUploadsComplete = selected === "member"
+    ? Boolean(uploads.photo && uploads.idFront && uploads.idBack)
+    : Boolean(uploads.photo && uploads.idFront && uploads.idBack && uploads.insuranceFront && uploads.insuranceBack);
 
   return (
     <main className={styles.page}>
@@ -303,30 +348,17 @@ export default function MembershipRegistration() {
 
       {!selected && (
         <section className={`${styles.cards} ${styles.twoCards}`} aria-label={t.title}>
-          <article className={`${styles.card} ${styles.coreCard} ${preview === "core" ? styles.expandedCard : ""}`}>
+          <article className={`${styles.card} ${styles.coreCard}`}>
             <div className={styles.cardNumber}>01</div>
             <h2>{t.core}</h2>
-            <p>{language === "de" ? "Für Spieler und das Management-Team." : "For players and the management team."}</p>
-            <button className={styles.detailsToggle} aria-expanded={preview === "core"} onClick={() => setPreview(preview === "core" ? null : "core")} type="button">
-              {preview === "core" ? (language === "de" ? "Details schließen" : "Close details") : (language === "de" ? "Mehr erfahren" : "Learn more")}
-            </button>
-            {preview === "core" && <div className={styles.expandedDetails}>
-              <p>{t.coreText}</p>
-              <p>{language === "de" ? "Falls du im letzten Jahr nicht registriert warst, kontaktiere bitte NFT Munich." : "If you were not registered last year, please contact NFT Munich."}</p>
-              <button onClick={() => { setSelected("player"); setCoreRole("player"); setFeeCategory(null); }} type="button">{t.choose}</button>
-            </div>}
+            <p>{t.coreText}<br /><br />{language === "de" ? "Falls du im letzten Jahr nicht registriert warst, kontaktiere bitte NFT Munich." : "If you were not registered last year, please contact NFT Munich."}</p>
+            <button onClick={() => { setSelected("player"); setCoreRole("player"); setFeeCategory(null); }} type="button">{t.choose}</button>
           </article>
-          <article className={`${styles.card} ${styles.memberCard} ${preview === "member" ? styles.expandedCard : ""}`}>
+          <article className={`${styles.card} ${styles.memberCard}`}>
             <div className={styles.cardNumber}>02</div>
             <h2>{t.member}</h2>
-            <p>{language === "de" ? "Für Supporter und Mitglieder." : "For supporters and members."}</p>
-            <button className={styles.detailsToggle} aria-expanded={preview === "member"} onClick={() => setPreview(preview === "member" ? null : "member")} type="button">
-              {preview === "member" ? (language === "de" ? "Details schließen" : "Close details") : (language === "de" ? "Mehr erfahren" : "Learn more")}
-            </button>
-            {preview === "member" && <div className={styles.expandedDetails}>
-              <p>{t.memberText}</p>
-              <button onClick={() => { setSelected("member"); setFeeCategory("other"); }} type="button">{t.choose}</button>
-            </div>}
+            <p>{t.memberText}</p>
+            <button onClick={() => { setSelected("member"); setFeeCategory("other"); }} type="button">{t.choose}</button>
           </article>
         </section>
       )}
@@ -338,7 +370,7 @@ export default function MembershipRegistration() {
             <div style={{ display: "grid", gap: ".35rem" }}>
               <small style={{ textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 800, opacity: .78 }}>{language === "de" ? "Du registrierst dich als" : "You are registering as"}</small>
               <h2>{selected === "member" ? t.member : t.core}</h2>
-              {selected === "member" && <p className={styles.memberFormText}>{t.memberText}</p>}
+              <p className={styles.memberFormText}>{selected === "member" ? t.memberText : (language === "de" ? "Für registrierte Spieler und Mitglieder des Managements. Wähle unten deine Rolle und die passende Beitragskategorie." : "For registered players and management members. Select your role and the applicable fee category below.")}</p>
             </div>
             {(!protectedRoute || coreAccess === "approved") && <div className={styles.feePanel} aria-label={language === "de" ? "Beiträge" : "Fees"}>
               {selected === "member" ? (
@@ -385,14 +417,14 @@ export default function MembershipRegistration() {
                     <legend><span>{selected === "member" ? "02" : selected === "player" ? "03" : "04"}</span>{t.documents}</legend>
                     <p className={styles.help}>{t.uploadHelp}</p>
                     <div className={styles.uploadGrid}>
-                      <div className={`${styles.documentGroup} ${styles.photoGroup}`}><strong>{t.photo}</strong><Upload label={language === "de" ? "Foto auswählen" : "Select photo"} name="photo" status={uploadProgress.photo} done={Boolean(uploads.photo)} language={language} onFile={(file, form) => uploadDocument(file, "photo", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} /></div>
+                      <div className={`${styles.documentGroup} ${styles.photoGroup}`}><strong>{t.photo}</strong><Upload label={language === "de" ? "Foto auswählen" : "Select photo"} name="photo" status={uploadProgress.photo} errorMessage={uploadErrors.photo} done={Boolean(uploads.photo)} language={language} onFile={(file, form) => uploadDocument(file, "photo", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || user?.email || ""))} /></div>
                       <div className={`${styles.documentGroup} ${styles.identityGroup}`}><strong>{t.identity}</strong><div className={styles.uploadPairGrid}>
-                        <Upload label={language === "de" ? "Vorderseite" : "Front side"} name="idFront" status={uploadProgress.idFront} done={Boolean(uploads.idFront)} language={language} onFile={(file, form) => uploadDocument(file, "idFront", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
-                        <Upload label={language === "de" ? "Rückseite" : "Back side"} name="idBack" status={uploadProgress.idBack} done={Boolean(uploads.idBack)} language={language} onFile={(file, form) => uploadDocument(file, "idBack", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
+                        <Upload label={language === "de" ? "Vorderseite" : "Front side"} name="idFront" status={uploadProgress.idFront} errorMessage={uploadErrors.idFront} done={Boolean(uploads.idFront)} language={language} onFile={(file, form) => uploadDocument(file, "idFront", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || user?.email || ""))} />
+                        <Upload label={language === "de" ? "Rückseite" : "Back side"} name="idBack" status={uploadProgress.idBack} errorMessage={uploadErrors.idBack} done={Boolean(uploads.idBack)} language={language} onFile={(file, form) => uploadDocument(file, "idBack", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || user?.email || ""))} />
                       </div></div>
                       {protectedRoute && <div className={`${styles.documentGroup} ${styles.insuranceGroup}`}><strong>{t.insurance}</strong><div className={styles.uploadPairGrid}>
-                        <Upload label={language === "de" ? "Vorderseite" : "Front side"} name="insuranceFront" status={uploadProgress.insuranceFront} done={Boolean(uploads.insuranceFront)} language={language} onFile={(file, form) => uploadDocument(file, "insuranceFront", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
-                        <Upload label={language === "de" ? "Rückseite" : "Back side"} name="insuranceBack" status={uploadProgress.insuranceBack} done={Boolean(uploads.insuranceBack)} language={language} onFile={(file, form) => uploadDocument(file, "insuranceBack", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || user?.email || ""))} />
+                        <Upload label={language === "de" ? "Vorderseite" : "Front side"} name="insuranceFront" status={uploadProgress.insuranceFront} errorMessage={uploadErrors.insuranceFront} done={Boolean(uploads.insuranceFront)} language={language} onFile={(file, form) => uploadDocument(file, "insuranceFront", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || user?.email || ""))} />
+                        <Upload label={language === "de" ? "Rückseite" : "Back side"} name="insuranceBack" status={uploadProgress.insuranceBack} errorMessage={uploadErrors.insuranceBack} done={Boolean(uploads.insuranceBack)} language={language} onFile={(file, form) => uploadDocument(file, "insuranceBack", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || user?.email || ""))} />
                       </div></div>}
                     </div>
                     {Object.values(uploadProgress).includes("error") && <p className={styles.error} role="alert">{language === "de" ? "Der Upload konnte nicht bestätigt werden. Bitte wähle die betreffende Datei erneut aus." : "The upload could not be confirmed. Please select that file again."}</p>}
@@ -401,7 +433,7 @@ export default function MembershipRegistration() {
                   <fieldset><legend><span>{selected === "member" ? "03" : selected === "player" ? "04" : "05"}</span>{t.payment}</legend><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /><p className={styles.paymentEmailNote}>{language === "de" ? "Nach der Registrierung erhältst du diese Zahlungsinformationen zusätzlich per E-Mail." : "After registration, you will also receive these payment details by email."}</p></fieldset>
                   <fieldset><legend><span>{selected === "member" ? "04" : selected === "player" ? "05" : "06"}</span>{t.declaration}</legend><div className={styles.checks}><Check name="truth" label={t.truth} /><Check name="statutes" label={<>{t.statutes} <Link href="/satzung.pdf" target="_blank" rel="noopener noreferrer">Satzung ↗</Link></>} /><Check name="privacy" label={<>{t.privacy} <Link href="/privacy-policy" target="_blank">Privacy ↗</Link></>} /></div></fieldset>
                   {status === "error" && <p className={styles.error} role="alert">{submissionError || t.error}</p>}
-                  <button className={styles.submit} disabled={status === "sending" || Object.values(uploadProgress).includes("uploading")}>{status === "sending" ? t.sending : t.submit}</button>
+                  <button className={styles.submit} disabled={status === "sending" || Object.values(uploadProgress).includes("uploading") || !requiredUploadsComplete}>{status === "sending" ? t.sending : t.submit}</button>
                 </form>
               )}
             </>
@@ -416,16 +448,16 @@ function Field({ label, name, type = "text", wide, defaultValue, readOnly, place
   return <label className={wide ? styles.wide : ""}>{label}<input name={name} type={type} required defaultValue={defaultValue} readOnly={readOnly} placeholder={placeholder} /></label>;
 }
 
-function Upload({ label, name, status, done, language, onFile }: { label: string; name: string; status?: "uploading" | "done" | "error"; done: boolean; language: Language; onFile: (file: File, form: FormData) => Promise<boolean> }) {
+function Upload({ label, name, status, errorMessage, done, language, onFile }: { label: string; name: string; status?: "uploading" | "done" | "error"; errorMessage?: string; done: boolean; language: Language; onFile: (file: File, form: FormData) => Promise<boolean> }) {
   const busy = status === "uploading";
   const message = busy
     ? (language === "de" ? "Wird hochgeladen …" : "Uploading …")
     : done
       ? (language === "de" ? "✓ Erfolgreich hochgeladen" : "✓ Uploaded successfully")
       : status === "error"
-        ? (language === "de" ? "Erneut auswählen" : "Select again")
+        ? (errorMessage || (language === "de" ? "Erneut auswählen" : "Select again"))
         : "JPG / PNG";
-  return <label className={styles.upload}>{label}<input name={`${name}File`} type="file" accept=".jpg,.jpeg,.png" required={!done} disabled={busy} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; const form = new FormData(input.form || undefined); const successful = await onFile(file, form); if (!successful) input.value = ""; }} /><span aria-live="polite">{message}</span></label>;
+  return <label className={styles.upload}>{label}<input name={`${name}File`} type="file" accept=".jpg,.jpeg,.png" required={!done} disabled={busy} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; const form = new FormData(input.form || undefined); const successful = await onFile(file, form); if (!successful) input.value = ""; }} /><span aria-live="polite" role={status === "error" ? "alert" : undefined}>{message}</span></label>;
 }
 
 function Check({ name, label }: { name: string; label: React.ReactNode }) {
