@@ -32,7 +32,12 @@ export async function POST(req: NextRequest) {
       const approvalRes = await fetch(scriptUrl, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "checkApprovedPlayerEmail", email: submitted.email }),
+        body: JSON.stringify({
+          action: "checkApprovedPlayerEmail",
+          email: submitted.email,
+          sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
+          spreadsheetId: process.env.GOOGLE_MEMBERSHIP_SHEET_ID,
+        }),
         cache: "no-store",
       });
       const approval = await approvalRes.json().catch(() => ({}));
