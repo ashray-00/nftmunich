@@ -59,7 +59,7 @@ const copy = {
     photo: "Aktuelles Foto",
     identity: "Amtlicher Identitätsnachweis",
     insurance: "Versicherungsnachweis",
-    uploadHelp: "JPG oder PNG, maximal 2 MB je Seite. Vorder- und Rückseiten werden sicher zu einer PDF zusammengeführt.",
+    uploadHelp: "JPG, PNG oder iPhone-Foto (HEIC), maximal 12 MB. Große Bilder werden automatisch optimiert. Vorder- und Rückseiten werden sicher zu einer PDF zusammengeführt.",
     payment: "Beitrag & Zahlung",
     transferNow: "Bitte überweise nach dem Absenden den unten angegebenen Betrag.",
     chooseFeeFirst: "Wähle oben deinen Spielerbeitrag aus. Danach erscheint hier der genaue Gesamtbetrag.",
@@ -127,7 +127,7 @@ const copy = {
     photo: "Current photo",
     identity: "Official proof of identity",
     insurance: "Proof of insurance",
-    uploadHelp: "JPG or PNG, maximum 2 MB per side. Front and back sides are securely combined into one PDF.",
+    uploadHelp: "JPG, PNG or iPhone photo (HEIC), maximum 12 MB. Large images are optimized automatically. Front and back sides are securely combined into one PDF.",
     payment: "Fee & payment",
     transferNow: "Please transfer the amount shown below after submitting.",
     chooseFeeFirst: "Select your player fee above. Your exact total will then appear here.",
@@ -244,11 +244,14 @@ export default function MembershipRegistration() {
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
       return fail(language === "de" ? "Bitte gib zuerst eine gültige E-Mail-Adresse ein." : "Enter a valid email address before uploading.");
     }
-    if (!(["image/jpeg", "image/png"].includes(file.type))) {
-      return fail(language === "de" ? "Nur JPG- und PNG-Dateien sind erlaubt." : "Only JPG and PNG files are allowed.");
+    if (file.size <= 0 || file.size > 12 * 1024 * 1024) {
+      return fail(language === "de" ? "Die Datei muss kleiner als 12 MB sein." : "The file must be smaller than 12 MB.");
     }
-    if (file.size <= 0 || file.size > 2 * 1024 * 1024) {
-      return fail(language === "de" ? "Die Datei muss kleiner als 2 MB sein." : "The file must be smaller than 2 MB.");
+    let uploadFile: File;
+    try {
+      uploadFile = await prepareImageForUpload(file);
+    } catch {
+      return fail(language === "de" ? "Dieses Foto konnte nicht gelesen werden. Bitte wähle ein JPG/PNG oder erstelle auf dem iPhone einen Screenshot des Dokuments." : "This photo could not be read. Select a JPG/PNG or take an iPhone screenshot of the document.");
     }
     setUploadProgress((current) => ({ ...current, [fieldType]: "uploading" }));
     setUploadErrors((current) => ({ ...current, [fieldType]: undefined }));
@@ -263,7 +266,7 @@ export default function MembershipRegistration() {
       const timeout = window.setTimeout(() => controller.abort(), 45000);
       try {
         const body = new FormData();
-        body.append("file", file);
+        body.append("file", uploadFile);
         body.append("fieldType", fieldType);
         body.append("fileIndex", "0");
         body.append("fullName", fullName || "applicant");
@@ -448,6 +451,34 @@ function Field({ label, name, type = "text", wide, defaultValue, readOnly, place
   return <label className={wide ? styles.wide : ""}>{label}<input name={name} type={type} required defaultValue={defaultValue} readOnly={readOnly} placeholder={placeholder} /></label>;
 }
 
+async function prepareImageForUpload(file: File): Promise<File> {
+  const lowerName = file.name.toLowerCase();
+  const supportedName = /\.(jpe?g|png|heic|heif)$/.test(lowerName);
+  const supportedType = ["image/jpeg", "image/png", "image/heic", "image/heif", ""].includes(file.type.toLowerCase());
+  if (!supportedName && !supportedType) throw new Error("Unsupported image type");
+  if (["image/jpeg", "image/png"].includes(file.type) && file.size <= 2 * 1024 * 1024) return file;
+
+  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  const scale = Math.min(1, 2200 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const context = canvas.getContext("2d");
+  if (!context) { bitmap.close(); throw new Error("Image conversion unavailable"); }
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+
+  let quality = 0.86;
+  let blob: Blob | null = null;
+  do {
+    blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+    quality -= 0.1;
+  } while (blob && blob.size > 1.9 * 1024 * 1024 && quality >= 0.46);
+  if (!blob || blob.size > 2 * 1024 * 1024) throw new Error("Image could not be reduced");
+  const baseName = file.name.replace(/\.[^.]+$/, "") || "iphone-photo";
+  return new File([blob], `${baseName}.jpg`, { type: "image/jpeg", lastModified: file.lastModified });
+}
+
 function Upload({ label, name, status, errorMessage, done, language, onFile }: { label: string; name: string; status?: "uploading" | "done" | "error"; errorMessage?: string; done: boolean; language: Language; onFile: (file: File, form: FormData) => Promise<boolean> }) {
   const busy = status === "uploading";
   const message = busy
@@ -457,7 +488,7 @@ function Upload({ label, name, status, errorMessage, done, language, onFile }: {
       : status === "error"
         ? (errorMessage || (language === "de" ? "Erneut auswählen" : "Select again"))
         : "JPG / PNG";
-  return <label className={styles.upload}>{label}<input name={`${name}File`} type="file" accept=".jpg,.jpeg,.png" required={!done} disabled={busy} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; const form = new FormData(input.form || undefined); const successful = await onFile(file, form); if (!successful) input.value = ""; }} /><span aria-live="polite" role={status === "error" ? "alert" : undefined}>{message}</span></label>;
+  return <label className={styles.upload}>{label}<input name={`${name}File`} type="file" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" required={!done} disabled={busy} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; const form = new FormData(input.form || undefined); const successful = await onFile(file, form); if (!successful) input.value = ""; }} /><span aria-live="polite" role={status === "error" ? "alert" : undefined}>{message}</span></label>;
 }
 
 function Check({ name, label }: { name: string; label: React.ReactNode }) {
