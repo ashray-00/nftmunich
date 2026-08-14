@@ -261,6 +261,9 @@ function uploadMembershipFile_(payload) {
   if (!payload.base64 || !payload.filename || !payload.mimeType) {
     return json_({ status: 400, message: "Missing file information." });
   }
+  if (["image/jpeg", "image/png"].indexOf(payload.mimeType) === -1 || String(payload.base64).length > 3000000) {
+    return json_({ status: 400, message: "Invalid image type or size." });
+  }
   if (payload.registrationType !== "member" && !isApprovedPlayerEmail_(payload.email)) {
     return json_({ status: 403, message: "This Core Member email is not approved." });
   }
@@ -281,6 +284,10 @@ function uploadMembershipFile_(payload) {
   if (existingFiles.hasNext()) {
     return json_({ status: 200, fileUrl: existingFiles.next().getUrl(), reused: true });
   }
+  const folderFiles = folder.getFiles();
+  let fileCount = 0;
+  while (folderFiles.hasNext() && fileCount <= 10) { folderFiles.next(); fileCount += 1; }
+  if (fileCount > 10) return json_({ status: 429, message: "Upload limit reached for this application." });
   const bytes = Utilities.base64Decode(payload.base64);
   const blob = Utilities.newBlob(bytes, payload.mimeType, safeFilename);
   const file = folder.createFile(blob);
