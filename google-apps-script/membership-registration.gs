@@ -560,7 +560,9 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
   const paymentEn = hardship
     ? ["Please do not transfer anything yet. The board will review your hardship request and contact you personally."]
     : [
-        "Please transfer €" + total + " to the following club account:",
+        "Please transfer the following amount to the club account:",
+        "Amount: " + total + " EUR",
+        "",
         "Account holder: " + settings.accountHolder,
         "IBAN: " + settings.iban,
         "Payment reference: " + reference
@@ -568,19 +570,23 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
   const body = [
     "Hi " + data.firstName + ",",
     "",
-    "Thank you for registering as " + category + ". Your registration was received successfully.",
+    "Thank you for registering. Your registration was received successfully.",
+    "",
+    "Category: " + category,
     "Application ID: " + applicationId,
     "",
     paymentEn.join("\n"),
     "",
-    "Questions? Contact " + REGISTRATION_EMAIL,
+    "If you have any questions, contact " + REGISTRATION_EMAIL + ".",
+    "",
     settings.clubName
   ].join("\n");
 
   const htmlPayment = hardship
     ? "<p><strong>Amount:</strong> No payment now. The board will contact you.</p>"
     : [
-        "<p><strong>Amount: €" + total + "</strong></p>",
+        "<p>Please transfer the following amount to the club account:</p>",
+        "<p><strong>Amount: " + total + " EUR</strong></p>",
         "<p>Account holder: " + escapeHtml_(settings.accountHolder) + "<br>",
         "<strong>IBAN: " + escapeHtml_(settings.iban) + "</strong><br>",
         "Payment reference: <strong>" + escapeHtml_(reference) + "</strong></p>"
@@ -591,8 +597,8 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
     "<p><strong>Category: " + escapeHtml_(category) + "</strong><br>",
     "Application ID: <strong>" + escapeHtml_(applicationId) + "</strong></p>",
     htmlPayment,
-    "<p>Questions? Contact <a href=\"mailto:" + REGISTRATION_EMAIL + "\">" + REGISTRATION_EMAIL + "</a><br>",
-    escapeHtml_(settings.clubName) + "</p>"
+    "<p>If you have any questions, contact <a href=\"mailto:" + REGISTRATION_EMAIL + "\">" + REGISTRATION_EMAIL + "</a>.</p>",
+    "<p>" + escapeHtml_(settings.clubName) + "</p>"
   ].join("");
 
   MailApp.sendEmail({
