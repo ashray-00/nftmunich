@@ -21,7 +21,7 @@ const APPLICATION_TABS = {
 function doPost(e) {
   try {
     const payload = JSON.parse(e.postData.contents || "{}");
-    const publicActions = { publicClubSettings: true };
+    const publicActions = { publicClubSettings: true, checkApprovedPlayerEmail: true };
     const expectedSecret = PropertiesService.getScriptProperties().getProperty("WEBSITE_SHARED_SECRET");
     if (!publicActions[payload.action] && (!expectedSecret || payload.sharedSecret !== expectedSecret)) {
       return json_({ status: 403, message: "Forbidden." });
