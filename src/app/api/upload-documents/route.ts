@@ -61,6 +61,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Invalid upload category." }, { status: 400 });
     }
 
+    if (!fullName.trim() || !/^\S+@\S+\.\S+$/.test(email)) {
+      return NextResponse.json({ message: "Complete your name and enter a valid email before uploading." }, { status: 400 });
+    }
+
     if (!file || file.size === 0) {
       return NextResponse.json({ message: "No file provided." }, { status: 400 });
     }
@@ -101,9 +105,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 50000);
     const scriptRes = await fetch(scriptUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
       body: JSON.stringify({
         action: "uploadFile",
         sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
@@ -114,7 +121,7 @@ export async function POST(req: NextRequest) {
         email,
         registrationType,
       }),
-    });
+    }).finally(() => clearTimeout(timeout));
 
     if (!scriptRes.ok) {
       throw new Error(`Apps Script responded with status ${scriptRes.status}`);
@@ -140,9 +147,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ fileUrl });
   } catch (err) {
     console.error("Document upload error:", err);
+    const timedOut = err instanceof Error && err.name === "AbortError";
     return NextResponse.json(
-      { message: "Failed to upload document. Please try again." },
-      { status: 500 }
+      { message: timedOut ? "The upload timed out. Please check your connection and select the file again." : "The document could not be saved. Please select it again. If the problem continues, contact NFT Munich." },
+      { status: timedOut ? 504 : 502 }
     );
   }
 }
