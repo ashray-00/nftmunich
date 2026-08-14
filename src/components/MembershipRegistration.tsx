@@ -361,7 +361,7 @@ export default function MembershipRegistration() {
                 <p>{language === "de" ? "Deine E-Mail-Adresse ist nicht registriert. Bitte kontaktiere NFT Munich unter nftmunich@gmail.com." : "Your email address is not registered. Please contact NFT Munich at nftmunich@gmail.com."}</p>
                 <button type="button" className={styles.accessButton} onClick={signOut}>{language === "de" ? "Andere E-Mail-Adresse verwenden" : "Use another email address"}</button>
               </div>}
-              {(!protectedRoute || (user && coreAccess === "approved")) && (
+              {(!protectedRoute || (coreAccess === "approved" && Boolean(user || verifiedCoreEmail))) && (
                 <form onSubmit={submit} className={styles.form}>
                   <fieldset>
                     <legend><span>01</span>{t.personal}</legend>
