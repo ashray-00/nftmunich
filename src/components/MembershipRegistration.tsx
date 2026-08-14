@@ -168,7 +168,9 @@ export default function MembershipRegistration() {
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({});
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [submissionError, setSubmissionError] = useState("");
-  const { user, loading } = useAuth();
+  const [coreAccess, setCoreAccess] = useState<"idle" | "checking" | "approved" | "denied">("idle");
+  const [verifiedCoreEmail, setVerifiedCoreEmail] = useState("");
+  const { user, loading, signOut } = useAuth();
   const t = copy[language];
 
   useEffect(() => {
@@ -192,6 +194,28 @@ export default function MembershipRegistration() {
       .then((data) => { if (data?.settings) setClubSettings({ ...DEFAULT_CLUB_SETTINGS, ...data.settings }); })
       .catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    const protectedSelection = selected === "player" || selected === "management";
+    if (!protectedSelection || !user?.email) {
+      setCoreAccess("idle");
+      return;
+    }
+    let active = true;
+    setCoreAccess("checking");
+    fetch("/api/auth/check-core-access", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: user.email }),
+    })
+      .then((response) => {
+        if (active) setCoreAccess(response.ok ? "approved" : "denied");
+      })
+      .catch(() => {
+        if (active) setCoreAccess("denied");
+      });
+    return () => { active = false; };
+  }, [selected, user?.email]);
 
   const supporterFee = Number(clubSettings.supporterFee) || 15;
   const studentTotal = supporterFee + (Number(clubSettings.playerStudentFee) || 0);
@@ -309,14 +333,14 @@ export default function MembershipRegistration() {
 
       {selected && (
         <section className={styles.formShell}>
-          <button className={styles.back} type="button" onClick={() => { setSelected(null); setFeeCategory(null); setUploads({}); setUploadProgress({}); setApplicationId(""); setConfirmationSent(true); setStatus("idle"); }}>← {t.back}</button>
+          <button className={styles.back} type="button" onClick={() => { setSelected(null); setFeeCategory(null); setVerifiedCoreEmail(""); setCoreAccess("idle"); setUploads({}); setUploadProgress({}); setApplicationId(""); setConfirmationSent(true); setStatus("idle"); }}>← {t.back}</button>
           <div className={styles.formHeading}>
             <div style={{ display: "grid", gap: ".35rem" }}>
               <small style={{ textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 800, opacity: .78 }}>{language === "de" ? "Du registrierst dich als" : "You are registering as"}</small>
               <h2>{selected === "member" ? t.member : t.core}</h2>
               {selected === "member" && <p className={styles.memberFormText}>{t.memberText}</p>}
             </div>
-              <div className={styles.feePanel} aria-label={language === "de" ? "Beiträge" : "Fees"}>
+            {(!protectedRoute || coreAccess === "approved") && <div className={styles.feePanel} aria-label={language === "de" ? "Beiträge" : "Fees"}>
               {selected === "member" ? (
                 <div className={styles.feeRow}><strong>{language === "de" ? `${supporterFee} € Aufnahmegebühr` : `€${supporterFee} joining fee`}</strong></div>
               ) : (
@@ -326,13 +350,18 @@ export default function MembershipRegistration() {
                   <div className={styles.feeRow}><strong>{language === "de" ? `+ ${supporterFee} € Aufnahmegebühr` : `+ €${supporterFee} joining fee`}</strong></div>
                 </>
               )}
-            </div>
+            </div>}
           </div>
 
           {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}{applicationId ? ` · ${applicationId}` : ""}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
             <>
-              {protectedRoute && !loading && !user && <div><h3>{t.loginTitle}</h3><LoginGate coreMember language={language} /></div>}
-              {(!protectedRoute || user) && (
+              {protectedRoute && !loading && !user && coreAccess !== "approved" && <div><h3>{t.loginTitle}</h3><LoginGate coreMember language={language} onApproved={(email) => { setVerifiedCoreEmail(email); setCoreAccess("approved"); }} /></div>}
+              {protectedRoute && user && coreAccess === "checking" && <div className={styles.notice}>{language === "de" ? "E-Mail-Adresse wird geprüft …" : "Checking registered email…"}</div>}
+              {protectedRoute && user && coreAccess === "denied" && <div className={styles.notice}>
+                <p>{language === "de" ? "Deine E-Mail-Adresse ist nicht registriert. Bitte kontaktiere NFT Munich unter nftmunich@gmail.com." : "Your email address is not registered. Please contact NFT Munich at nftmunich@gmail.com."}</p>
+                <button type="button" className={styles.accessButton} onClick={signOut}>{language === "de" ? "Andere E-Mail-Adresse verwenden" : "Use another email address"}</button>
+              </div>}
+              {(!protectedRoute || (user && coreAccess === "approved")) && (
                 <form onSubmit={submit} className={styles.form}>
                   <fieldset>
                     <legend><span>01</span>{t.personal}</legend>
@@ -340,7 +369,7 @@ export default function MembershipRegistration() {
                       <Field label={t.firstName} name="firstName" />
                       <Field label={t.lastName} name="lastName" />
                       <Field label={t.birthDate} name="birthDate" placeholder={language === "de" ? "TT.MM.JJJJ" : "DD.MM.YYYY"} />
-                      <Field label={t.email} name="email" type="email" defaultValue={user?.email} readOnly={Boolean(user)} />
+                      <Field label={t.email} name="email" type="email" defaultValue={protectedRoute ? (verifiedCoreEmail || user?.email) : ""} readOnly={protectedRoute && Boolean(user || verifiedCoreEmail)} />
                       <Field label={t.street} name="street" wide />
                       <Field label={t.postalCode} name="postalCode" />
                       <Field label={t.city} name="city" />
