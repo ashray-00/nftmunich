@@ -22,7 +22,12 @@ export async function POST(request: NextRequest) {
     const response = await fetch(scriptUrl, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "checkApprovedPlayerEmail", email }),
+      body: JSON.stringify({
+        action: "checkApprovedPlayerEmail",
+        email,
+        sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
+        spreadsheetId: process.env.GOOGLE_MEMBERSHIP_SHEET_ID,
+      }),
       cache: "no-store",
     });
     const result = await response.json().catch(() => ({}));
