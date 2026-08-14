@@ -336,7 +336,8 @@ function saveMembershipRegistration_(payload) {
     const photoFile = driveFileFromUrl_(data.photo);
     const applicantFolder = firstParentFolder_(photoFile);
     applicantFolder.setName(safeFolderName_(applicationId + "_" + data.firstName + "_" + data.lastName));
-    photoFile.setName(applicationId + "_Photo." + fileExtension_(photoFile));
+    const fileBase = safeFileName_(applicationId + "_" + data.firstName + "_" + data.lastName);
+    photoFile.setName(fileBase + "_Photo." + fileExtension_(photoFile));
     const documentsPdf = createDocumentsPdf_(data, applicationId);
     const applicationPdf = createApplicationPdf_(data, applicationId, documentsPdf);
     const accepted = "✓ Accepted — " + now;
@@ -378,18 +379,31 @@ function createDocumentsPdf_(data, applicationId) {
   const folder = firstParentFolder_(sourceFiles[0]);
   const doc = DocumentApp.create(applicationId + " Documents");
   const body = doc.getBody();
-  body.appendParagraph("NFT Munich e.V. - Applicant documents").setHeading(DocumentApp.ParagraphHeading.HEADING1);
-  body.appendParagraph("Application ID: " + applicationId);
+  body.setMarginTop(42).setMarginBottom(42).setMarginLeft(42).setMarginRight(42);
+  const fullName = data.firstName + " " + data.lastName;
   items.forEach(function(item, index) {
-    body.appendPageBreak();
-    body.appendParagraph(item[0]).setHeading(DocumentApp.ParagraphHeading.HEADING2);
+    if (index > 0) body.appendPageBreak();
+    const heading = body.appendParagraph("NFT MUNICH E.V.  |  APPLICANT DOCUMENT");
+    heading.setBold(true).setFontSize(10).setForegroundColor("#164c35");
+    body.appendHorizontalRule();
+    body.appendParagraph(item[0]).setHeading(DocumentApp.ParagraphHeading.HEADING1);
+    const meta = body.appendTable([
+      ["Full name", fullName],
+      ["Application number", applicationId]
+    ]);
+    styleFormTable_(meta);
+    body.appendParagraph("");
     const image = body.appendImage(sourceFiles[index].getBlob());
     const width = image.getWidth();
-    if (width > 500) image.setWidth(500).setHeight(Math.round(image.getHeight() * 500 / width));
+    const height = image.getHeight();
+    const scale = Math.min(500 / width, 610 / height, 1);
+    image.setWidth(Math.round(width * scale)).setHeight(Math.round(height * scale));
+    body.appendParagraph("Document: " + item[0] + "  |  " + fullName).setFontSize(9).setForegroundColor("#666666");
   });
   doc.saveAndClose();
   const tempFile = DriveApp.getFileById(doc.getId());
-  const pdf = folder.createFile(tempFile.getAs(MimeType.PDF).setName(applicationId + "_ID_Insurance.pdf"));
+  const fileBase = safeFileName_(applicationId + "_" + data.firstName + "_" + data.lastName);
+  const pdf = folder.createFile(tempFile.getAs(MimeType.PDF).setName(fileBase + "_ID_Insurance.pdf"));
   pdf.setDescription("Private combined ID and insurance document for " + applicationId);
   tempFile.setTrashed(true);
   sourceFiles.forEach(function(file) { file.setTrashed(true); });
@@ -401,26 +415,48 @@ function createApplicationPdf_(data, applicationId, documentsPdf) {
   const folder = firstParentFolder_(photoFile);
   const doc = DocumentApp.create(applicationId + " Application");
   const body = doc.getBody();
-  body.appendParagraph("NFT Munich e.V. - Membership application").setHeading(DocumentApp.ParagraphHeading.HEADING1);
-  const fields = [
-    ["Application ID", applicationId], ["Submitted at", data.submittedAt], ["Category", data.registrationType],
-    ["Name", data.firstName + " " + data.lastName], ["Date of birth", data.birthDate],
+  body.setMarginTop(42).setMarginBottom(42).setMarginLeft(42).setMarginRight(42);
+  const title = body.appendParagraph("NFT MUNICH E.V.");
+  title.setBold(true).setFontSize(11).setForegroundColor("#164c35");
+  body.appendParagraph("MEMBERSHIP APPLICATION").setHeading(DocumentApp.ParagraphHeading.TITLE);
+  body.appendParagraph("Titurelstrasse 8, 81925 Munich  |  nftmunich@gmail.com  |  www.nftmunich.club")
+    .setFontSize(8).setForegroundColor("#666666");
+  body.appendHorizontalRule();
+
+  appendFormSection_(body, "Application", [
+    ["Application number", applicationId], ["Submitted", data.submittedAt],
+    ["Category", registrationLabel_(data.registrationType)], ["Language", String(data.language || "").toUpperCase()]
+  ]);
+  appendFormSection_(body, "Personal details", [
+    ["Full name", data.firstName + " " + data.lastName], ["Date of birth", data.birthDate],
     ["Address", data.street + ", " + data.postalCode + " " + data.city],
-    ["Email", data.email], ["Phone", data.phone], ["Fee category", data.feeCategory],
-    ["Membership fee", data.membershipFee], ["Player fee", data.playerFee], ["Total fee", data.totalFee],
+    ["Email", data.email], ["Phone / WhatsApp", data.phone]
+  ]);
+  if (data.registrationType !== "member") appendFormSection_(body, "Player and management details", [
+    ["Role", data.registrationType === "management" ? "Player + Management" : "Player"],
     ["Position", data.position], ["Emergency contact", data.emergencyName],
     ["Emergency phone", data.emergencyPhone], ["Management role", data.managementRole],
-    ["Responsibility", data.responsibility], ["Documents", documentsPdf]
-  ];
-  fields.forEach(function(field) { if (field[1] !== "" && field[1] != null) body.appendParagraph(field[0] + ": " + field[1]); });
-  body.appendParagraph("Accepted declarations").setHeading(DocumentApp.ParagraphHeading.HEADING2);
+    ["Responsibility", data.responsibility]
+  ]);
+  appendFormSection_(body, "Fee", [
+    ["Fee category", data.feeCategory], ["Joining fee", data.membershipFee],
+    ["Player fee", data.playerFee], ["Total amount", data.totalFee === "" ? "Board review" : data.totalFee + " EUR"]
+  ]);
+  body.appendParagraph("Declarations and consent").setHeading(DocumentApp.ParagraphHeading.HEADING2);
   const accepted = "✓ Accepted — " + data.submittedAt;
-  body.appendListItem("Declaration / confirmation: " + accepted);
-  body.appendListItem("NFT Munich e.V. statutes: " + accepted);
-  body.appendListItem("Privacy policy and data processing: " + accepted);
+  const consentTable = body.appendTable([
+    ["Declaration / confirmation", accepted],
+    ["NFT Munich e.V. statutes", accepted],
+    ["Privacy policy and data processing", accepted]
+  ]);
+  styleFormTable_(consentTable);
+  body.appendParagraph("");
+  body.appendParagraph("This document was generated from the applicant's submitted online form. The recorded date and time document the active acceptance of all mandatory declarations.")
+    .setFontSize(8).setForegroundColor("#666666");
   doc.saveAndClose();
   const tempFile = DriveApp.getFileById(doc.getId());
-  const pdf = folder.createFile(tempFile.getAs(MimeType.PDF).setName(applicationId + "_Application.pdf"));
+  const fileBase = safeFileName_(applicationId + "_" + data.firstName + "_" + data.lastName);
+  const pdf = folder.createFile(tempFile.getAs(MimeType.PDF).setName(fileBase + "_Application.pdf"));
   pdf.setDescription("Private membership application summary for " + applicationId);
   tempFile.setTrashed(true);
   return pdf.getUrl();
@@ -445,6 +481,29 @@ function firstParentFolder_(file) {
   const parents = file.getParents();
   if (!parents.hasNext()) throw new Error("Applicant folder not found.");
   return parents.next();
+}
+
+function appendFormSection_(body, title, rows) {
+  body.appendParagraph(title).setHeading(DocumentApp.ParagraphHeading.HEADING2);
+  const filtered = rows.filter(function(row) { return row[1] !== "" && row[1] != null; });
+  if (filtered.length) styleFormTable_(body.appendTable(filtered));
+}
+
+function styleFormTable_(table) {
+  table.setBorderColor("#d7ddd9").setBorderWidth(1);
+  for (let rowIndex = 0; rowIndex < table.getNumRows(); rowIndex += 1) {
+    const row = table.getRow(rowIndex);
+    row.getCell(0).setBackgroundColor("#f1f5f2").setWidth(145);
+    row.getCell(0).editAsText().setBold(true).setFontSize(9).setForegroundColor("#164c35");
+    row.getCell(1).editAsText().setFontSize(9).setForegroundColor("#111111");
+  }
+  return table;
+}
+
+function registrationLabel_(type) {
+  if (type === "management") return "Core Member - Player + Management";
+  if (type === "player") return "Core Member - Player";
+  return "Member";
 }
 
 function fileExtension_(file) {
@@ -495,7 +554,7 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
   const category = labels[data.registrationType] || data.registrationType;
   const hardship = data.feeCategory === "hardship";
   const total = hardship ? "" : Number(data.totalFee || 0);
-  const reference = [applicationId, paymentReferencePart_(data.firstName), paymentReferencePart_(data.lastName)]
+  const reference = [paymentReferencePart_(data.firstName), paymentReferencePart_(data.lastName)]
     .filter(String)
     .join("-");
   const paymentEn = hardship
