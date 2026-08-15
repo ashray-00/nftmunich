@@ -2,8 +2,6 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "../context/AuthContext";
-import LoginGate from "./LoginGate";
 import styles from "../styles/MembershipRegistration.module.css";
 
 type Language = "de" | "en";
@@ -64,7 +62,7 @@ const copy = {
     insurance: "Versicherungsnachweis",
     uploadHelp: "JPG, PNG oder iPhone-Foto (HEIC), maximal 12 MB. Große Bilder werden automatisch optimiert.",
     payment: "Beitrag & Zahlung",
-    transferNow: "Bitte überweise jetzt noch nichts. Sobald das Vereinskonto verfügbar ist, senden wir dir die Bankverbindung und Zahlungsinformationen per E-Mail.",
+    transferNow: "Bitte noch keine Zahlung vornehmen. Du erhältst die Bankverbindung und Zahlungsinformationen in den kommenden Wochen per E-Mail.",
     chooseFeeFirst: "Wähle oben deinen Spielerbeitrag aus. Danach erscheint hier der genaue Gesamtbetrag.",
     hardshipPayment: "Bitte noch nichts überweisen. Der Vorstand prüft deinen Härtefall und informiert dich persönlich.",
     total: "Zu zahlender Gesamtbetrag",
@@ -136,7 +134,7 @@ const copy = {
     insurance: "Proof of insurance",
     uploadHelp: "JPG, PNG or iPhone photo (HEIC), maximum 12 MB. Large images are optimized automatically.",
     payment: "Fee & payment",
-    transferNow: "Please do not make a payment yet. Once the club bank account is available, we will email you the bank and payment details.",
+    transferNow: "Please do not make a payment yet. You will receive the bank and payment details by email in the coming weeks.",
     chooseFeeFirst: "Select your player fee above. Your exact total will then appear here.",
     hardshipPayment: "Please do not transfer anything yet. The board will review your hardship request and contact you personally.",
     total: "Total amount to pay",
@@ -177,8 +175,33 @@ export default function MembershipRegistration() {
   const [submissionError, setSubmissionError] = useState("");
   const [coreAccess, setCoreAccess] = useState<"idle" | "checking" | "approved" | "denied">("idle");
   const [verifiedCoreEmail, setVerifiedCoreEmail] = useState("");
-  const { user, loading, signOut } = useAuth();
+  const [coreEmailInput, setCoreEmailInput] = useState("");
   const t = copy[language];
+
+  async function checkCoreEmail(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const email = coreEmailInput.trim().toLowerCase();
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setCoreAccess("denied");
+      return;
+    }
+    setCoreAccess("checking");
+    try {
+      const response = await fetch("/api/auth/check-core-access", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!response.ok) {
+        setCoreAccess("denied");
+        return;
+      }
+      setVerifiedCoreEmail(email);
+      setCoreAccess("approved");
+    } catch {
+      setCoreAccess("denied");
+    }
+  }
 
   useEffect(() => {
     const requestedType = new URLSearchParams(window.location.search).get("type");
@@ -208,29 +231,8 @@ export default function MembershipRegistration() {
       setCoreAccess("idle");
       return;
     }
-    if (verifiedCoreEmail) {
-      setCoreAccess("approved");
-      return;
-    }
-    if (!user?.email) {
-      setCoreAccess("idle");
-      return;
-    }
-    let active = true;
-    setCoreAccess("checking");
-    fetch("/api/auth/check-core-access", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: user.email }),
-    })
-      .then((response) => {
-        if (active) setCoreAccess(response.ok ? "approved" : "denied");
-      })
-      .catch(() => {
-        if (active) setCoreAccess("denied");
-      });
-    return () => { active = false; };
-  }, [selected, user?.email, verifiedCoreEmail]);
+    setCoreAccess(verifiedCoreEmail ? "approved" : "idle");
+  }, [selected, verifiedCoreEmail]);
 
   const supporterFee = Number(clubSettings.supporterFee) || 15;
   const studentTotal = supporterFee + (Number(clubSettings.playerStudentFee) || 0);
@@ -396,13 +398,11 @@ export default function MembershipRegistration() {
 
           {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}{applicationId ? ` · ${applicationId}` : ""}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
             <>
-              {protectedRoute && !loading && !user && coreAccess !== "approved" && <div><h3>{t.loginTitle}</h3><LoginGate coreMember language={language} /></div>}
-              {protectedRoute && user && coreAccess === "checking" && <div className={styles.notice}>{language === "de" ? "E-Mail-Adresse wird geprüft …" : "Checking registered email…"}</div>}
-              {protectedRoute && user && coreAccess === "denied" && <div className={styles.notice}>
+              {protectedRoute && coreAccess !== "approved" && <form onSubmit={checkCoreEmail} className={styles.accessForm}><h3>{t.loginTitle}</h3><p>{language === "de" ? "Gib die E-Mail-Adresse ein, mit der du bei NFT Munich registriert bist." : "Enter the email address registered with NFT Munich."}</p><label>{t.email}<input type="email" required value={coreEmailInput} onChange={(event) => { setCoreEmailInput(event.target.value); if (coreAccess === "denied") setCoreAccess("idle"); }} /></label><button type="submit" className={styles.accessButton} disabled={coreAccess === "checking"}>{coreAccess === "checking" ? (language === "de" ? "Wird geprüft …" : "Checking…") : (language === "de" ? "E-Mail prüfen" : "Check email")}</button></form>}
+              {protectedRoute && coreAccess === "denied" && <div className={styles.notice}>
                 <p>{language === "de" ? "Deine E-Mail-Adresse ist nicht registriert. Bitte kontaktiere NFT Munich unter nftmunich@gmail.com." : "Your email address is not registered. Please contact NFT Munich at nftmunich@gmail.com."}</p>
-                <button type="button" className={styles.accessButton} onClick={signOut}>{language === "de" ? "Andere E-Mail-Adresse verwenden" : "Use another email address"}</button>
               </div>}
-              {(!protectedRoute || (coreAccess === "approved" && Boolean(user || verifiedCoreEmail))) && (
+              {(!protectedRoute || (coreAccess === "approved" && Boolean(verifiedCoreEmail))) && (
                 <form onSubmit={submit} className={styles.form}>
                   <fieldset>
                     <legend><span>01</span>{t.personal}</legend>
@@ -410,7 +410,7 @@ export default function MembershipRegistration() {
                       <Field label={t.firstName} name="firstName" />
                       <Field label={t.lastName} name="lastName" />
                       <Field label={t.birthDate} name="birthDate" placeholder={language === "de" ? "TT.MM.JJJJ" : "DD.MM.YYYY"} />
-                      <Field label={t.email} name="email" type="email" defaultValue={protectedRoute ? (verifiedCoreEmail || user?.email) : ""} readOnly={protectedRoute && Boolean(user || verifiedCoreEmail)} />
+                      <Field label={t.email} name="email" type="email" defaultValue={protectedRoute ? verifiedCoreEmail : ""} readOnly={protectedRoute && Boolean(verifiedCoreEmail)} />
                       <Field label={t.street} name="street" wide />
                       <Field label={t.postalCode} name="postalCode" />
                       <Field label={t.city} name="city" />
@@ -425,20 +425,20 @@ export default function MembershipRegistration() {
                     <legend><span>{selected === "member" ? "02" : selected === "player" ? "03" : "04"}</span>{t.documents}</legend>
                     <p className={styles.help}>{t.uploadHelp}</p>
                     <div className={styles.uploadGrid}>
-                      <div className={`${styles.documentGroup} ${styles.photoGroup}`}><strong>{t.photo}</strong><Upload label={language === "de" ? "Foto auswählen" : "Select photo"} name="photo" status={uploadProgress.photo} errorMessage={uploadErrors.photo} done={Boolean(uploads.photo)} language={language} onFile={(file, form) => uploadDocument(file, "photo", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || user?.email || ""))} /></div>
+                      <div className={`${styles.documentGroup} ${styles.photoGroup}`}><strong>{t.photo}</strong><Upload label={language === "de" ? "Foto auswählen" : "Select photo"} name="photo" status={uploadProgress.photo} errorMessage={uploadErrors.photo} done={Boolean(uploads.photo)} language={language} onFile={(file, form) => uploadDocument(file, "photo", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || ""))} /></div>
                       <div className={`${styles.documentGroup} ${styles.identityGroup}`}><strong>{t.identity}</strong><div className={styles.uploadPairGrid}>
-                        <Upload label={language === "de" ? "Vorderseite" : "Front side"} name="idFront" status={uploadProgress.idFront} errorMessage={uploadErrors.idFront} done={Boolean(uploads.idFront)} language={language} onFile={(file, form) => uploadDocument(file, "idFront", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || user?.email || ""))} />
-                        <Upload label={language === "de" ? "Rückseite" : "Back side"} name="idBack" status={uploadProgress.idBack} errorMessage={uploadErrors.idBack} done={Boolean(uploads.idBack)} language={language} onFile={(file, form) => uploadDocument(file, "idBack", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || user?.email || ""))} />
+                        <Upload label={language === "de" ? "Vorderseite" : "Front side"} name="idFront" status={uploadProgress.idFront} errorMessage={uploadErrors.idFront} done={Boolean(uploads.idFront)} language={language} onFile={(file, form) => uploadDocument(file, "idFront", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || ""))} />
+                        <Upload label={language === "de" ? "Rückseite" : "Back side"} name="idBack" status={uploadProgress.idBack} errorMessage={uploadErrors.idBack} done={Boolean(uploads.idBack)} language={language} onFile={(file, form) => uploadDocument(file, "idBack", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || ""))} />
                       </div></div>
                       {protectedRoute && <div className={`${styles.documentGroup} ${styles.insuranceGroup}`}><strong>{t.insurance}</strong><div className={styles.uploadPairGrid}>
-                        <Upload label={language === "de" ? "Vorderseite" : "Front side"} name="insuranceFront" status={uploadProgress.insuranceFront} errorMessage={uploadErrors.insuranceFront} done={Boolean(uploads.insuranceFront)} language={language} onFile={(file, form) => uploadDocument(file, "insuranceFront", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || user?.email || ""))} />
-                        <Upload label={language === "de" ? "Rückseite" : "Back side"} name="insuranceBack" status={uploadProgress.insuranceBack} errorMessage={uploadErrors.insuranceBack} done={Boolean(uploads.insuranceBack)} language={language} onFile={(file, form) => uploadDocument(file, "insuranceBack", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || user?.email || ""))} />
+                        <Upload label={language === "de" ? "Vorderseite" : "Front side"} name="insuranceFront" status={uploadProgress.insuranceFront} errorMessage={uploadErrors.insuranceFront} done={Boolean(uploads.insuranceFront)} language={language} onFile={(file, form) => uploadDocument(file, "insuranceFront", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || ""))} />
+                        <Upload label={language === "de" ? "Rückseite" : "Back side"} name="insuranceBack" status={uploadProgress.insuranceBack} errorMessage={uploadErrors.insuranceBack} done={Boolean(uploads.insuranceBack)} language={language} onFile={(file, form) => uploadDocument(file, "insuranceBack", `${form.get("firstName") || ""} ${form.get("lastName") || ""}`, String(form.get("email") || verifiedCoreEmail || ""))} />
                       </div></div>}
                     </div>
                     {Object.values(uploadProgress).includes("error") && <p className={styles.error} role="alert">{language === "de" ? "Der Upload konnte nicht bestätigt werden. Bitte wähle die betreffende Datei erneut aus." : "The upload could not be confirmed. Please select that file again."}</p>}
                   </fieldset>
 
-                  <fieldset><legend><span>{selected === "member" ? "03" : "04"}</span>{t.payment}</legend><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /><p className={styles.paymentEmailNote}>{language === "de" ? "Die Bankverbindung und Zahlungsinformationen erhältst du in den kommenden Wochen per E-Mail." : "You will receive the bank and payment details by email in the coming weeks."}</p></fieldset>
+                  <fieldset><legend><span>{selected === "member" ? "03" : "04"}</span>{t.payment}</legend><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /></fieldset>
                   <fieldset><legend><span>{selected === "member" ? "04" : "05"}</span>{language === "de" ? "Zusätzliche Mitteilung" : "Additional message"}</legend><label className={styles.selectLabel}>{t.optionalMessage}<textarea className={styles.textarea} name="optionalMessage" maxLength={1500} rows={5} /></label></fieldset>
                   <fieldset><legend><span>{selected === "member" ? "05" : "06"}</span>{t.declaration}</legend><div className={styles.checks}><Check name="truth" label={t.truth} /><Check name="statutes" label={<>{t.statutes} <Link href="/satzung.pdf" target="_blank" rel="noopener noreferrer">Satzung ↗</Link></>} /><Check name="privacy" label={<>{t.privacy} <Link href="/privacy-policy" target="_blank">Privacy ↗</Link></>} /></div></fieldset>
                   {status === "error" && <p className={styles.error} role="alert">{submissionError || t.error}</p>}

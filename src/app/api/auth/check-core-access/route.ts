@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifiedCoreEmail } from "../../../../lib/coreAccess";
+import { createCoreAccessCookie } from "../../../../lib/coreAccess";
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -15,10 +15,6 @@ export async function POST(request: NextRequest) {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ approved: false }, { status: 400 });
   }
-  if (verifiedCoreEmail(request) !== email) {
-    return NextResponse.json({ approved: false }, { status: 403 });
-  }
-
   const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
   if (!scriptUrl) return NextResponse.json({ approved: false }, { status: 500 });
 
@@ -36,7 +32,13 @@ export async function POST(request: NextRequest) {
     });
     const result = await response.json().catch(() => ({}));
     const approved = response.ok && result.status === 200 && result.approved === true;
-    return NextResponse.json({ approved }, { status: approved ? 200 : 403 });
+    const nextResponse = NextResponse.json({ approved }, { status: approved ? 200 : 403 });
+    if (approved) {
+      const cookie = createCoreAccessCookie(email);
+      if (!cookie) return NextResponse.json({ approved: false }, { status: 500 });
+      nextResponse.cookies.set(cookie.name, cookie.value, cookie.options);
+    }
+    return nextResponse;
   } catch {
     return NextResponse.json({ approved: false }, { status: 502 });
   }
