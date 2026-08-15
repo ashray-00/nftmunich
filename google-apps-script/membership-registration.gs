@@ -409,8 +409,7 @@ function createDocumentsPdf_(data, applicationId) {
     body.appendHorizontalRule();
     body.appendParagraph(item[0]).setHeading(DocumentApp.ParagraphHeading.HEADING1);
     const meta = body.appendTable([
-      ["Full name", fullName],
-      ["Application number", applicationId]
+      ["Full name", fullName]
     ]);
     styleFormTable_(meta);
     body.appendParagraph("");
@@ -423,7 +422,7 @@ function createDocumentsPdf_(data, applicationId) {
   });
   doc.saveAndClose();
   const tempFile = DriveApp.getFileById(doc.getId());
-  const fileBase = safeFileName_(applicationId + "_" + data.firstName + "_" + data.lastName);
+  const fileBase = safeFileName_(data.firstName + "_" + data.lastName);
   const pdf = folder.createFile(tempFile.getAs(MimeType.PDF).setName(fileBase + "_ID_Insurance.pdf"));
   pdf.setDescription("Private combined ID and insurance document for " + applicationId);
   tempFile.setTrashed(true);
@@ -440,12 +439,10 @@ function createApplicationPdf_(data, applicationId, documentsPdf) {
   const title = body.appendParagraph("NFT MUNICH E.V.");
   title.setBold(true).setFontSize(11).setForegroundColor("#164c35");
   body.appendParagraph("MEMBERSHIP APPLICATION").setHeading(DocumentApp.ParagraphHeading.TITLE);
-  body.appendParagraph("Titurelstrasse 8, 81925 Munich  |  nftmunich@gmail.com  |  www.nftmunich.club")
-    .setFontSize(8).setForegroundColor("#666666");
   body.appendHorizontalRule();
 
   appendFormSection_(body, "Application", [
-    ["Application number", applicationId], ["Submitted", data.submittedAt],
+    ["Submitted", data.submittedAt],
     ["Category", registrationLabel_(data.registrationType)], ["Language", String(data.language || "").toUpperCase()]
   ]);
   appendFormSection_(body, "Personal details", [
@@ -586,7 +583,6 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
     "Thank you for registering. Your registration was received successfully.",
     "",
     "Category: " + category,
-    "Application ID: " + applicationId,
     "",
     paymentEn.join("\n"),
     "",
@@ -601,8 +597,7 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
   const htmlBody = [
     "<p>Hi " + escapeHtml_(data.firstName) + ",</p>",
     "<p>Thank you for registering. Your registration was received successfully.</p>",
-    "<p><strong>Category: " + escapeHtml_(category) + "</strong><br>",
-    "Application ID: <strong>" + escapeHtml_(applicationId) + "</strong></p>",
+    "<p><strong>Category: " + escapeHtml_(category) + "</strong></p>",
     htmlPayment,
     "<p>If you have any questions, contact <a href=\"mailto:" + REGISTRATION_EMAIL + "\">" + REGISTRATION_EMAIL + "</a>.</p>",
     "<p>" + escapeHtml_(settings.clubName) + "</p>"

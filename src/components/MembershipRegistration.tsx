@@ -166,7 +166,6 @@ export default function MembershipRegistration() {
   const [selected, setSelected] = useState<RouteType | null>(null);
   const [uploads, setUploads] = useState<UploadState>({});
   const [feeCategory, setFeeCategory] = useState<FeeCategory | null>(null);
-  const [applicationId, setApplicationId] = useState("");
   const [confirmationSent, setConfirmationSent] = useState(true);
   const [clubSettings, setClubSettings] = useState<ClubSettings>(DEFAULT_CLUB_SETTINGS);
   const [uploadProgress, setUploadProgress] = useState<UploadProgress>({});
@@ -320,7 +319,6 @@ export default function MembershipRegistration() {
     });
     const result = await response.json().catch(() => ({}));
     if (response.ok) {
-      setApplicationId(result.applicationId || "");
       setConfirmationSent(result.emailSent !== false);
     } else {
       const messages: Record<string, { de: string; en: string }> = {
@@ -376,7 +374,7 @@ export default function MembershipRegistration() {
 
       {selected && (
         <section className={styles.formShell}>
-          <button className={styles.back} type="button" onClick={() => { setSelected(null); setFeeCategory(null); setVerifiedCoreEmail(""); setCoreAccess("idle"); setUploads({}); setUploadProgress({}); setApplicationId(""); setConfirmationSent(true); setStatus("idle"); }}>← {t.back}</button>
+          <button className={styles.back} type="button" onClick={() => { setSelected(null); setFeeCategory(null); setVerifiedCoreEmail(""); setCoreAccess("idle"); setUploads({}); setUploadProgress({}); setConfirmationSent(true); setStatus("idle"); }}>← {t.back}</button>
           <div className={styles.formHeading}>
             <div style={{ display: "grid", gap: ".35rem" }}>
               <small style={{ textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 800, opacity: .78 }}>{language === "de" ? "Du registrierst dich als" : "You are registering as"}</small>
@@ -396,7 +394,7 @@ export default function MembershipRegistration() {
             </div>}
           </div>
 
-          {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}{applicationId ? ` · ${applicationId}` : ""}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
+          {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
             <>
               {protectedRoute && coreAccess !== "approved" && <form onSubmit={checkCoreEmail} className={styles.accessForm}><h3>{t.loginTitle}</h3><p>{language === "de" ? "Gib die E-Mail-Adresse ein, mit der du bei NFT Munich registriert bist." : "Enter the email address registered with NFT Munich."}</p><label>{t.email}<input type="email" required value={coreEmailInput} onChange={(event) => { setCoreEmailInput(event.target.value); if (coreAccess === "denied") setCoreAccess("idle"); }} /></label><button type="submit" className={styles.accessButton} disabled={coreAccess === "checking"}>{coreAccess === "checking" ? (language === "de" ? "Wird geprüft …" : "Checking…") : (language === "de" ? "E-Mail prüfen" : "Check email")}</button></form>}
               {protectedRoute && coreAccess === "denied" && <div className={styles.notice}>
@@ -419,7 +417,7 @@ export default function MembershipRegistration() {
                     {protectedRoute && <label className={styles.selectLabel}>{t.feeChoice}<select name="feeCategory" required value={feeCategory || ""} onChange={(event) => setFeeCategory(event.target.value as FeeCategory)}><option value="" disabled>—</option><option value="student">{language === "de" ? `Studierende / Azubis – ${studentTotal} € gesamt` : `Students / trainees – €${studentTotal} total`}</option><option value="other">{language === "de" ? `Sonstige – ${otherTotal} € gesamt` : `Others – €${otherTotal} total`}</option><option value="hardship">{t.special}</option></select></label>}
                   </fieldset>
 
-                  {protectedRoute && <fieldset><legend><span>02</span>{t.playerDetails}</legend><div className={styles.grid}><Field label={t.position} name="position" /><Field label={t.profession} name="profession" wide placeholder={t.professionHelp} /><Field label={t.estimatedStay} name="estimatedStay" wide /><Field label={t.emergencyName} name="emergencyName" /><Field label={t.emergencyPhone} name="emergencyPhone" type="tel" /></div><label className={styles.selectLabel}>{t.managementInterest}<select name="managementInterest" required defaultValue=""><option value="" disabled>—</option><option value="yes">{t.yes}</option><option value="no">{t.no}</option></select></label></fieldset>}
+                  {protectedRoute && <fieldset><legend><span>02</span>{t.playerDetails}</legend><div className={styles.grid}><Field label={t.position} name="position" /><Field label={t.profession} name="profession" wide placeholder={t.professionHelp} /><label className={styles.wide}>{t.estimatedStay}<select name="estimatedStay" required defaultValue=""><option value="" disabled>—</option><option value="Less than 1 year">{language === "de" ? "Weniger als 1 Jahr" : "Less than 1 year"}</option><option value="More than 1 year">{language === "de" ? "Mehr als 1 Jahr" : "More than 1 year"}</option><option value="Less than 5 years">{language === "de" ? "Weniger als 5 Jahre" : "Less than 5 years"}</option><option value="More than 5 years">{language === "de" ? "Mehr als 5 Jahre" : "More than 5 years"}</option></select></label><Field label={t.emergencyName} name="emergencyName" /><Field label={t.emergencyPhone} name="emergencyPhone" type="tel" /></div><label className={styles.selectLabel}>{t.managementInterest}<select name="managementInterest" required defaultValue=""><option value="" disabled>—</option><option value="yes">{t.yes}</option><option value="no">{t.no}</option></select></label></fieldset>}
 
                   <fieldset>
                     <legend><span>{selected === "member" ? "02" : selected === "player" ? "03" : "04"}</span>{t.documents}</legend>
