@@ -39,6 +39,9 @@ export async function POST(request: NextRequest) {
     if (registrationType !== "member" && ["position", "profession", "estimatedStay", "emergencyName", "emergencyPhone", "managementInterest"].some((field) => !clean(body[field], 200))) {
       return NextResponse.json({ message: "All player details are required." }, { status: 400 });
     }
+    if (registrationType !== "member" && !["Less than 1 year", "More than 1 year", "Less than 5 years", "More than 5 years"].includes(clean(body.estimatedStay, 200))) {
+      return NextResponse.json({ message: "Invalid estimated stay selection." }, { status: 400 });
+    }
     if (registrationType !== "member" && !["yes", "no"].includes(clean(body.managementInterest, 10))) {
       return NextResponse.json({ message: "Invalid management interest selection." }, { status: 400 });
     }
@@ -108,7 +111,7 @@ export async function POST(request: NextRequest) {
       throw new Error(result.message || "Registration storage rejected the request.");
     }
 
-    return NextResponse.json({ success: true, applicationId: result.applicationId, totalFee: result.totalFee, emailSent: result.emailSent !== false });
+    return NextResponse.json({ success: true, totalFee: result.totalFee, emailSent: result.emailSent !== false });
   } catch (error) {
     console.error("Membership registration error:", error);
     return NextResponse.json({ message: "Could not save the application." }, { status: 500 });
