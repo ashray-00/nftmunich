@@ -10,7 +10,7 @@
 @media(max-width:760px){.uploadPairGrid{grid-template-columns:1fr}.formHeading .feePanel{width:100%;min-width:0;box-sizing:border-box}.formHeading .feeRow strong{font-size:.95rem}}
 @media(max-width:760px){.cards.twoCards{grid-template-columns:1fr}}
 .card button{margin-top:auto}
-.uploadGrid{grid-template-columns:1fr;align-items:start;gap:1.4rem}.uploadPairGrid>*{min-width:0}.upload input{width:100%;box-sizing:border-box}.upload{box-sizing:border-box;min-width:0}.paymentEmailNote{margin:.65rem 0 0;color:#5e665f;font-size:.92rem;line-height:1.45}
+.uploadGrid{grid-template-columns:1fr;align-items:start;gap:1.4rem}.uploadPairGrid>*{min-width:0}.upload input{width:100%;box-sizing:border-box}.upload{box-sizing:border-box;min-width:0}.paymentEmailNote{margin:.65rem 0 0;color:#5e665f;font-size:.92rem;line-height:1.45}.textarea{width:100%;box-sizing:border-box;border:1px solid #aaa89f;border-radius:9px;padding:.9rem;background:#fbfaf7;font:inherit;resize:vertical;min-height:120px}
 @media(max-width:520px){.page{padding-left:.75rem;padding-right:.75rem}.hero h1{font-size:2.45rem}.form{padding:1rem}.formHeading{padding:1.25rem}.form legend{font-size:1.1rem}.uploadPair{padding:.75rem}.upload{padding:.85rem;min-height:110px}.card{padding:1.15rem}.card h2{font-size:1.75rem}}
 .card button{margin-top:auto}
 .page{width:100%;min-width:0;box-sizing:border-box;overflow-x:hidden}

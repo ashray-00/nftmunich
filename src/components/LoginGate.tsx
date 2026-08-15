@@ -6,10 +6,9 @@ import styles from "../styles/TournamentRegistration.module.css";
 type LoginGateProps = {
   coreMember?: boolean;
   language?: "de" | "en";
-  onApproved?: (email: string) => void;
 };
 
-export default function LoginGate({ coreMember = false, language = "en", onApproved }: LoginGateProps) {
+export default function LoginGate({ coreMember = false, language = "en" }: LoginGateProps) {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
@@ -23,30 +22,19 @@ export default function LoginGate({ coreMember = false, language = "en", onAppro
 
     setStatus("loading");
     try {
-      if (coreMember) {
-        const approvalResponse = await fetch("/api/auth/check-core-access", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-        if (approvalResponse.status === 403) {
-          setStatus("error");
-          setEmailError(language === "de"
-            ? "Diese E-Mail-Adresse ist nicht registriert. Bitte kontaktiere NFT Munich unter nftmunich@gmail.com."
-            : "This email address is not registered. Please contact NFT Munich at nftmunich@gmail.com.");
-          return;
-        }
-        if (!approvalResponse.ok) throw new Error("Email check failed");
-        setStatus("idle");
-        onApproved?.(email.trim().toLowerCase());
-        return;
-      }
       localStorage.setItem("redirectAfterLogin", window.location.href);
       const response = await fetch("/api/auth/request-magic-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, purpose: coreMember ? "core-member" : undefined }),
       });
+      if (response.status === 403 && coreMember) {
+        setStatus("error");
+        setEmailError(language === "de"
+          ? "Diese E-Mail-Adresse ist nicht registriert. Bitte kontaktiere NFT Munich unter nftmunich@gmail.com."
+          : "This email address is not registered. Please contact NFT Munich at nftmunich@gmail.com.");
+        return;
+      }
       if (!response.ok) throw new Error("Login link request failed");
       setStatus("sent");
     } catch {
@@ -82,7 +70,7 @@ export default function LoginGate({ coreMember = false, language = "en", onAppro
         {emailError && <span className={styles.errorText}>{emailError}</span>}
         {status === "error" && !emailError && <span className={styles.errorText}>{language === "de" ? "Ein Netzwerkfehler ist aufgetreten. Bitte versuche es erneut." : "A network error occurred. Please try again."}</span>}
         <button type="button" onClick={handleSubmit} className={styles.submitButton} disabled={status === "loading"} style={{ marginTop: "0.75rem" }}>
-          {status === "loading" ? (language === "de" ? "Wird geprüft…" : "Checking…") : coreMember ? (language === "de" ? "E-Mail prüfen" : "Check email") : "Send Login Link"}
+          {status === "loading" ? (language === "de" ? "Wird gesendet…" : "Sending…") : coreMember ? (language === "de" ? "Zugangslink senden" : "Send access link") : "Send Login Link"}
         </button>
       </div>
     </div>

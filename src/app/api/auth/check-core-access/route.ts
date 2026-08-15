@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifiedCoreEmail } from "../../../../lib/coreAccess";
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -13,6 +14,9 @@ export async function POST(request: NextRequest) {
     : "";
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ approved: false }, { status: 400 });
+  }
+  if (verifiedCoreEmail(request) !== email) {
+    return NextResponse.json({ approved: false }, { status: 403 });
   }
 
   const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
