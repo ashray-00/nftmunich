@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { abuseKey } from "../../../lib/abuseKey";
 
 export const maxDuration = 60;
 
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     const response = await fetch(scriptUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "registrationInterest", sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET, name, email, registrationType }),
+      body: JSON.stringify({ action: "registrationInterest", sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET, name, email, registrationType, abuseKey: abuseKey(request) }),
       cache: "no-store",
     });
     const result = await response.json().catch(() => ({}));

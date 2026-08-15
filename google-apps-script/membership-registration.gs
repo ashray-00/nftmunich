@@ -42,6 +42,9 @@ function doPost(e) {
 }
 
 function sendRegistrationInterest_(payload) {
+  if (!withinRateLimit_("interest", payload.abuseKey, 8, 100)) {
+    return json_({ status: 429, message: "Too many requests. Please try again later." });
+  }
   const name = String(payload.name || "").replace(/[\r\n<>]/g, "").trim().slice(0, 150);
   const email = String(payload.email || "").replace(/[\r\n<>]/g, "").trim().slice(0, 254);
   const typeLabels = {
@@ -258,6 +261,9 @@ function sendApprovedRegistrationLink_(email, fallbackName) {
 }
 
 function uploadMembershipFile_(payload) {
+  if (!withinRateLimit_("upload", payload.abuseKey, 40, 500)) {
+    return json_({ status: 429, message: "Upload limit reached. Please try again later." });
+  }
   if (!payload.base64 || !payload.filename || !payload.mimeType) {
     return json_({ status: 400, message: "Missing file information." });
   }
@@ -310,6 +316,9 @@ function safeFolderName_(value) {
 }
 
 function saveMembershipRegistration_(payload) {
+  if (!withinRateLimit_("submit", payload.abuseKey, 10, 150)) {
+    return json_({ status: 429, message: "Submission limit reached. Please try again later." });
+  }
   const data = payload.registration || {};
   if (data.registrationType !== "member" && !isApprovedPlayerEmail_(data.email)) {
     return json_({ status: 403, message: "This Core Member email is not approved." });
@@ -333,6 +342,7 @@ function saveMembershipRegistration_(payload) {
   data.submittedAt = now;
   try {
     applicationId = createApplicationId_(spreadsheet);
+    assertSingleApplicantFolder_(data);
     const photoFile = driveFileFromUrl_(data.photo);
     const applicantFolder = firstParentFolder_(photoFile);
     applicantFolder.setName(safeFolderName_(applicationId + "_" + data.firstName + "_" + data.lastName));
@@ -349,10 +359,12 @@ function saveMembershipRegistration_(payload) {
       data.managementRole, data.responsibility, safeSpreadsheetValue_(data.photo),
       safeSpreadsheetValue_(documentsPdf), safeSpreadsheetValue_(documentsPdf),
       accepted, accepted, accepted, "Pending", "New", ""
-      , safeSpreadsheetValue_(applicationPdf)
+      , safeSpreadsheetValue_(applicationPdf), data.profession, data.estimatedStay,
+      data.managementInterest, data.optionalMessage
     ];
     sheet.appendRow(row.map(safeSpreadsheetValue_));
     sheet.getRange(1, 30).setValue("Application PDF");
+    sheet.getRange(1, 31, 1, 4).setValues([["Profession / field", "Estimated stay in Munich", "Interested in management", "Optional message"]]);
   } finally {
     lock.releaseLock();
   }
@@ -364,6 +376,15 @@ function saveMembershipRegistration_(payload) {
     console.error("Applicant confirmation email failed", emailError);
   }
   return json_({ status: 200, applicationId: applicationId, totalFee: data.totalFee, emailSent: emailSent });
+}
+
+function assertSingleApplicantFolder_(data) {
+  const urls = [data.photo, data.idFront, data.idBack];
+  if (data.registrationType !== "member") urls.push(data.insuranceFront, data.insuranceBack);
+  const folderIds = urls.map(function(url) { return firstParentFolder_(driveFileFromUrl_(url)).getId(); });
+  if (folderIds.some(function(id) { return id !== folderIds[0]; })) {
+    throw new Error("All application files must belong to the same applicant folder.");
+  }
 }
 
 function createDocumentsPdf_(data, applicationId) {
@@ -432,12 +453,14 @@ function createApplicationPdf_(data, applicationId, documentsPdf) {
     ["Address", data.street + ", " + data.postalCode + " " + data.city],
     ["Email", data.email], ["Phone / WhatsApp", data.phone]
   ]);
-  if (data.registrationType !== "member") appendFormSection_(body, "Player and management details", [
-    ["Role", data.registrationType === "management" ? "Player + Management" : "Player"],
+  if (data.registrationType !== "member") appendFormSection_(body, "Core Member details", [
+    ["Role", "Player"],
     ["Position", data.position], ["Emergency contact", data.emergencyName],
-    ["Emergency phone", data.emergencyPhone], ["Management role", data.managementRole],
-    ["Responsibility", data.responsibility]
+    ["Emergency phone", data.emergencyPhone], ["Profession / field", data.profession],
+    ["Estimated stay in Munich", data.estimatedStay],
+    ["Interested in management", data.managementInterest === "yes" ? "Yes" : "No"]
   ]);
+  appendFormSection_(body, "Additional message", [["Message", data.optionalMessage]]);
   appendFormSection_(body, "Fee", [
     ["Fee category", data.feeCategory], ["Joining fee", data.membershipFee],
     ["Player fee", data.playerFee], ["Total amount", data.totalFee === "" ? "Board review" : data.totalFee + " EUR"]
@@ -501,7 +524,6 @@ function styleFormTable_(table) {
 }
 
 function registrationLabel_(type) {
-  if (type === "management") return "Core Member - Player + Management";
   if (type === "player") return "Core Member - Player";
   return "Member";
 }
@@ -536,11 +558,12 @@ function getOrCreateApplicationSheet_(spreadsheet, tabName) {
       "Player fee", "Position", "Emergency contact", "Emergency phone",
       "Management role", "Responsibility", "Photo", "ID document",
       "Insurance", "Truth accepted", "Statutes accepted", "Privacy accepted",
-      "Application status", "Review status", "Notes"
+      "Application status", "Review status", "Notes", "Application PDF",
+      "Profession / field", "Estimated stay in Munich", "Interested in management", "Optional message"
     ]);
     sheet.setFrozenRows(1);
-    sheet.getRange(1, 1, 1, 29).setFontWeight("bold").setBackground("#0b5dbb").setFontColor("#ffffff");
-    sheet.autoResizeColumns(1, 29);
+    sheet.getRange(1, 1, 1, 34).setFontWeight("bold").setBackground("#0b5dbb").setFontColor("#ffffff");
+    sheet.autoResizeColumns(1, 34);
   }
   return sheet;
 }
@@ -549,24 +572,14 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
   const labels = {
     member: "Member / Supporter",
     player: "Core Member - Player",
-    management: "Core Member - Player + Management"
+    management: "Core Member - Player"
   };
   const category = labels[data.registrationType] || data.registrationType;
   const hardship = data.feeCategory === "hardship";
   const total = hardship ? "" : Number(data.totalFee || 0);
-  const reference = [paymentReferencePart_(data.firstName), paymentReferencePart_(data.lastName)]
-    .filter(String)
-    .join("-");
   const paymentEn = hardship
-    ? ["Please do not transfer anything yet. The board will review your hardship request and contact you personally."]
-    : [
-        "Please transfer the following amount to the club account:",
-        "Amount: " + total + " EUR",
-        "",
-        "Account holder: " + settings.accountHolder,
-        "IBAN: " + settings.iban,
-        "Payment reference: " + reference
-      ];
+    ? ["Amount: Individual review", "The board will review your hardship request and contact you personally."]
+    : ["Amount: " + total + " EUR", "Please do not make a payment yet.", "We will email you the bank and payment details in the coming weeks."];
   const body = [
     "Hi " + data.firstName + ",",
     "",
@@ -583,14 +596,8 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
   ].join("\n");
 
   const htmlPayment = hardship
-    ? "<p><strong>Amount:</strong> No payment now. The board will contact you.</p>"
-    : [
-        "<p>Please transfer the following amount to the club account:</p>",
-        "<p><strong>Amount: " + total + " EUR</strong></p>",
-        "<p>Account holder: " + escapeHtml_(settings.accountHolder) + "<br>",
-        "<strong>IBAN: " + escapeHtml_(settings.iban) + "</strong><br>",
-        "Payment reference: <strong>" + escapeHtml_(reference) + "</strong></p>"
-      ].join("");
+    ? "<p><strong>Amount:</strong> Individual review<br>The board will review your hardship request and contact you personally.</p>"
+    : "<p><strong>Amount: " + total + " EUR</strong></p><p>Please do not make a payment yet. We will email you the bank and payment details in the coming weeks.</p>";
   const htmlBody = [
     "<p>Hi " + escapeHtml_(data.firstName) + ",</p>",
     "<p>Thank you for registering. Your registration was received successfully.</p>",
@@ -667,9 +674,16 @@ function readClubSettings_(spreadsheet) {
   return settings;
 }
 
-function publicClubSettings_(payload) {
-  const spreadsheet = SpreadsheetApp.openById(payload.spreadsheetId || DEFAULT_MEMBERSHIP_SHEET_ID);
-  return json_({ status: 200, settings: readClubSettings_(spreadsheet) });
+function publicClubSettings_() {
+  const spreadsheet = SpreadsheetApp.openById(DEFAULT_MEMBERSHIP_SHEET_ID);
+  const settings = readClubSettings_(spreadsheet);
+  return json_({ status: 200, settings: {
+    clubName: settings.clubName,
+    supporterFee: settings.supporterFee,
+    memberFee: settings.memberFee,
+    playerStudentFee: settings.playerStudentFee,
+    playerOtherFee: settings.playerOtherFee
+  }});
 }
 
 function adminDashboard_(payload) {
@@ -713,6 +727,25 @@ function safeSpreadsheetValue_(value) {
 
 function safeFileName_(value) {
   return String(value).replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 140);
+}
+
+function withinRateLimit_(action, abuseKey, perClientLimit, globalLimit) {
+  const cache = CacheService.getScriptCache();
+  const client = String(abuseKey || "missing").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || "missing";
+  const lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    const clientKey = "rate:" + action + ":client:" + client;
+    const globalKey = "rate:" + action + ":global";
+    const clientCount = Number(cache.get(clientKey) || 0);
+    const globalCount = Number(cache.get(globalKey) || 0);
+    if (clientCount >= perClientLimit || globalCount >= globalLimit) return false;
+    cache.put(clientKey, String(clientCount + 1), 3600);
+    cache.put(globalKey, String(globalCount + 1), 21600);
+    return true;
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function json_(value) {

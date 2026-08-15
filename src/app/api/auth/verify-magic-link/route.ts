@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createCoreAccessCookie } from "../../../../lib/coreAccess";
 
 export async function POST(req: NextRequest) {
   const SERVER_URL = process.env.SERVER_URL;
@@ -30,7 +31,18 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({ token: (body as { token: string }).token.trim() }),
     });
     const data = await backendRes.json().catch(() => ({}));
-    return NextResponse.json(data, { status: backendRes.status });
+    const response = NextResponse.json(data, { status: backendRes.status });
+    if (backendRes.ok && typeof data.session_token === "string") {
+      try {
+        const payload = data.session_token.split(".")[1];
+        const decoded = payload ? JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) : null;
+        const cookie = decoded?.email ? createCoreAccessCookie(String(decoded.email)) : null;
+        if (cookie) response.cookies.set(cookie.name, cookie.value, cookie.options);
+      } catch {
+        // The backend response remains authoritative; an invalid token simply receives no Core cookie.
+      }
+    }
+    return response;
   } catch {
     return NextResponse.json({ detail: "Failed to contact authentication server." }, { status: 502 });
   }

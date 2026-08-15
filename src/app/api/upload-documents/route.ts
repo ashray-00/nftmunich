@@ -14,6 +14,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
+import { verifiedCoreEmail } from "../../../lib/coreAccess";
+import { abuseKey } from "../../../lib/abuseKey";
+import { createUploadRef, ensureUploadSession } from "../../../lib/uploadRef";
 
 export const maxDuration = 60;
 
@@ -24,7 +27,7 @@ const ACCEPTED_MIME_TYPES = [
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
 const ALLOWED_FIELD_TYPES = new Set(["photo", "idFront", "idBack", "insuranceFront", "insuranceBack"]);
-const ALLOWED_REGISTRATION_TYPES = new Set(["member", "player", "management"]);
+const ALLOWED_REGISTRATION_TYPES = new Set(["member", "player"]);
 
 function sanitizeFullName(name: string): string {
   return name
@@ -58,6 +61,10 @@ export async function POST(req: NextRequest) {
     const fullName = String(formData.get("fullName") ?? "").slice(0, 150);
     const email = String(formData.get("email") ?? "").trim().toLowerCase().slice(0, 254);
     const registrationType = String(formData.get("registrationType") ?? "member").slice(0, 20);
+
+    if (registrationType === "player" && verifiedCoreEmail(req) !== email) {
+      return NextResponse.json({ message: "Core Member authentication required." }, { status: 403 });
+    }
 
     if (!ALLOWED_FIELD_TYPES.has(fieldType) || !ALLOWED_REGISTRATION_TYPES.has(registrationType)) {
       return NextResponse.json({ message: "Invalid upload category." }, { status: 400 });
@@ -122,6 +129,7 @@ export async function POST(req: NextRequest) {
         fullName,
         email,
         registrationType,
+        abuseKey: abuseKey(req),
       }),
     }).finally(() => clearTimeout(timeout));
 
@@ -146,7 +154,14 @@ export async function POST(req: NextRequest) {
       throw new Error("Apps Script did not return a file URL. Check that the script is redeployed and Drive permissions are granted.");
     }
 
-    return NextResponse.json({ fileUrl });
+    const response = NextResponse.json({ uploaded: true });
+    const session = ensureUploadSession(req, response);
+    const fileRef = createUploadRef(fileUrl, email, fieldType, session);
+    if (!fileRef) return NextResponse.json({ message: "Upload security is not configured." }, { status: 500 });
+    const securedResponse = NextResponse.json({ uploaded: true, fileRef });
+    const existingSession = req.cookies.get("nft_upload_session")?.value;
+    if (!existingSession) securedResponse.cookies.set("nft_upload_session", session, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 2 * 60 * 60 });
+    return securedResponse;
   } catch (err) {
     console.error("Document upload error:", err);
     const timedOut = err instanceof Error && err.name === "AbortError";
