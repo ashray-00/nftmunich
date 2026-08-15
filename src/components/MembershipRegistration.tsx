@@ -7,8 +7,7 @@ import LoginGate from "./LoginGate";
 import styles from "../styles/MembershipRegistration.module.css";
 
 type Language = "de" | "en";
-type RouteType = "member" | "player" | "management";
-type CoreRole = "player" | "management";
+type RouteType = "member" | "player";
 type FeeCategory = "student" | "other" | "hardship";
 type UploadState = { photo?: string; idFront?: string; idBack?: string; insuranceFront?: string; insuranceBack?: string };
 type UploadProgress = Partial<Record<keyof UploadState, "uploading" | "done" | "error">>;
@@ -52,16 +51,20 @@ const copy = {
     position: "Spielposition",
     emergencyName: "Notfallkontakt – Name",
     emergencyPhone: "Notfallkontakt – Telefonnummer",
-    managementDetails: "Managementangaben",
-    role: "Aufgabe / Funktion im Verein",
-    responsibility: "Kurze Beschreibung der Verantwortung",
+    profession: "Beruf / Studien- oder Arbeitsbereich",
+    professionHelp: "Bitte gib deinen Studiengang, Ausbildungsberuf oder Arbeitsbereich an.",
+    estimatedStay: "Voraussichtliche Aufenthaltsdauer in München",
+    managementInterest: "Hast du auch Interesse an einer Aufgabe im Management?",
+    yes: "Ja",
+    no: "Nein",
+    optionalMessage: "Möchtest du uns noch etwas mitteilen? (optional)",
     documents: "Dokumente",
     photo: "Aktuelles Foto",
     identity: "Amtlicher Identitätsnachweis",
     insurance: "Versicherungsnachweis",
     uploadHelp: "JPG, PNG oder iPhone-Foto (HEIC), maximal 12 MB. Große Bilder werden automatisch optimiert.",
     payment: "Beitrag & Zahlung",
-    transferNow: "Bitte überweise nach dem Absenden den unten angegebenen Betrag.",
+    transferNow: "Bitte überweise jetzt noch nichts. Sobald das Vereinskonto verfügbar ist, senden wir dir die Bankverbindung und Zahlungsinformationen per E-Mail.",
     chooseFeeFirst: "Wähle oben deinen Spielerbeitrag aus. Danach erscheint hier der genaue Gesamtbetrag.",
     hardshipPayment: "Bitte noch nichts überweisen. Der Vorstand prüft deinen Härtefall und informiert dich persönlich.",
     total: "Zu zahlender Gesamtbetrag",
@@ -78,8 +81,8 @@ const copy = {
     submit: "Antrag verbindlich absenden",
     sending: "Wird gesendet …",
     successTitle: "Vielen Dank für deine Anmeldung",
-    successEmail: "Eine Bestätigung mit diesen Zahlungsangaben wurde an deine E-Mail-Adresse gesendet.",
-    emailWarning: "Dein Antrag wurde gespeichert, aber die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte speichere die Zahlungsangaben auf dieser Seite.",
+    successEmail: "Eine Bestätigung wurde an deine E-Mail-Adresse gesendet. Die Bankverbindung erhältst du in den kommenden Wochen per E-Mail.",
+    emailWarning: "Dein Antrag wurde gespeichert, aber die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte kontaktiere NFT Munich.",
     error: "Der Antrag konnte nicht übermittelt werden. Bitte versuche es erneut oder schreibe an nftmunich@gmail.com.",
     uploadError: "Das Dokument konnte nicht hochgeladen werden. Bitte prüfe Dateityp und Dateigröße und versuche es erneut.",
     loginTitle: "Freigegebene E-Mail erforderlich",
@@ -120,16 +123,20 @@ const copy = {
     position: "Playing position",
     emergencyName: "Emergency contact – name",
     emergencyPhone: "Emergency contact – phone number",
-    managementDetails: "Management details",
-    role: "Club role / function",
-    responsibility: "Short description of responsibilities",
+    profession: "Profession / field of study or work",
+    professionHelp: "Specify your field of study, vocational training or work.",
+    estimatedStay: "Estimated stay in Munich",
+    managementInterest: "Are you also interested in a management role?",
+    yes: "Yes",
+    no: "No",
+    optionalMessage: "Is there anything else you would like to tell us? (optional)",
     documents: "Documents",
     photo: "Current photo",
     identity: "Official proof of identity",
     insurance: "Proof of insurance",
     uploadHelp: "JPG, PNG or iPhone photo (HEIC), maximum 12 MB. Large images are optimized automatically.",
     payment: "Fee & payment",
-    transferNow: "Please transfer the amount shown below after submitting.",
+    transferNow: "Please do not make a payment yet. Once the club bank account is available, we will email you the bank and payment details.",
     chooseFeeFirst: "Select your player fee above. Your exact total will then appear here.",
     hardshipPayment: "Please do not transfer anything yet. The board will review your hardship request and contact you personally.",
     total: "Total amount to pay",
@@ -146,8 +153,8 @@ const copy = {
     submit: "Submit binding application",
     sending: "Submitting …",
     successTitle: "Thank you for your registration",
-    successEmail: "A confirmation containing these payment details has been sent to your email address.",
-    emailWarning: "Your application was saved, but the confirmation email could not be sent. Please save the payment details shown on this page.",
+    successEmail: "A confirmation has been sent to your email address. You will receive the bank details by email in the coming weeks.",
+    emailWarning: "Your application was saved, but the confirmation email could not be sent. Please contact NFT Munich.",
     error: "The application could not be submitted. Please try again or contact nftmunich@gmail.com.",
     uploadError: "The document could not be uploaded. Check the file type and size, then try again.",
     loginTitle: "Approved email required",
@@ -159,7 +166,6 @@ const copy = {
 export default function MembershipRegistration() {
   const [language, setLanguage] = useState<Language>("de");
   const [selected, setSelected] = useState<RouteType | null>(null);
-  const [coreRole, setCoreRole] = useState<CoreRole>("player");
   const [uploads, setUploads] = useState<UploadState>({});
   const [feeCategory, setFeeCategory] = useState<FeeCategory | null>(null);
   const [applicationId, setApplicationId] = useState("");
@@ -179,12 +185,12 @@ export default function MembershipRegistration() {
     const typeMap: Record<string, RouteType> = {
       member: "member",
       player: "player",
-      management: "management",
+      management: "player",
     };
     const route = requestedType ? typeMap[requestedType] : undefined;
     if (route) {
-      setSelected(route === "management" ? "management" : route);
-      if (route !== "member") setCoreRole(route === "management" ? "management" : "player");
+      setSelected(route);
+      // Legacy management links now open the single Core Member form.
       setFeeCategory(route === "member" ? "other" : null);
     }
   }, []);
@@ -197,7 +203,7 @@ export default function MembershipRegistration() {
   }, []);
 
   useEffect(() => {
-    const protectedSelection = selected === "player" || selected === "management";
+    const protectedSelection = selected === "player";
     if (!protectedSelection) {
       setCoreAccess("idle");
       return;
@@ -274,8 +280,8 @@ export default function MembershipRegistration() {
         body.append("registrationType", selected || "member");
         const response = await fetch("/api/upload-documents", { method: "POST", body, signal: controller.signal });
         const result = await response.json().catch(() => ({}));
-        if (!response.ok || !result.fileUrl) throw new Error(result.message || "Upload failed");
-        setUploads((current) => ({ ...current, [fieldType]: result.fileUrl }));
+        if (!response.ok || !result.fileRef) throw new Error(result.message || "Upload failed");
+        setUploads((current) => ({ ...current, [fieldType]: result.fileRef }));
         setUploadProgress((current) => ({ ...current, [fieldType]: "done" }));
         setUploadErrors((current) => ({ ...current, [fieldType]: undefined }));
         window.clearTimeout(timeout);
@@ -330,7 +336,7 @@ export default function MembershipRegistration() {
     if (response.ok) window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const protectedRoute = selected === "player" || selected === "management";
+  const protectedRoute = selected === "player";
   const requiredUploadsComplete = selected === "member"
     ? Boolean(uploads.photo && uploads.idFront && uploads.idBack)
     : Boolean(uploads.photo && uploads.idFront && uploads.idBack && uploads.insuranceFront && uploads.insuranceBack);
@@ -355,7 +361,7 @@ export default function MembershipRegistration() {
             <div className={styles.cardNumber}>01</div>
             <h2>{t.core}</h2>
             <p>{t.coreText}<br /><br />{language === "de" ? "Falls du im letzten Jahr nicht registriert warst, kontaktiere bitte NFT Munich." : "If you were not registered last year, please contact NFT Munich."}</p>
-            <button onClick={() => { setSelected("player"); setCoreRole("player"); setFeeCategory(null); }} type="button">{t.choose}</button>
+            <button onClick={() => { setSelected("player"); setFeeCategory(null); }} type="button">{t.choose}</button>
           </article>
           <article className={`${styles.card} ${styles.memberCard}`}>
             <div className={styles.cardNumber}>02</div>
@@ -373,7 +379,7 @@ export default function MembershipRegistration() {
             <div style={{ display: "grid", gap: ".35rem" }}>
               <small style={{ textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 800, opacity: .78 }}>{language === "de" ? "Du registrierst dich als" : "You are registering as"}</small>
               <h2>{selected === "member" ? t.member : t.core}</h2>
-              <p className={styles.memberFormText}>{selected === "member" ? t.memberText : (language === "de" ? "Für registrierte Spieler und Mitglieder des Managements. Wähle unten deine Rolle und die passende Beitragskategorie." : "For registered players and management members. Select your role and the applicable fee category below.")}</p>
+              <p className={styles.memberFormText}>{selected === "member" ? t.memberText : (language === "de" ? "Für registrierte Spieler und Mitglieder des Managements. Wähle unten die passende Beitragskategorie." : "For registered players and management members. Select the applicable fee category below.")}</p>
             </div>
             {(!protectedRoute || coreAccess === "approved") && <div className={styles.feePanel} aria-label={language === "de" ? "Beiträge" : "Fees"}>
               {selected === "member" ? (
@@ -388,9 +394,9 @@ export default function MembershipRegistration() {
             </div>}
           </div>
 
-          {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}{applicationId ? ` · ${applicationId}` : ""}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
+          {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}{applicationId ? ` · ${applicationId}` : ""}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
             <>
-              {protectedRoute && !loading && !user && coreAccess !== "approved" && <div><h3>{t.loginTitle}</h3><LoginGate coreMember language={language} onApproved={(email) => { setVerifiedCoreEmail(email); setCoreAccess("approved"); }} /></div>}
+              {protectedRoute && !loading && !user && coreAccess !== "approved" && <div><h3>{t.loginTitle}</h3><LoginGate coreMember language={language} /></div>}
               {protectedRoute && user && coreAccess === "checking" && <div className={styles.notice}>{language === "de" ? "E-Mail-Adresse wird geprüft …" : "Checking registered email…"}</div>}
               {protectedRoute && user && coreAccess === "denied" && <div className={styles.notice}>
                 <p>{language === "de" ? "Deine E-Mail-Adresse ist nicht registriert. Bitte kontaktiere NFT Munich unter nftmunich@gmail.com." : "Your email address is not registered. Please contact NFT Munich at nftmunich@gmail.com."}</p>
@@ -410,11 +416,10 @@ export default function MembershipRegistration() {
                       <Field label={t.city} name="city" />
                       <Field label={t.phone} name="phone" type="tel" wide />
                     </div>
-                    {protectedRoute && <><label className={styles.selectLabel}>{language === "de" ? "Deine Rolle" : "Your role"}<select required value={coreRole} onChange={(event) => { const role = event.target.value as CoreRole; setCoreRole(role); setSelected(role === "management" ? "management" : "player"); }}><option value="player">Player</option><option value="management">Player + Management</option></select></label><label className={styles.selectLabel}>{t.feeChoice}<select name="feeCategory" required value={feeCategory || ""} onChange={(event) => setFeeCategory(event.target.value as FeeCategory)}><option value="" disabled>—</option><option value="student">{language === "de" ? `Studierende / Azubis – ${studentTotal} € gesamt` : `Students / trainees – €${studentTotal} total`}</option><option value="other">{language === "de" ? `Sonstige – ${otherTotal} € gesamt` : `Others – €${otherTotal} total`}</option><option value="hardship">{t.special}</option></select></label></>}
+                    {protectedRoute && <label className={styles.selectLabel}>{t.feeChoice}<select name="feeCategory" required value={feeCategory || ""} onChange={(event) => setFeeCategory(event.target.value as FeeCategory)}><option value="" disabled>—</option><option value="student">{language === "de" ? `Studierende / Azubis – ${studentTotal} € gesamt` : `Students / trainees – €${studentTotal} total`}</option><option value="other">{language === "de" ? `Sonstige – ${otherTotal} € gesamt` : `Others – €${otherTotal} total`}</option><option value="hardship">{t.special}</option></select></label>}
                   </fieldset>
 
-                  {protectedRoute && <fieldset><legend><span>02</span>{t.playerDetails}</legend><div className={styles.grid}><Field label={t.position} name="position" /><Field label={t.emergencyName} name="emergencyName" /><Field label={t.emergencyPhone} name="emergencyPhone" type="tel" /></div></fieldset>}
-                  {selected === "management" && <fieldset><legend><span>03</span>{t.managementDetails}</legend><div className={styles.grid}><Field label={t.role} name="managementRole" /><Field label={t.responsibility} name="responsibility" wide /></div></fieldset>}
+                  {protectedRoute && <fieldset><legend><span>02</span>{t.playerDetails}</legend><div className={styles.grid}><Field label={t.position} name="position" /><Field label={t.profession} name="profession" wide placeholder={t.professionHelp} /><Field label={t.estimatedStay} name="estimatedStay" wide /><Field label={t.emergencyName} name="emergencyName" /><Field label={t.emergencyPhone} name="emergencyPhone" type="tel" /></div><label className={styles.selectLabel}>{t.managementInterest}<select name="managementInterest" required defaultValue=""><option value="" disabled>—</option><option value="yes">{t.yes}</option><option value="no">{t.no}</option></select></label></fieldset>}
 
                   <fieldset>
                     <legend><span>{selected === "member" ? "02" : selected === "player" ? "03" : "04"}</span>{t.documents}</legend>
@@ -433,8 +438,9 @@ export default function MembershipRegistration() {
                     {Object.values(uploadProgress).includes("error") && <p className={styles.error} role="alert">{language === "de" ? "Der Upload konnte nicht bestätigt werden. Bitte wähle die betreffende Datei erneut aus." : "The upload could not be confirmed. Please select that file again."}</p>}
                   </fieldset>
 
-                  <fieldset><legend><span>{selected === "member" ? "03" : selected === "player" ? "04" : "05"}</span>{t.payment}</legend><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} settings={clubSettings} /><p className={styles.paymentEmailNote}>{language === "de" ? "Nach der Registrierung erhältst du diese Zahlungsinformationen zusätzlich per E-Mail." : "After registration, you will also receive these payment details by email."}</p></fieldset>
-                  <fieldset><legend><span>{selected === "member" ? "04" : selected === "player" ? "05" : "06"}</span>{t.declaration}</legend><div className={styles.checks}><Check name="truth" label={t.truth} /><Check name="statutes" label={<>{t.statutes} <Link href="/satzung.pdf" target="_blank" rel="noopener noreferrer">Satzung ↗</Link></>} /><Check name="privacy" label={<>{t.privacy} <Link href="/privacy-policy" target="_blank">Privacy ↗</Link></>} /></div></fieldset>
+                  <fieldset><legend><span>{selected === "member" ? "03" : "04"}</span>{t.payment}</legend><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /><p className={styles.paymentEmailNote}>{language === "de" ? "Die Bankverbindung und Zahlungsinformationen erhältst du in den kommenden Wochen per E-Mail." : "You will receive the bank and payment details by email in the coming weeks."}</p></fieldset>
+                  <fieldset><legend><span>{selected === "member" ? "04" : "05"}</span>{language === "de" ? "Zusätzliche Mitteilung" : "Additional message"}</legend><label className={styles.selectLabel}>{t.optionalMessage}<textarea className={styles.textarea} name="optionalMessage" maxLength={1500} rows={5} /></label></fieldset>
+                  <fieldset><legend><span>{selected === "member" ? "05" : "06"}</span>{t.declaration}</legend><div className={styles.checks}><Check name="truth" label={t.truth} /><Check name="statutes" label={<>{t.statutes} <Link href="/satzung.pdf" target="_blank" rel="noopener noreferrer">Satzung ↗</Link></>} /><Check name="privacy" label={<>{t.privacy} <Link href="/privacy-policy" target="_blank">Privacy ↗</Link></>} /></div></fieldset>
                   {status === "error" && <p className={styles.error} role="alert">{submissionError || t.error}</p>}
                   <button className={styles.submit} disabled={status === "sending" || Object.values(uploadProgress).includes("uploading") || !requiredUploadsComplete}>{status === "sending" ? t.sending : t.submit}</button>
                 </form>
@@ -495,20 +501,11 @@ function Check({ name, label }: { name: string; label: React.ReactNode }) {
   return <label><input type="checkbox" name={name} value="accepted" required /><span>{label}</span></label>;
 }
 
-function PaymentSummary({ t, amount, hardship, settings }: { t: (typeof copy)[Language]; amount: number | null; hardship: boolean; settings: ClubSettings }) {
+function PaymentSummary({ t, amount, hardship }: { t: (typeof copy)[Language]; amount: number | null; hardship: boolean }) {
   return <div className={styles.payment} aria-live="polite">
     <p>{hardship ? t.hardshipPayment : amount === null ? t.chooseFeeFirst : t.transferNow}</p>
     {!hardship && amount !== null && <>
       <strong>{t.total}: {amount} €</strong>
-      <dl style={{ display: "grid", gap: ".7rem", margin: "1rem 0 0" }}>
-        <BankDetail label={t.accountHolder} value={settings.accountHolder} />
-        <BankDetail label="IBAN" value={settings.iban} />
-        <BankDetail label={t.paymentReference} value={t.paymentReferenceValue} />
-      </dl>
     </>}
   </div>;
-}
-
-function BankDetail({ label, value }: { label: string; value: string }) {
-  return <div style={{ display: "grid", gridTemplateColumns: "minmax(120px, .55fr) 1fr", gap: "1rem", borderTop: "1px solid #d4d0c5", paddingTop: ".7rem" }}><dt style={{ fontWeight: 700, color: "#5e665f" }}>{label}</dt><dd style={{ margin: 0, fontWeight: 850, overflowWrap: "anywhere" }}>{value}</dd></div>;
 }

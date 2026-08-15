@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifiedCoreEmail } from "../../../lib/coreAccess";
+import { abuseKey } from "../../../lib/abuseKey";
+import { uploadSession, verifyUploadRef } from "../../../lib/uploadRef";
 
 export const maxDuration = 60;
 
-const REGISTRATION_TYPES = new Set(["member", "player", "management"]);
+const REGISTRATION_TYPES = new Set(["member", "player"]);
 const PLAYER_FEE_CATEGORIES = new Set(["student", "other", "hardship"]);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -19,6 +22,9 @@ export async function POST(request: NextRequest) {
     const registrationType = clean(body.registrationType, 20);
     const feeCategory = clean(body.feeCategory, 20);
     const email = clean(body.email, 254).toLowerCase();
+    if (registrationType === "player" && verifiedCoreEmail(request) !== email) {
+      return NextResponse.json({ message: "Core Member authentication required." }, { status: 403 });
+    }
 
     const validFeeCategory = registrationType === "member"
       ? feeCategory === "standard"
@@ -30,11 +36,11 @@ export async function POST(request: NextRequest) {
     if (requiredPersonalFields.some((field) => !clean(body[field], 200)) || !EMAIL_RE.test(email)) {
       return NextResponse.json({ message: "All personal details and a valid email address are required." }, { status: 400 });
     }
-    if (registrationType !== "member" && ["position", "emergencyName", "emergencyPhone"].some((field) => !clean(body[field], 200))) {
+    if (registrationType !== "member" && ["position", "profession", "estimatedStay", "emergencyName", "emergencyPhone", "managementInterest"].some((field) => !clean(body[field], 200))) {
       return NextResponse.json({ message: "All player details are required." }, { status: 400 });
     }
-    if (registrationType === "management" && ["managementRole", "responsibility"].some((field) => !clean(body[field], 1000))) {
-      return NextResponse.json({ message: "All management details are required." }, { status: 400 });
+    if (registrationType !== "member" && !["yes", "no"].includes(clean(body.managementInterest, 10))) {
+      return NextResponse.json({ message: "Invalid management interest selection." }, { status: 400 });
     }
     if (body.truth !== "accepted" || body.statutes !== "accepted" || body.privacy !== "accepted") {
       return NextResponse.json({ message: "All declarations must be accepted." }, { status: 400 });
@@ -45,6 +51,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Registration storage is not configured." }, { status: 503 });
     }
     const spreadsheetId = process.env.GOOGLE_MEMBERSHIP_SHEET_ID || "1VpURRDCv_PRP82A8mOsvFwt7dXd94mPcT1oFTv5ibOs";
+    const session = uploadSession(request);
+    const securedFiles = Object.fromEntries(["photo", "idFront", "idBack", "insuranceFront", "insuranceBack"].map((field) => [
+      field, verifyUploadRef(clean(body[field], 5000), email, field, session),
+    ]));
     const registration = {
       registrationType,
       language: clean(body.language, 2),
@@ -60,13 +70,17 @@ export async function POST(request: NextRequest) {
       position: clean(body.position, 100),
       emergencyName: clean(body.emergencyName, 150),
       emergencyPhone: clean(body.emergencyPhone, 50),
+      profession: clean(body.profession, 300),
+      estimatedStay: clean(body.estimatedStay, 200),
+      managementInterest: clean(body.managementInterest, 10),
+      optionalMessage: clean(body.optionalMessage, 1500),
       managementRole: clean(body.managementRole, 150),
       responsibility: clean(body.responsibility, 1000),
-      photo: clean(body.photo, 1000),
-      idFront: clean(body.idFront, 1000),
-      idBack: clean(body.idBack, 1000),
-      insuranceFront: clean(body.insuranceFront, 1000),
-      insuranceBack: clean(body.insuranceBack, 1000),
+      photo: securedFiles.photo,
+      idFront: securedFiles.idFront,
+      idBack: securedFiles.idBack,
+      insuranceFront: securedFiles.insuranceFront,
+      insuranceBack: securedFiles.insuranceBack,
       truth: "accepted",
       statutes: "accepted",
       privacy: "accepted",
@@ -85,6 +99,7 @@ export async function POST(request: NextRequest) {
         sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
         spreadsheetId,
         registration,
+        abuseKey: abuseKey(request),
       }),
       cache: "no-store",
     });
