@@ -273,6 +273,8 @@ function uploadMembershipFile_(payload) {
   if (payload.registrationType !== "member" && !isApprovedPlayerEmail_(payload.email)) {
     return json_({ status: 403, message: "This Core Member email is not approved." });
   }
+  const allowedFields = { photo: true, idFront: true, idBack: true, insuranceFront: true, insuranceBack: true };
+  if (!allowedFields[payload.fieldType]) return json_({ status: 400, message: "Invalid upload field." });
 
   const folders = DriveApp.getFoldersByName(UPLOAD_FOLDER);
   const rootFolder = folders.hasNext() ? folders.next() : DriveApp.createFolder(UPLOAD_FOLDER);
@@ -290,10 +292,14 @@ function uploadMembershipFile_(payload) {
   if (existingFiles.hasNext()) {
     return json_({ status: 200, fileUrl: existingFiles.next().getUrl(), reused: true });
   }
-  const folderFiles = folder.getFiles();
-  let fileCount = 0;
-  while (folderFiles.hasNext() && fileCount <= 10) { folderFiles.next(); fileCount += 1; }
-  if (fileCount > 10) return json_({ status: 429, message: "Upload limit reached for this application." });
+  // Keep only the newest upload for each field. Retries therefore cannot fill
+  // the applicant folder and block an otherwise valid submission.
+  const previousFiles = folder.getFiles();
+  const fieldMarker = "_" + payload.fieldType + "_";
+  while (previousFiles.hasNext()) {
+    const previous = previousFiles.next();
+    if (previous.getName().indexOf(fieldMarker) !== -1) previous.setTrashed(true);
+  }
   const bytes = Utilities.base64Decode(payload.base64);
   const blob = Utilities.newBlob(bytes, payload.mimeType, safeFilename);
   const file = folder.createFile(blob);

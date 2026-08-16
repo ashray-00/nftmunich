@@ -16,3 +16,5 @@
 .card button{margin-top:auto}
 .page{width:100%;min-width:0;box-sizing:border-box;overflow-x:hidden}
 .grid select{width:100%;box-sizing:border-box;border:1px solid #aaa89f;border-radius:9px;padding:.9rem;background:#fbfaf7;font:inherit}
+.playerFeeNote{color:#4f5d55;margin:1.5rem 0 1.75rem;padding:1rem 1.15rem;border-left:4px solid #df5b35;border-radius:0 10px 10px 0;background:#fff;line-height:1.65;font-size:.98rem}
+@media(max-width:760px){.playerFeeNote{margin-top:1.25rem;padding:.9rem 1rem;font-size:.94rem}}
