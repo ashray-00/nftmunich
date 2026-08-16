@@ -406,10 +406,10 @@ function createDocumentsPdf_(data, applicationId) {
   }
   const sourceFiles = items.map(function(item) { return driveFileFromUrl_(item[1]); });
   const folder = firstParentFolder_(sourceFiles[0]);
-  const doc = DocumentApp.create(applicationId + " Documents");
+  const fullName = data.firstName + " " + data.lastName;
+  const doc = DocumentApp.create(fullName + " Documents");
   const body = doc.getBody();
   body.setMarginTop(42).setMarginBottom(42).setMarginLeft(42).setMarginRight(42);
-  const fullName = data.firstName + " " + data.lastName;
   items.forEach(function(item, index) {
     if (index > 0) body.appendPageBreak();
     const heading = body.appendParagraph("NFT MUNICH E.V.  |  APPLICANT DOCUMENT");
@@ -437,7 +437,7 @@ function createDocumentsPdf_(data, applicationId) {
   const tempFile = DriveApp.getFileById(doc.getId());
   const fileBase = safeFileName_(data.firstName + "_" + data.lastName);
   const pdf = folder.createFile(tempFile.getAs(MimeType.PDF).setName(fileBase + "_ID_Insurance.pdf"));
-  pdf.setDescription("Private combined ID and insurance document for " + applicationId);
+  pdf.setDescription("Private combined ID and insurance document for " + fullName);
   tempFile.setTrashed(true);
   sourceFiles.forEach(function(file) { if (file.getMimeType() !== MimeType.PDF) file.setTrashed(true); });
   return pdf.getUrl();

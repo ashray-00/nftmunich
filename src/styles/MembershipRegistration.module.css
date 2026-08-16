@@ -3,6 +3,7 @@
 .card p{font-size:1.05rem;line-height:1.7;margin:0 0 2rem;padding:1rem 1.1rem;border-left:4px solid #df5b35;border-radius:0 10px 10px 0;background:#f7f3ec;color:#25372e}
 .card:nth-child(2) p{background:#ffffff14;color:inherit}
 .formHeading .feePanel{display:grid;grid-template-columns:1fr;gap:0;min-width:min(100%,340px);align-self:center;background:#ffffff14;border:1px solid #ffffff30;border-radius:12px;padding:.35rem 1.1rem;line-height:1.4}.formHeading .feeRow{display:block;width:100%;padding:.72rem 0;border-bottom:1px solid #ffffff4a}.formHeading .feeRow:last-child{border-bottom:0}.formHeading .feeRow strong{display:block;font-size:1rem;line-height:1.35;white-space:nowrap}
+.formHeading .feeGroupLabel{display:block;margin:.35rem -1.1rem 0;padding:.7rem 1.1rem .35rem;border-top:2px solid #ffffff75;text-transform:uppercase;letter-spacing:.08em;font-size:.75rem;font-weight:850;color:#dfece4}
 .formHeading .memberFormText{max-width:470px;margin:.35rem 0 0;text-align:left;font-size:.95rem;line-height:1.55;font-weight:500;opacity:.9}
 .card.coreCard{background:#173e2b;color:#fff}.card.memberCard{background:#fff;color:#17231d}.card.coreCard p{background:#ffffff14;color:inherit}.card.memberCard p{background:#f7f3ec;color:#25372e}
 .accessButton{margin-top:.75rem;border:0;border-radius:9px;padding:.8rem 1rem;background:#173e2b;color:#fff;font-weight:800;cursor:pointer}
