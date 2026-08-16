@@ -61,7 +61,7 @@ const copy = {
     identity: "Amtlicher Identitätsnachweis",
     insurance: "Versicherungsnachweis",
     uploadHelp: "JPG, JPEG, PNG, PDF oder iPhone-Foto (HEIC), maximal 12 MB. Große Bilder werden automatisch optimiert.",
-    playerFeeNote: "Der Jahresbeitrag für Spieler finanziert die grundlegende Fußballausstattung und den Spielbetrieb, darunter Bälle, Leibchen, medizinisches Material, Freundschaftsspiele und neue Trikots für die Herren- und Damenmannschaft. Ein Teil fließt außerdem in einen Notfallfonds, der Studierende bei einer Verletzung im Training oder Spiel für ein bis zwei Monate unterstützen kann.",
+    playerFeeNote: "Der Jahresbeitrag für Spieler unterstützt die grundlegende Fußballausstattung und den Spielbetrieb, darunter Bälle, Leibchen, medizinisches Material, Freundschaftsspiele und neue Trikots für die Herren- und Damenmannschaft. Ein Teil fließt außerdem in einen Notfallfonds für den Fall, dass Studierende nach einer Verletzung im Training oder Spiel ein bis zwei Monate nicht arbeiten können.",
     payment: "Beitrag & Zahlung",
     transferNow: "Bitte noch keine Zahlung vornehmen. Du erhältst die Bankverbindung und Zahlungsinformationen in den kommenden Wochen per E-Mail.",
     chooseFeeFirst: "Wähle oben deinen Spielerbeitrag aus. Danach erscheint hier der genaue Gesamtbetrag.",
@@ -134,7 +134,7 @@ const copy = {
     identity: "Official proof of identity",
     insurance: "Proof of insurance",
     uploadHelp: "JPG, JPEG, PNG, PDF or iPhone photo (HEIC), maximum 12 MB. Large images are optimized automatically.",
-    playerFeeNote: "The annual player fee supports essential football equipment and activities, including balls, bibs, medical supplies, friendly matches and new kits for the men's and women's teams. Part of it will also fund short-term emergency support for students who cannot work for one to two months after an injury during NFT Munich training or a match.",
+    playerFeeNote: "The annual player fee supports essential football equipment and activities, including balls, bibs, medical supplies, friendly matches and new kits for the men's and women's teams. Part of it will also fund short-term emergency support in case a student cannot work for one to two months after an injury during NFT Munich training or a match.",
     payment: "Fee & payment",
     transferNow: "Please do not make a payment yet. You will receive the bank and payment details by email in the coming weeks.",
     chooseFeeFirst: "Select your player fee above. Your exact total will then appear here.",
@@ -263,6 +263,11 @@ export default function MembershipRegistration() {
       uploadFile = await prepareFileForUpload(file);
     } catch {
       return fail(language === "de" ? "Diese Datei konnte nicht gelesen werden. Bitte wähle ein JPG, JPEG, PNG oder PDF." : "This file could not be read. Select a JPG, JPEG, PNG or PDF.");
+    }
+    try {
+      await ensureUploadSessionReady();
+    } catch {
+      return fail(language === "de" ? "Die sichere Upload-Sitzung konnte nicht gestartet werden. Bitte lade die Seite neu und versuche es erneut." : "The secure upload session could not be started. Reload the page and try again.");
     }
     setUploadProgress((current) => ({ ...current, [fieldType]: "uploading" }));
     setUploadErrors((current) => ({ ...current, [fieldType]: undefined }));
@@ -401,7 +406,7 @@ export default function MembershipRegistration() {
               )}
             </div>}
           </div>
-          {selected === "player" && coreAccess === "approved" && <p className={styles.help}>{t.playerFeeNote}</p>}
+          {selected === "player" && coreAccess === "approved" && <p className={styles.playerFeeNote}>{t.playerFeeNote}</p>}
 
           {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
             <>
@@ -509,6 +514,16 @@ function Upload({ label, name, status, errorMessage, done, language, onFile }: {
 
 function Check({ name, label }: { name: string; label: React.ReactNode }) {
   return <label><input type="checkbox" name={name} value="accepted" required /><span>{label}</span></label>;
+}
+
+let uploadSessionRequest: Promise<void> | null = null;
+function ensureUploadSessionReady() {
+  if (!uploadSessionRequest) {
+    uploadSessionRequest = fetch("/api/upload-session", { method: "POST", credentials: "same-origin" })
+      .then((response) => { if (!response.ok) throw new Error("Upload session unavailable"); })
+      .catch((error) => { uploadSessionRequest = null; throw error; });
+  }
+  return uploadSessionRequest;
 }
 
 function PaymentSummary({ t, amount, hardship }: { t: (typeof copy)[Language]; amount: number | null; hardship: boolean }) {

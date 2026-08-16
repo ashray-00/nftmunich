@@ -131,6 +131,7 @@ export async function POST(req: NextRequest) {
         fullName,
         email,
         registrationType,
+        fieldType,
         abuseKey: abuseKey(req),
       }),
     }).finally(() => clearTimeout(timeout));
