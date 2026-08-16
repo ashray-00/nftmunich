@@ -261,8 +261,11 @@ export default function MembershipRegistration() {
     let uploadFile: File;
     try {
       uploadFile = await prepareFileForUpload(file);
-    } catch {
-      return fail(language === "de" ? "Diese Datei konnte nicht gelesen werden. Bitte wähle ein JPG, JPEG, PNG oder PDF." : "This file could not be read. Select a JPG, JPEG, PNG or PDF.");
+    } catch (error) {
+      const onePagePdf = error instanceof Error && error.message === "PDF_ONE_PAGE_REQUIRED";
+      return fail(onePagePdf
+        ? (language === "de" ? "Bitte lade pro Feld eine einseitige PDF hoch." : "Upload a one-page PDF in each field.")
+        : (language === "de" ? "Diese Datei konnte nicht gelesen werden. Bitte wähle ein JPG, JPEG, PNG oder PDF." : "This file could not be read. Select a JPG, JPEG, PNG or PDF."));
     }
     try {
       await ensureUploadSessionReady();
@@ -398,10 +401,11 @@ export default function MembershipRegistration() {
                 </>
               ) : (
                 <>
-                  <div className={styles.feeRow}><strong>{language === "de" ? `${clubSettings.playerStudentFee} € Jahresbeitrag Spieler (Studierende/Azubis)` : `€${clubSettings.playerStudentFee} annual player fee (students/trainees)`}</strong></div>
-                  <div className={styles.feeRow}><strong>{language === "de" ? `${clubSettings.playerOtherFee} € Jahresbeitrag Spieler (Sonstige)` : `€${clubSettings.playerOtherFee} annual player fee (others)`}</strong></div>
                   <div className={styles.feeRow}><strong>{language === "de" ? `${joiningFee} € Aufnahmegebühr (einmalig)` : `€${joiningFee} joining fee (one-time)`}</strong></div>
                   <div className={styles.feeRow}><strong>{language === "de" ? `${annualFee} € Jahresgebühr e.V. für 2026` : `€${annualFee} e.V. annual fee for 2026`}</strong></div>
+                  <div className={styles.feeGroupLabel}>{language === "de" ? "Jahresbeitrag Spieler" : "Annual player fee"}</div>
+                  <div className={styles.feeRow}><strong>{language === "de" ? `${clubSettings.playerStudentFee} € für Studierende/Azubis` : `€${clubSettings.playerStudentFee} for students/trainees`}</strong></div>
+                  <div className={styles.feeRow}><strong>{language === "de" ? `${clubSettings.playerOtherFee} € für Sonstige` : `€${clubSettings.playerOtherFee} for others`}</strong></div>
                 </>
               )}
             </div>}
@@ -475,7 +479,7 @@ async function prepareFileForUpload(file: File): Promise<File> {
   const supportedType = ["image/jpeg", "image/png", "application/pdf", "image/heic", "image/heif", ""].includes(file.type.toLowerCase());
   if (!supportedName && !supportedType) throw new Error("Unsupported image type");
   if (file.type === "application/pdf" || lowerName.endsWith(".pdf")) {
-    return new File([file], lowerName.endsWith(".pdf") ? file.name : `${file.name}.pdf`, { type: "application/pdf", lastModified: file.lastModified });
+    return pdfPageToJpeg(file);
   }
   if (["image/jpeg", "image/png"].includes(file.type) && file.size <= 2 * 1024 * 1024) return file;
 
@@ -510,6 +514,34 @@ function Upload({ label, name, status, errorMessage, done, language, onFile }: {
         ? (errorMessage || (language === "de" ? "Erneut auswählen" : "Select again"))
         : "JPG / PNG / PDF";
   return <label className={styles.upload}>{label}<input name={`${name}File`} type="file" accept="image/jpeg,image/png,image/heic,image/heif,application/pdf,.jpg,.jpeg,.png,.pdf,.heic,.heif" required={!done} disabled={busy} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; const form = new FormData(input.form || undefined); const successful = await onFile(file, form); if (!successful) input.value = ""; }} /><span aria-live="polite" role={status === "error" ? "alert" : undefined}>{message}</span></label>;
+}
+
+async function pdfPageToJpeg(file: File): Promise<File> {
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/legacy/build/pdf.worker.min.mjs", import.meta.url).toString();
+  const pdfDocument = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  if (pdfDocument.numPages !== 1) {
+    await pdfDocument.destroy();
+    throw new Error("PDF_ONE_PAGE_REQUIRED");
+  }
+  const page = await pdfDocument.getPage(1);
+  const baseViewport = page.getViewport({ scale: 1 });
+  const scale = Math.min(2.5, 2200 / Math.max(baseViewport.width, baseViewport.height));
+  const viewport = page.getViewport({ scale });
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(viewport.width));
+  canvas.height = Math.max(1, Math.round(viewport.height));
+  const context = canvas.getContext("2d", { alpha: false });
+  if (!context) { await pdfDocument.destroy(); throw new Error("PDF_RENDER_UNAVAILABLE"); }
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  await page.render({ canvasContext: context, viewport }).promise;
+  page.cleanup();
+  await pdfDocument.destroy();
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.88));
+  if (!blob || blob.size > 2 * 1024 * 1024) throw new Error("PDF_RENDER_TOO_LARGE");
+  const baseName = file.name.replace(/\.pdf$/i, "") || "document";
+  return new File([blob], `${baseName}.jpg`, { type: "image/jpeg", lastModified: file.lastModified });
 }
 
 function Check({ name, label }: { name: string; label: React.ReactNode }) {
