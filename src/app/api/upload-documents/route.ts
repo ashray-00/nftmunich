@@ -23,9 +23,10 @@ export const maxDuration = 60;
 const ACCEPTED_MIME_TYPES = [
   "image/jpeg",
   "image/png",
+  "application/pdf",
 ];
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
+const MAX_FILE_SIZE = 12 * 1024 * 1024; // 12 MB
 const ALLOWED_FIELD_TYPES = new Set(["photo", "idFront", "idBack", "insuranceFront", "insuranceBack"]);
 const ALLOWED_REGISTRATION_TYPES = new Set(["member", "player"]);
 
@@ -80,14 +81,14 @@ export async function POST(req: NextRequest) {
 
     if (!ACCEPTED_MIME_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { message: "Invalid file type. Only JPG and PNG are accepted." },
+        { message: "Invalid file type. Only JPG, JPEG, PNG and PDF are accepted." },
         { status: 400 }
       );
     }
 
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { message: "File exceeds the 2 MB size limit." },
+        { message: "File exceeds the 12 MB size limit." },
         { status: 400 }
       );
     }
@@ -98,8 +99,9 @@ export async function POST(req: NextRequest) {
     const fileBuffer = Buffer.from(arrayBuffer);
     const isJpeg = fileBuffer.length >= 3 && fileBuffer[0] === 0xff && fileBuffer[1] === 0xd8 && fileBuffer[2] === 0xff;
     const isPng = fileBuffer.length >= 8 && fileBuffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
-    if ((file.type === "image/jpeg" && !isJpeg) || (file.type === "image/png" && !isPng)) {
-      return NextResponse.json({ message: "The uploaded file content does not match its image type." }, { status: 400 });
+    const isPdf = fileBuffer.length >= 5 && fileBuffer.subarray(0, 5).toString("ascii") === "%PDF-";
+    if ((file.type === "image/jpeg" && !isJpeg) || (file.type === "image/png" && !isPng) || (file.type === "application/pdf" && !isPdf)) {
+      return NextResponse.json({ message: "The uploaded file content does not match its declared type." }, { status: 400 });
     }
     const base64 = fileBuffer.toString("base64");
     const contentHash = createHash("sha256").update(fileBuffer).digest("hex").slice(0, 16);

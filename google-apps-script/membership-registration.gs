@@ -267,7 +267,7 @@ function uploadMembershipFile_(payload) {
   if (!payload.base64 || !payload.filename || !payload.mimeType) {
     return json_({ status: 400, message: "Missing file information." });
   }
-  if (["image/jpeg", "image/png"].indexOf(payload.mimeType) === -1 || String(payload.base64).length > 3000000) {
+  if (["image/jpeg", "image/png", "application/pdf"].indexOf(payload.mimeType) === -1 || String(payload.base64).length > 17000000) {
     return json_({ status: 400, message: "Invalid image type or size." });
   }
   if (payload.registrationType !== "member" && !isApprovedPlayerEmail_(payload.email)) {
@@ -326,7 +326,9 @@ function saveMembershipRegistration_(payload) {
   const spreadsheet = SpreadsheetApp.openById(payload.spreadsheetId || DEFAULT_MEMBERSHIP_SHEET_ID);
   const settings = readClubSettings_(spreadsheet);
   const hardship = data.feeCategory === "hardship";
-  data.membershipFee = hardship ? "" : Number(settings.supporterFee) || 15;
+  data.joiningFee = hardship ? "" : Number(settings.supporterFee) || 5;
+  data.annualFee = hardship ? "" : Number(settings.memberFee) || 10;
+  data.membershipFee = hardship ? "" : Number(data.joiningFee) + Number(data.annualFee);
   data.playerFee = data.registrationType === "member" || hardship
     ? ""
     : data.feeCategory === "student" ? Number(settings.playerStudentFee) || 0 : Number(settings.playerOtherFee) || 0;
@@ -413,11 +415,16 @@ function createDocumentsPdf_(data, applicationId) {
     ]);
     styleFormTable_(meta);
     body.appendParagraph("");
-    const image = body.appendImage(sourceFiles[index].getBlob());
-    const width = image.getWidth();
-    const height = image.getHeight();
-    const scale = Math.min(500 / width, 610 / height, 1);
-    image.setWidth(Math.round(width * scale)).setHeight(Math.round(height * scale));
+    if (sourceFiles[index].getMimeType() === MimeType.PDF) {
+      body.appendParagraph("Uploaded PDF: " + sourceFiles[index].getName()).setBold(true);
+      body.appendParagraph(sourceFiles[index].getUrl()).setLinkUrl(sourceFiles[index].getUrl());
+    } else {
+      const image = body.appendImage(sourceFiles[index].getBlob());
+      const width = image.getWidth();
+      const height = image.getHeight();
+      const scale = Math.min(500 / width, 610 / height, 1);
+      image.setWidth(Math.round(width * scale)).setHeight(Math.round(height * scale));
+    }
     body.appendParagraph("Document: " + item[0] + "  |  " + fullName).setFontSize(9).setForegroundColor("#666666");
   });
   doc.saveAndClose();
@@ -426,7 +433,7 @@ function createDocumentsPdf_(data, applicationId) {
   const pdf = folder.createFile(tempFile.getAs(MimeType.PDF).setName(fileBase + "_ID_Insurance.pdf"));
   pdf.setDescription("Private combined ID and insurance document for " + applicationId);
   tempFile.setTrashed(true);
-  sourceFiles.forEach(function(file) { file.setTrashed(true); });
+  sourceFiles.forEach(function(file) { if (file.getMimeType() !== MimeType.PDF) file.setTrashed(true); });
   return pdf.getUrl();
 }
 
@@ -459,7 +466,8 @@ function createApplicationPdf_(data, applicationId, documentsPdf) {
   ]);
   appendFormSection_(body, "Additional message", [["Message", data.optionalMessage]]);
   appendFormSection_(body, "Fee", [
-    ["Fee category", data.feeCategory], ["Joining fee", data.membershipFee],
+    ["Fee category", data.feeCategory], ["Joining fee", data.joiningFee],
+    ["e.V. annual fee 2026", data.annualFee],
     ["Player fee", data.playerFee], ["Total amount", data.totalFee === "" ? "Board review" : data.totalFee + " EUR"]
   ]);
   body.appendParagraph("Declarations and consent").setHeading(DocumentApp.ParagraphHeading.HEADING2);
@@ -576,7 +584,7 @@ function sendApplicantConfirmation_(data, applicationId, settings) {
   const total = hardship ? "" : Number(data.totalFee || 0);
   const paymentEn = hardship
     ? ["Amount: Individual review", "The board will review your hardship request and contact you personally."]
-    : ["Amount: " + total + " EUR", "Please do not make a payment yet.", "We will email you the bank and payment details in the coming weeks."];
+    : ["Amount: " + total + " EUR", "Please do not make a payment yet. We will email you the bank and payment details in the coming weeks."];
   const body = [
     "Hi " + data.firstName + ",",
     "",
@@ -639,7 +647,7 @@ function defaultClubSettings_() {
     website: "www.nftmunich.club",
     accountHolder: PAYMENT_ACCOUNT_HOLDER,
     iban: PAYMENT_IBAN,
-    supporterFee: "15",
+    supporterFee: "5",
     memberFee: "10",
     playerStudentFee: "50",
     playerOtherFee: "100"
@@ -666,6 +674,18 @@ function readClubSettings_(spreadsheet) {
     const key = String(row[0] || "");
     if (Object.prototype.hasOwnProperty.call(settings, key)) settings[key] = String(row[1] || "");
   });
+  // Migrate the former combined €15 joining fee to the approved €5 joining
+  // fee. The separate €10 annual e.V. fee remains in memberFee.
+  if (settings.supporterFee === "15") {
+    settings.supporterFee = "5";
+    const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, 2).getValues();
+    for (let index = 0; index < values.length; index += 1) {
+      if (String(values[index][0]) === "supporterFee") {
+        sheet.getRange(index + 2, 2).setValue("5");
+        break;
+      }
+    }
+  }
   return settings;
 }
 
