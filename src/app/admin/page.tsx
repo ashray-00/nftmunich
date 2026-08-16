@@ -47,7 +47,7 @@ const DEFAULT_SETTINGS: ClubSettings = {
   website: "www.nftmunich.club",
   accountHolder: "NFT Munich e.V.",
   iban: "1234XXXX",
-  supporterFee: "15",
+  supporterFee: "5",
   memberFee: "10",
   playerStudentFee: "50",
   playerOtherFee: "100",

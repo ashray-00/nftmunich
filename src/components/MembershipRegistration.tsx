@@ -12,7 +12,7 @@ type UploadProgress = Partial<Record<keyof UploadState, "uploading" | "done" | "
 type UploadErrors = Partial<Record<keyof UploadState, string>>;
 
 type ClubSettings = { clubName: string; accountHolder: string; iban: string; supporterFee: string; memberFee: string; playerStudentFee: string; playerOtherFee: string };
-const DEFAULT_CLUB_SETTINGS: ClubSettings = { clubName: "NFT Munich e.V.", accountHolder: "NFT Munich e.V.", iban: "1234XXXX", supporterFee: "15", memberFee: "10", playerStudentFee: "50", playerOtherFee: "100" };
+const DEFAULT_CLUB_SETTINGS: ClubSettings = { clubName: "NFT Munich e.V.", accountHolder: "NFT Munich e.V.", iban: "1234XXXX", supporterFee: "5", memberFee: "10", playerStudentFee: "50", playerOtherFee: "100" };
 
 const copy = {
   de: {
@@ -60,7 +60,8 @@ const copy = {
     photo: "Aktuelles Foto",
     identity: "Amtlicher Identitätsnachweis",
     insurance: "Versicherungsnachweis",
-    uploadHelp: "JPG, PNG oder iPhone-Foto (HEIC), maximal 12 MB. Große Bilder werden automatisch optimiert.",
+    uploadHelp: "JPG, JPEG, PNG, PDF oder iPhone-Foto (HEIC), maximal 12 MB. Große Bilder werden automatisch optimiert.",
+    playerFeeNote: "Der Jahresbeitrag für Spieler finanziert die grundlegende Fußballausstattung und den Spielbetrieb, darunter Bälle, Leibchen, medizinisches Material, Freundschaftsspiele und neue Trikots für die Herren- und Damenmannschaft. Ein Teil fließt außerdem in einen Notfallfonds, der Studierende bei einer Verletzung im Training oder Spiel für ein bis zwei Monate unterstützen kann.",
     payment: "Beitrag & Zahlung",
     transferNow: "Bitte noch keine Zahlung vornehmen. Du erhältst die Bankverbindung und Zahlungsinformationen in den kommenden Wochen per E-Mail.",
     chooseFeeFirst: "Wähle oben deinen Spielerbeitrag aus. Danach erscheint hier der genaue Gesamtbetrag.",
@@ -132,7 +133,8 @@ const copy = {
     photo: "Current photo",
     identity: "Official proof of identity",
     insurance: "Proof of insurance",
-    uploadHelp: "JPG, PNG or iPhone photo (HEIC), maximum 12 MB. Large images are optimized automatically.",
+    uploadHelp: "JPG, JPEG, PNG, PDF or iPhone photo (HEIC), maximum 12 MB. Large images are optimized automatically.",
+    playerFeeNote: "The annual player fee supports essential football equipment and activities, including balls, bibs, medical supplies, friendly matches and new kits for the men's and women's teams. Part of it will also fund short-term emergency support for students who cannot work for one to two months after an injury during NFT Munich training or a match.",
     payment: "Fee & payment",
     transferNow: "Please do not make a payment yet. You will receive the bank and payment details by email in the coming weeks.",
     chooseFeeFirst: "Select your player fee above. Your exact total will then appear here.",
@@ -233,10 +235,12 @@ export default function MembershipRegistration() {
     setCoreAccess(verifiedCoreEmail ? "approved" : "idle");
   }, [selected, verifiedCoreEmail]);
 
-  const supporterFee = Number(clubSettings.supporterFee) || 15;
-  const studentTotal = supporterFee + (Number(clubSettings.playerStudentFee) || 0);
-  const otherTotal = supporterFee + (Number(clubSettings.playerOtherFee) || 0);
-  const amount = selected === "member" ? supporterFee : feeCategory === "student" ? studentTotal : feeCategory === "other" ? otherTotal : null;
+  const joiningFee = Number(clubSettings.supporterFee) || 5;
+  const annualFee = Number(clubSettings.memberFee) || 10;
+  const memberTotal = joiningFee + annualFee;
+  const studentTotal = memberTotal + (Number(clubSettings.playerStudentFee) || 0);
+  const otherTotal = memberTotal + (Number(clubSettings.playerOtherFee) || 0);
+  const amount = selected === "member" ? memberTotal : feeCategory === "student" ? studentTotal : feeCategory === "other" ? otherTotal : null;
   const categoryLabel = selected ? t[selected] : "";
 
   async function uploadDocument(file: File, fieldType: keyof UploadState, fullName: string, email: string) {
@@ -256,9 +260,9 @@ export default function MembershipRegistration() {
     }
     let uploadFile: File;
     try {
-      uploadFile = await prepareImageForUpload(file);
+      uploadFile = await prepareFileForUpload(file);
     } catch {
-      return fail(language === "de" ? "Dieses Foto konnte nicht gelesen werden. Bitte wähle ein JPG/PNG oder erstelle auf dem iPhone einen Screenshot des Dokuments." : "This photo could not be read. Select a JPG/PNG or take an iPhone screenshot of the document.");
+      return fail(language === "de" ? "Diese Datei konnte nicht gelesen werden. Bitte wähle ein JPG, JPEG, PNG oder PDF." : "This file could not be read. Select a JPG, JPEG, PNG or PDF.");
     }
     setUploadProgress((current) => ({ ...current, [fieldType]: "uploading" }));
     setUploadErrors((current) => ({ ...current, [fieldType]: undefined }));
@@ -383,16 +387,21 @@ export default function MembershipRegistration() {
             </div>
             {(!protectedRoute || coreAccess === "approved") && <div className={styles.feePanel} aria-label={language === "de" ? "Beiträge" : "Fees"}>
               {selected === "member" ? (
-                <div className={styles.feeRow}><strong>{language === "de" ? `${supporterFee} € Aufnahmegebühr` : `€${supporterFee} joining fee`}</strong></div>
+                <>
+                  <div className={styles.feeRow}><strong>{language === "de" ? `${joiningFee} € Aufnahmegebühr (einmalig)` : `€${joiningFee} joining fee (one-time)`}</strong></div>
+                  <div className={styles.feeRow}><strong>{language === "de" ? `${annualFee} € Jahresgebühr e.V. für 2026` : `€${annualFee} e.V. annual fee for 2026`}</strong></div>
+                </>
               ) : (
                 <>
-                  <div className={styles.feeRow}><strong>{language === "de" ? `${clubSettings.playerStudentFee} € für Studierende/Azubis` : `€${clubSettings.playerStudentFee} for students/trainees`}</strong></div>
-                  <div className={styles.feeRow}><strong>{language === "de" ? `${clubSettings.playerOtherFee} € für Sonstige` : `€${clubSettings.playerOtherFee} for others`}</strong></div>
-                  <div className={styles.feeRow}><strong>{language === "de" ? `+ ${supporterFee} € Aufnahmegebühr` : `+ €${supporterFee} joining fee`}</strong></div>
+                  <div className={styles.feeRow}><strong>{language === "de" ? `${clubSettings.playerStudentFee} € Jahresbeitrag Spieler (Studierende/Azubis)` : `€${clubSettings.playerStudentFee} annual player fee (students/trainees)`}</strong></div>
+                  <div className={styles.feeRow}><strong>{language === "de" ? `${clubSettings.playerOtherFee} € Jahresbeitrag Spieler (Sonstige)` : `€${clubSettings.playerOtherFee} annual player fee (others)`}</strong></div>
+                  <div className={styles.feeRow}><strong>{language === "de" ? `${joiningFee} € Aufnahmegebühr (einmalig)` : `€${joiningFee} joining fee (one-time)`}</strong></div>
+                  <div className={styles.feeRow}><strong>{language === "de" ? `${annualFee} € Jahresgebühr e.V. für 2026` : `€${annualFee} e.V. annual fee for 2026`}</strong></div>
                 </>
               )}
             </div>}
           </div>
+          {selected === "player" && coreAccess === "approved" && <p className={styles.help}>{t.playerFeeNote}</p>}
 
           {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
             <>
@@ -455,11 +464,14 @@ function Field({ label, name, type = "text", wide, defaultValue, readOnly, place
   return <label className={wide ? styles.wide : ""}>{label}<input name={name} type={type} required defaultValue={defaultValue} readOnly={readOnly} placeholder={placeholder} /></label>;
 }
 
-async function prepareImageForUpload(file: File): Promise<File> {
+async function prepareFileForUpload(file: File): Promise<File> {
   const lowerName = file.name.toLowerCase();
-  const supportedName = /\.(jpe?g|png|heic|heif)$/.test(lowerName);
-  const supportedType = ["image/jpeg", "image/png", "image/heic", "image/heif", ""].includes(file.type.toLowerCase());
+  const supportedName = /\.(jpe?g|png|pdf|heic|heif)$/.test(lowerName);
+  const supportedType = ["image/jpeg", "image/png", "application/pdf", "image/heic", "image/heif", ""].includes(file.type.toLowerCase());
   if (!supportedName && !supportedType) throw new Error("Unsupported image type");
+  if (file.type === "application/pdf" || lowerName.endsWith(".pdf")) {
+    return new File([file], lowerName.endsWith(".pdf") ? file.name : `${file.name}.pdf`, { type: "application/pdf", lastModified: file.lastModified });
+  }
   if (["image/jpeg", "image/png"].includes(file.type) && file.size <= 2 * 1024 * 1024) return file;
 
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
@@ -491,8 +503,8 @@ function Upload({ label, name, status, errorMessage, done, language, onFile }: {
       ? (language === "de" ? "✓ Erfolgreich hochgeladen" : "✓ Uploaded successfully")
       : status === "error"
         ? (errorMessage || (language === "de" ? "Erneut auswählen" : "Select again"))
-        : "JPG / PNG";
-  return <label className={styles.upload}>{label}<input name={`${name}File`} type="file" accept="image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif" required={!done} disabled={busy} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; const form = new FormData(input.form || undefined); const successful = await onFile(file, form); if (!successful) input.value = ""; }} /><span aria-live="polite" role={status === "error" ? "alert" : undefined}>{message}</span></label>;
+        : "JPG / PNG / PDF";
+  return <label className={styles.upload}>{label}<input name={`${name}File`} type="file" accept="image/jpeg,image/png,image/heic,image/heif,application/pdf,.jpg,.jpeg,.png,.pdf,.heic,.heif" required={!done} disabled={busy} onChange={async (event) => { const input = event.currentTarget; const file = input.files?.[0]; if (!file) return; const form = new FormData(input.form || undefined); const successful = await onFile(file, form); if (!successful) input.value = ""; }} /><span aria-live="polite" role={status === "error" ? "alert" : undefined}>{message}</span></label>;
 }
 
 function Check({ name, label }: { name: string; label: React.ReactNode }) {
