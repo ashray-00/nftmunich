@@ -3,23 +3,6 @@ import { ownerAuthorization } from "../../../../lib/adminAuth";
 
 const SERVER_URL = process.env.SERVER_URL;
 
-async function syncApprovedPlayers(players: unknown[], sendLinks = false) {
-  const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
-  if (!scriptUrl) return;
-  await fetch(scriptUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "syncApprovedPlayers",
-      sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
-      spreadsheetId: process.env.GOOGLE_MEMBERSHIP_SHEET_ID,
-      players,
-      sendLinks,
-    }),
-    cache: "no-store",
-  });
-}
-
 function missingConfig() {
   return NextResponse.json({ detail: "Server configuration error." }, { status: 500 });
 }
@@ -34,9 +17,6 @@ export async function GET(req: NextRequest) {
       headers: { "Content-Type": "application/json", authorization },
     });
     const data = await res.json().catch(() => ({}));
-    if (res.ok && Array.isArray(data.players)) {
-      await syncApprovedPlayers(data.players).catch(() => undefined);
-    }
     return NextResponse.json(data, { status: res.status });
   } catch {
     return NextResponse.json({ detail: "Failed to contact server." }, { status: 502 });
@@ -62,10 +42,6 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => ({}));
-    if (res.ok) {
-      const submitted = body && typeof body === "object" ? body as Record<string, unknown> : {};
-      await syncApprovedPlayers([{ name: submitted.name, email: submitted.email }], true).catch(() => undefined);
-    }
     return NextResponse.json(data, { status: res.status });
   } catch {
     return NextResponse.json({ detail: "Failed to contact server." }, { status: 502 });

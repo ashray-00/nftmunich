@@ -1,21 +1,13 @@
 import { NextResponse } from "next/server";
 
+const SERVER_URL = process.env.SERVER_URL;
+
 export async function GET() {
-  const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
-  if (!scriptUrl) return NextResponse.json({ message: "Club settings are not configured." }, { status: 503 });
+  if (!SERVER_URL) return NextResponse.json({ message: "Server configuration error." }, { status: 500 });
   try {
-    const response = await fetch(scriptUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "publicClubSettings",
-        spreadsheetId: process.env.GOOGLE_MEMBERSHIP_SHEET_ID,
-      }),
-      cache: "no-store",
-    });
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok || result.status !== 200) throw new Error("Settings unavailable.");
-    return NextResponse.json({ settings: result.settings });
+    const res = await fetch(`${SERVER_URL}/api/v1/membership/public-club-settings`, { cache: "no-store" });
+    const data = await res.json().catch(() => ({}));
+    return NextResponse.json(data, { status: res.status });
   } catch {
     return NextResponse.json({ message: "Could not load club settings." }, { status: 502 });
   }

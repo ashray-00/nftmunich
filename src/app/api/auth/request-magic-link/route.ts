@@ -23,32 +23,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const submitted = body as { email: string; purpose?: string };
-    if (submitted.purpose === "core-member") {
-      const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
-      if (!scriptUrl) {
-        return NextResponse.json({ message: "Registration service configuration error." }, { status: 500 });
-      }
-      const approvalRes = await fetch(scriptUrl, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          action: "checkApprovedPlayerEmail",
-          email: submitted.email,
-          sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
-          spreadsheetId: process.env.GOOGLE_MEMBERSHIP_SHEET_ID,
-        }),
-        cache: "no-store",
-      });
-      const approval = await approvalRes.json().catch(() => ({}));
-      if (!approvalRes.ok || approval.status !== 200 || approval.approved !== true) {
-        return NextResponse.json({ message: "Email is not registered." }, { status: 403 });
-      }
-    }
     const backendRes = await fetch(`${SERVER_URL}/api/v1/auth/request-magic-link`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: (body as { email: string }).email }),
+      body: JSON.stringify(body),
     });
     const data = await backendRes.json().catch(() => ({}));
     return NextResponse.json(data, { status: backendRes.status });

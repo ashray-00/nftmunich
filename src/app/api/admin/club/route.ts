@@ -1,41 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyOwnerWithBackend } from "../../../../lib/adminAuth";
+import { ownerAuthorization } from "../../../../lib/adminAuth";
 
-export const maxDuration = 60;
+const SERVER_URL = process.env.SERVER_URL;
 
-async function callScript(payload: Record<string, unknown>) {
-  const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
-  if (!scriptUrl) throw new Error("Club storage is not configured.");
-  const response = await fetch(scriptUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      spreadsheetId: process.env.GOOGLE_MEMBERSHIP_SHEET_ID,
-      sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
-      ...payload,
-    }),
-    cache: "no-store",
-  });
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok || result.status !== 200) throw new Error(result.message || "Club storage rejected the request.");
-  return result;
+function missingConfig() {
+  return NextResponse.json({ detail: "Server configuration error." }, { status: 500 });
 }
 
-export async function GET(request: NextRequest) {
-  if (!(await verifyOwnerWithBackend(request))) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+export async function GET(req: NextRequest) {
+  if (!SERVER_URL) return missingConfig();
+  if (!ownerAuthorization(req).allowed) return NextResponse.json({ detail: "Forbidden." }, { status: 403 });
+
+  const authorization = req.headers.get("authorization") ?? "";
   try {
-    return NextResponse.json(await callScript({ action: "adminDashboard" }));
-  } catch (error) {
-    return NextResponse.json({ message: error instanceof Error ? error.message : "Could not load dashboard." }, { status: 502 });
+    const res = await fetch(`${SERVER_URL}/api/v1/admin/club`, {
+      headers: { "Content-Type": "application/json", authorization },
+      cache: "no-store",
+    });
+    const data = await res.json().catch(() => ({}));
+    return NextResponse.json(data, { status: res.status });
+  } catch {
+    return NextResponse.json({ detail: "Failed to contact server." }, { status: 502 });
   }
 }
 
-export async function POST(request: NextRequest) {
-  if (!(await verifyOwnerWithBackend(request))) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+export async function POST(req: NextRequest) {
+  if (!SERVER_URL) return missingConfig();
+  if (!ownerAuthorization(req).allowed) return NextResponse.json({ detail: "Forbidden." }, { status: 403 });
+
+  const authorization = req.headers.get("authorization") ?? "";
+  let body: unknown;
   try {
-    const settings = await request.json();
-    return NextResponse.json(await callScript({ action: "updateClubSettings", settings }));
-  } catch (error) {
-    return NextResponse.json({ message: error instanceof Error ? error.message : "Could not save settings." }, { status: 502 });
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ detail: "Invalid request body." }, { status: 400 });
+  }
+
+  try {
+    const res = await fetch(`${SERVER_URL}/api/v1/admin/club`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", authorization },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    });
+    const data = await res.json().catch(() => ({}));
+    return NextResponse.json(data, { status: res.status });
+  } catch {
+    return NextResponse.json({ detail: "Failed to contact server." }, { status: 502 });
   }
 }

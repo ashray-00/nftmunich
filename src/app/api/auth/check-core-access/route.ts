@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createCoreAccessCookie } from "../../../../lib/coreAccess";
+
+const SERVER_URL = process.env.SERVER_URL;
+const CORE_ACCESS_COOKIE = "nft_core_access";
+const CORE_ACCESS_MAX_AGE = 30 * 60;
 
 export async function POST(request: NextRequest) {
+  if (!SERVER_URL) {
+    return NextResponse.json({ approved: false }, { status: 500 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -9,36 +16,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ approved: false }, { status: 400 });
   }
 
-  const email = body && typeof body === "object" && "email" in body
-    ? String((body as { email: unknown }).email || "").trim().toLowerCase()
-    : "";
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ approved: false }, { status: 400 });
-  }
-  const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
-  if (!scriptUrl) return NextResponse.json({ approved: false }, { status: 500 });
-
   try {
-    const response = await fetch(scriptUrl, {
+    const res = await fetch(`${SERVER_URL}/api/v1/membership/check-core-access`, {
       method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        action: "checkApprovedPlayerEmail",
-        email,
-        sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET,
-        spreadsheetId: process.env.GOOGLE_MEMBERSHIP_SHEET_ID,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
       cache: "no-store",
     });
-    const result = await response.json().catch(() => ({}));
-    const approved = response.ok && result.status === 200 && result.approved === true;
-    const nextResponse = NextResponse.json({ approved }, { status: approved ? 200 : 403 });
-    if (approved) {
-      const cookie = createCoreAccessCookie(email);
-      if (!cookie) return NextResponse.json({ approved: false }, { status: 500 });
-      nextResponse.cookies.set(cookie.name, cookie.value, cookie.options);
+    const data = await res.json().catch(() => ({}));
+    const response = NextResponse.json({ approved: res.ok && data.approved === true }, { status: res.status });
+    if (res.ok && data.approved && data.core_access_token) {
+      response.cookies.set(CORE_ACCESS_COOKIE, data.core_access_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: CORE_ACCESS_MAX_AGE,
+      });
     }
-    return nextResponse;
+    return response;
   } catch {
     return NextResponse.json({ approved: false }, { status: 502 });
   }

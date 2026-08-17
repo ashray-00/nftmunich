@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createCoreAccessCookie } from "../../../../lib/coreAccess";
+
+const CORE_ACCESS_COOKIE = "nft_core_access";
+const CORE_ACCESS_MAX_AGE = 30 * 60;
 
 export async function POST(req: NextRequest) {
   const SERVER_URL = process.env.SERVER_URL;
@@ -32,15 +34,14 @@ export async function POST(req: NextRequest) {
     });
     const data = await backendRes.json().catch(() => ({}));
     const response = NextResponse.json(data, { status: backendRes.status });
-    if (backendRes.ok && typeof data.session_token === "string") {
-      try {
-        const payload = data.session_token.split(".")[1];
-        const decoded = payload ? JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) : null;
-        const cookie = decoded?.email ? createCoreAccessCookie(String(decoded.email)) : null;
-        if (cookie) response.cookies.set(cookie.name, cookie.value, cookie.options);
-      } catch {
-        // The backend response remains authoritative; an invalid token simply receives no Core cookie.
-      }
+    if (backendRes.ok && typeof data.core_access_token === "string") {
+      response.cookies.set(CORE_ACCESS_COOKIE, data.core_access_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: CORE_ACCESS_MAX_AGE,
+      });
     }
     return response;
   } catch {

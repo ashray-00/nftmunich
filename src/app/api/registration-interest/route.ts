@@ -1,39 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { abuseKey } from "../../../lib/abuseKey";
 
-export const maxDuration = 60;
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const REGISTRATION_TYPES = new Set(["supporter", "player", "management-player"]);
-
-function clean(value: unknown, max: number) {
-  return String(value ?? "").replace(/[<>\u0000-\u001F]/g, "").trim().slice(0, max);
-}
+const SERVER_URL = process.env.SERVER_URL;
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    if (clean(body.website, 100)) return NextResponse.json({ success: true });
-    const name = clean(body.name, 150);
-    const email = clean(body.email, 254).toLowerCase();
-    const registrationType = clean(body.registrationType, 30);
-    if (!name || !EMAIL_RE.test(email) || !REGISTRATION_TYPES.has(registrationType)) {
-      return NextResponse.json({ message: "Valid name, email and registration type required." }, { status: 400 });
-    }
+  if (!SERVER_URL) {
+    return NextResponse.json({ message: "Server configuration error." }, { status: 500 });
+  }
 
-    const scriptUrl = process.env.GOOGLE_SCRIPT_URL;
-    if (!scriptUrl) return NextResponse.json({ message: "Email service is not configured." }, { status: 503 });
-    const response = await fetch(scriptUrl, {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ message: "Invalid request body." }, { status: 400 });
+  }
+
+  const forwardedFor = request.headers.get("x-forwarded-for") ?? request.headers.get("x-vercel-forwarded-for") ?? "";
+
+  try {
+    const res = await fetch(`${SERVER_URL}/api/v1/membership/registration-interest`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "registrationInterest", sharedSecret: process.env.GOOGLE_SCRIPT_SHARED_SECRET, name, email, registrationType, abuseKey: abuseKey(request) }),
+      headers: { "Content-Type": "application/json", "x-forwarded-for": forwardedFor },
+      body: JSON.stringify(body),
       cache: "no-store",
     });
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok || result.status !== 200) throw new Error(result.message || "Email service failed.");
-    return NextResponse.json({ success: true, result: result.result === "pending" ? "pending" : "link-sent" });
+    const data = await res.json().catch(() => ({}));
+    return NextResponse.json(data, { status: res.status });
   } catch (error) {
-    console.error("Registration interest error:", error);
-    return NextResponse.json({ message: "Could not send request." }, { status: 500 });
+    console.error("Registration interest proxy error:", error);
+    return NextResponse.json({ message: "Could not send request." }, { status: 502 });
   }
 }
