@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const maxDuration = 30;
+
 const SERVER_URL = process.env.SERVER_URL;
 
 export async function POST(request: NextRequest) {
