@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ensureUploadSession } from "../../../lib/uploadSession";
 
-export const maxDuration = 90;
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   const SERVER_URL = process.env.SERVER_URL;
