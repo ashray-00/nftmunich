@@ -569,6 +569,23 @@ function scheduleQueueProcessing_() {
 }
 
 /**
+ * Run this once manually from the editor (select it in the function
+ * dropdown next to the Run button, then click Run) before using the
+ * form for real. Managing triggers (ScriptApp.newTrigger /
+ * getProjectTriggers, used by scheduleQueueProcessing_ above) requires
+ * a one-time permission grant. A web app running unattended can't click
+ * through that consent screen itself, so the first real submission
+ * would otherwise fail with a generic storage error. Functions ending
+ * in "_" are hidden from the Run dropdown, which is why this one
+ * doesn't have that suffix — it exists purely to be run once by hand.
+ * Safe to run more than once.
+ */
+function grantTriggerPermission() {
+  const existing = ScriptApp.getProjectTriggers();
+  Logger.log("Trigger permission OK. Existing triggers: " + existing.length);
+}
+
+/**
  * Processes every "Pending" row left by enqueuePdfGeneration_: builds
  * the two combined PDFs, writes their links into the applicant's row,
  * and removes the queue entry. Jobs that throw are marked
