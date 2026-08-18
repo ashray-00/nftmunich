@@ -80,7 +80,6 @@ const copy = {
     submit: "Antrag verbindlich absenden",
     sending: "Wird gesendet …",
     successTitle: "Vielen Dank für deine Anmeldung",
-    successEmail: "Eine Bestätigung wurde an deine E-Mail-Adresse gesendet. Die Bankverbindung erhältst du in den kommenden Wochen per E-Mail.",
     emailWarning: "Dein Antrag wurde gespeichert, aber die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte kontaktiere NFT Munich.",
     error: "Der Antrag konnte nicht übermittelt werden. Bitte versuche es erneut oder schreibe an nftmunich@gmail.com.",
     uploadError: "Das Dokument konnte nicht hochgeladen werden. Bitte prüfe Dateityp und Dateigröße und versuche es erneut.",
@@ -153,7 +152,6 @@ const copy = {
     submit: "Submit binding application",
     sending: "Submitting …",
     successTitle: "Thank you for your registration",
-    successEmail: "A confirmation has been sent to your email address. You will receive the bank details by email in the coming weeks.",
     emailWarning: "Your application was saved, but the confirmation email could not be sent. Please contact NFT Munich.",
     error: "The application could not be submitted. Please try again or contact nftmunich@gmail.com.",
     uploadError: "The document could not be uploaded. Check the file type and size, then try again.",
@@ -412,7 +410,7 @@ export default function MembershipRegistration() {
           </div>
           {selected === "player" && coreAccess === "approved" && <p className={styles.playerFeeNote}>{t.playerFeeNote}</p>}
 
-          {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} /><p>{confirmationSent ? t.successEmail : t.emailWarning}</p></div> : (
+          {status === "success" ? <div className={styles.success}><h3>{t.successTitle}</h3><p>{categoryLabel}</p><PaymentSummary t={t} amount={amount} hardship={feeCategory === "hardship"} />{!confirmationSent && <p>{t.emailWarning}</p>}</div> : (
             <>
               {protectedRoute && coreAccess !== "approved" && <form onSubmit={checkCoreEmail} className={styles.accessForm}><h3>{t.loginTitle}</h3><p>{language === "de" ? "Gib die E-Mail-Adresse ein, mit der du bei NFT Munich registriert bist." : "Enter the email address registered with NFT Munich."}</p><label>{t.email}<input type="email" required value={coreEmailInput} onChange={(event) => { setCoreEmailInput(event.target.value); if (coreAccess === "denied") setCoreAccess("idle"); }} /></label><button type="submit" className={styles.accessButton} disabled={coreAccess === "checking"}>{coreAccess === "checking" ? (language === "de" ? "Wird geprüft …" : "Checking…") : (language === "de" ? "E-Mail prüfen" : "Check email")}</button></form>}
               {protectedRoute && coreAccess === "denied" && <div className={styles.notice}>
