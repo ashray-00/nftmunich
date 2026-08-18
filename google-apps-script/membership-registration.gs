@@ -545,16 +545,39 @@ function enqueuePdfGeneration_(tabName, applicationId, data) {
   const spreadsheet = SpreadsheetApp.openById(DEFAULT_MEMBERSHIP_SHEET_ID);
   const sheet = pendingDocsSheet_(spreadsheet);
   sheet.appendRow([applicationId, tabName, new Date(), "Pending", JSON.stringify(data)]);
+  scheduleQueueProcessing_();
 }
 
 /**
- * Time-driven trigger target — set this up once in the Apps Script UI
- * (Triggers → Add Trigger → processPdfQueue → Time-driven → Minutes
- * timer → Every minute). Processes every "Pending" row left by
- * enqueuePdfGeneration_: builds the two combined PDFs, writes their
- * links into the applicant's row, and removes the queue entry. Jobs
- * that throw are marked "Failed: <message>" and left for manual review
- * rather than retried forever.
+ * Schedules processPdfQueue to run almost immediately (~1s) rather than
+ * waiting for the next periodic tick. A true onChange/onEdit trigger
+ * would be more "event-driven" than this, but Apps Script deliberately
+ * does not fire onChange/onEdit for edits a script makes to its own
+ * spreadsheet (to avoid a trigger re-triggering itself forever) — so
+ * that path isn't available here. This is the closest equivalent: react
+ * to the actual event by scheduling work at the moment it happens,
+ * instead of blind polling. The dedup check keeps concurrent
+ * submissions from stacking up multiple redundant one-time triggers.
+ */
+function scheduleQueueProcessing_() {
+  const alreadyScheduled = ScriptApp.getProjectTriggers().some(function(trigger) {
+    return trigger.getHandlerFunction() === "processPdfQueue";
+  });
+  if (!alreadyScheduled) {
+    ScriptApp.newTrigger("processPdfQueue").timeBased().after(1000).create();
+  }
+}
+
+/**
+ * Processes every "Pending" row left by enqueuePdfGeneration_: builds
+ * the two combined PDFs, writes their links into the applicant's row,
+ * and removes the queue entry. Jobs that throw are marked
+ * "Failed: <message>" and left for manual review rather than retried
+ * forever. Normally runs via the near-instant one-time trigger created
+ * by scheduleQueueProcessing_ — but also set this up once as a
+ * low-frequency recurring trigger (Triggers → Add Trigger →
+ * processPdfQueue → Time-driven → Minutes timer → Every 15 minutes) as
+ * a safety net, in case a one-time trigger is ever lost.
  */
 function processPdfQueue() {
   const spreadsheet = SpreadsheetApp.openById(DEFAULT_MEMBERSHIP_SHEET_ID);
