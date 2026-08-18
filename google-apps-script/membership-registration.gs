@@ -260,6 +260,42 @@ function sendApprovedRegistrationLink_(email, fallbackName) {
   });
 }
 
+/**
+ * Resolves (or creates) the root upload folder, the registration-type
+ * category folder, and the applicant's own folder as one atomic unit.
+ *
+ * This used to be three separate check-then-create calls with no locking,
+ * which is a real race: Drive allows multiple folders with the identical
+ * name in the same parent, so two uploads for the same applicant arriving
+ * within milliseconds of each other could each see "no folder yet" and
+ * both create one — splitting that applicant's files across two
+ * same-named folders. assertSingleApplicantFolder_ then rejects the
+ * registration at submit time because the files don't share one folder
+ * ID, even though everything looked fine at upload time. Wrapping folder
+ * resolution in the same script lock used elsewhere in this file (see
+ * saveMembershipRegistration_, withinRateLimit_) serializes concurrent
+ * uploads so only one folder ever gets created per applicant.
+ */
+function resolveApplicantFolder_(registrationType, fullName, email) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const folders = DriveApp.getFoldersByName(UPLOAD_FOLDER);
+    const rootFolder = folders.hasNext() ? folders.next() : DriveApp.createFolder(UPLOAD_FOLDER);
+    const categoryNames = {
+      member: "01_Club_Members",
+      player: "02_Players",
+      management: "03_Management_and_Players"
+    };
+    const categoryName = categoryNames[registrationType] || "00_Unsorted";
+    const categoryFolder = getOrCreateChildFolder_(rootFolder, categoryName);
+    const applicantName = safeFolderName_((fullName || "Applicant") + "_" + (email || "no-email"));
+    return getOrCreateChildFolder_(categoryFolder, applicantName);
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 function uploadMembershipFile_(payload) {
   if (!withinRateLimit_("upload", payload.abuseKey, 40, 500)) {
     return json_({ status: 429, message: "Upload limit reached. Please try again later." });
@@ -276,17 +312,7 @@ function uploadMembershipFile_(payload) {
   const allowedFields = { photo: true, idFront: true, idBack: true, insuranceFront: true, insuranceBack: true };
   if (!allowedFields[payload.fieldType]) return json_({ status: 400, message: "Invalid upload field." });
 
-  const folders = DriveApp.getFoldersByName(UPLOAD_FOLDER);
-  const rootFolder = folders.hasNext() ? folders.next() : DriveApp.createFolder(UPLOAD_FOLDER);
-  const categoryNames = {
-    member: "01_Club_Members",
-    player: "02_Players",
-    management: "03_Management_and_Players"
-  };
-  const categoryName = categoryNames[payload.registrationType] || "00_Unsorted";
-  const categoryFolder = getOrCreateChildFolder_(rootFolder, categoryName);
-  const applicantName = safeFolderName_((payload.fullName || "Applicant") + "_" + (payload.email || "no-email"));
-  const folder = getOrCreateChildFolder_(categoryFolder, applicantName);
+  const folder = resolveApplicantFolder_(payload.registrationType, payload.fullName, payload.email);
   const safeFilename = safeFileName_(payload.filename);
   const existingFiles = folder.getFilesByName(safeFilename);
   if (existingFiles.hasNext()) {
@@ -303,6 +329,12 @@ function uploadMembershipFile_(payload) {
   const bytes = Utilities.base64Decode(payload.base64);
   const blob = Utilities.newBlob(bytes, payload.mimeType, safeFilename);
   const file = folder.createFile(blob);
+  const categoryNames = {
+    member: "01_Club_Members",
+    player: "02_Players",
+    management: "03_Management_and_Players"
+  };
+  const categoryName = categoryNames[payload.registrationType] || "00_Unsorted";
   file.setDescription("Private NFT Munich membership application document. Category: " + categoryName);
 
   return json_({ status: 200, fileUrl: file.getUrl() });
@@ -639,7 +671,7 @@ function escapeHtml_(value) {
 function paymentReferencePart_(value) {
   return String(value || "")
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-zA-Z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 30);
