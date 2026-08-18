@@ -12,6 +12,7 @@ const PAYMENT_ACCOUNT_HOLDER = "NFT Munich e.V.";
 const SETTINGS_TAB = "Club Settings";
 const APPROVED_PLAYERS_TAB = "Approved Player Emails";
 const PENDING_REQUESTS_TAB = "Pending Player Requests";
+const PENDING_DOCS_TAB = "Pending Document Generation";
 const APPLICATION_TABS = {
   member: "Club Members",
   player: "Registered Players",
@@ -388,8 +389,6 @@ function saveMembershipRegistration_(payload) {
     applicantFolder.setName(safeFolderName_(applicationId + "_" + data.firstName + "_" + data.lastName));
     const fileBase = safeFileName_(applicationId + "_" + data.firstName + "_" + data.lastName);
     photoFile.setName(fileBase + "_Photo." + fileExtension_(photoFile));
-    const documentsPdf = createDocumentsPdf_(data, applicationId);
-    const applicationPdf = createApplicationPdf_(data, applicationId, documentsPdf);
     const accepted = "✓ Accepted — " + now;
     const row = [
       applicationId, now, data.registrationType, data.language,
@@ -397,25 +396,29 @@ function saveMembershipRegistration_(payload) {
       data.city, data.email, data.phone, data.feeCategory, data.membershipFee,
       data.playerFee, data.position, data.emergencyName, data.emergencyPhone,
       data.managementRole, data.responsibility, safeSpreadsheetValue_(data.photo),
-      safeSpreadsheetValue_(documentsPdf), safeSpreadsheetValue_(documentsPdf),
+      "Generating…", "Generating…",
       accepted, accepted, accepted, "Pending", "New", ""
-      , safeSpreadsheetValue_(applicationPdf), data.profession, data.estimatedStay,
+      , "Generating…", data.profession, data.estimatedStay,
       data.managementInterest, data.optionalMessage
     ];
     sheet.appendRow(row.map(safeSpreadsheetValue_));
     sheet.getRange(1, 30).setValue("Application PDF");
     sheet.getRange(1, 31, 1, 4).setValues([["Profession / field", "Estimated stay in Munich", "Interested in management", "Optional message"]]);
+    // The two combined PDFs (createDocumentsPdf_, createApplicationPdf_) are the
+    // slow part of this request — each builds a Google Doc from full-resolution
+    // uploaded images and converts it to PDF, which can take 15-20s apiece. That
+    // used to happen here, synchronously, before the row was even written —
+    // meaning the applicant's browser (and the Vercel function relaying the
+    // request) sat waiting on document generation that has nothing to do with
+    // whether their registration succeeded. The row is the part that matters in
+    // real time; the PDFs are a staff convenience. So: write the row now with
+    // placeholders in the PDF columns, queue the slow part, and let a
+    // time-driven trigger (see processPdfQueue_) fill them in moments later.
+    enqueuePdfGeneration_(tabName, applicationId, data);
   } finally {
     lock.releaseLock();
   }
-  let emailSent = true;
-  try {
-    sendApplicantConfirmation_(data, applicationId, settings);
-  } catch (emailError) {
-    emailSent = false;
-    console.error("Applicant confirmation email failed", emailError);
-  }
-  return json_({ status: 200, applicationId: applicationId, totalFee: data.totalFee, emailSent: emailSent });
+  return json_({ status: 200, applicationId: applicationId, totalFee: data.totalFee });
 }
 
 function assertSingleApplicantFolder_(data) {
@@ -528,6 +531,75 @@ function createApplicationPdf_(data, applicationId, documentsPdf) {
   return pdf.getUrl();
 }
 
+function pendingDocsSheet_(spreadsheet) {
+  let sheet = spreadsheet.getSheetByName(PENDING_DOCS_TAB);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(PENDING_DOCS_TAB);
+    sheet.appendRow(["Application ID", "Tab name", "Enqueued at", "Status", "Data (JSON)"]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function enqueuePdfGeneration_(tabName, applicationId, data) {
+  const spreadsheet = SpreadsheetApp.openById(DEFAULT_MEMBERSHIP_SHEET_ID);
+  const sheet = pendingDocsSheet_(spreadsheet);
+  sheet.appendRow([applicationId, tabName, new Date(), "Pending", JSON.stringify(data)]);
+}
+
+/**
+ * Time-driven trigger target — set this up once in the Apps Script UI
+ * (Triggers → Add Trigger → processPdfQueue_ → Time-driven → Minutes
+ * timer → Every minute). Processes every "Pending" row left by
+ * enqueuePdfGeneration_: builds the two combined PDFs, writes their
+ * links into the applicant's row, and removes the queue entry. Jobs
+ * that throw are marked "Failed: <message>" and left for manual review
+ * rather than retried forever.
+ */
+function processPdfQueue_() {
+  const spreadsheet = SpreadsheetApp.openById(DEFAULT_MEMBERSHIP_SHEET_ID);
+  const queue = pendingDocsSheet_(spreadsheet);
+  if (queue.getLastRow() < 2) return;
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    for (let rowIndex = queue.getLastRow(); rowIndex >= 2; rowIndex--) {
+      const values = queue.getRange(rowIndex, 1, 1, 5).getValues()[0];
+      const applicationId = values[0];
+      const tabName = values[1];
+      const status = values[3];
+      if (status !== "Pending") continue;
+      try {
+        const job = JSON.parse(values[4]);
+        const documentsPdf = createDocumentsPdf_(job, applicationId);
+        const applicationPdf = createApplicationPdf_(job, applicationId, documentsPdf);
+        updateApplicationDocuments_(spreadsheet, tabName, applicationId, documentsPdf, applicationPdf);
+        queue.deleteRow(rowIndex);
+      } catch (jobError) {
+        console.error("PDF generation failed for " + applicationId, jobError);
+        queue.getRange(rowIndex, 4).setValue("Failed: " + String((jobError && jobError.message) || jobError));
+      }
+    }
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function updateApplicationDocuments_(spreadsheet, tabName, applicationId, documentsPdf, applicationPdf) {
+  const sheet = spreadsheet.getSheetByName(tabName);
+  if (!sheet || sheet.getLastRow() < 2) return;
+  const ids = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+  for (let index = 0; index < ids.length; index++) {
+    if (String(ids[index][0]) === String(applicationId)) {
+      const rowIndex = index + 2;
+      sheet.getRange(rowIndex, 22).setValue(safeSpreadsheetValue_(documentsPdf));
+      sheet.getRange(rowIndex, 23).setValue(safeSpreadsheetValue_(documentsPdf));
+      sheet.getRange(rowIndex, 30).setValue(safeSpreadsheetValue_(applicationPdf));
+      return;
+    }
+  }
+}
+
 function driveFileFromUrl_(url) {
   const match = String(url || "").match(/[-\w]{25,}/);
   if (!match) throw new Error("Invalid private Drive file URL.");
@@ -609,63 +681,6 @@ function getOrCreateApplicationSheet_(spreadsheet, tabName) {
     sheet.autoResizeColumns(1, 34);
   }
   return sheet;
-}
-
-function sendApplicantConfirmation_(data, applicationId, settings) {
-  const labels = {
-    member: "Member / Supporter",
-    player: "Core Member - Player",
-    management: "Core Member - Player"
-  };
-  const category = labels[data.registrationType] || data.registrationType;
-  const hardship = data.feeCategory === "hardship";
-  const total = hardship ? "" : Number(data.totalFee || 0);
-  const paymentEn = hardship
-    ? ["Amount: Individual review", "The board will review your hardship request and contact you personally."]
-    : ["Amount: " + total + " EUR", "Please do not make a payment yet. We will email you the bank and payment details in the coming weeks."];
-  const body = [
-    "Hi " + data.firstName + ",",
-    "",
-    "Thank you for registering. Your registration was received successfully.",
-    "",
-    "Category: " + category,
-    "",
-    paymentEn.join("\n"),
-    "",
-    "If you have any questions, contact " + REGISTRATION_EMAIL + ".",
-    "",
-    settings.clubName
-  ].join("\n");
-
-  const htmlPayment = hardship
-    ? "<p><strong>Amount:</strong> Individual review<br>The board will review your hardship request and contact you personally.</p>"
-    : "<p><strong>Amount: " + total + " EUR</strong></p><p>Please do not make a payment yet. We will email you the bank and payment details in the coming weeks.</p>";
-  const htmlBody = [
-    "<p>Hi " + escapeHtml_(data.firstName) + ",</p>",
-    "<p>Thank you for registering. Your registration was received successfully.</p>",
-    "<p><strong>Category: " + escapeHtml_(category) + "</strong></p>",
-    htmlPayment,
-    "<p>If you have any questions, contact <a href=\"mailto:" + REGISTRATION_EMAIL + "\">" + REGISTRATION_EMAIL + "</a>.</p>",
-    "<p>" + escapeHtml_(settings.clubName) + "</p>"
-  ].join("");
-
-  MailApp.sendEmail({
-    to: data.email,
-    subject: "NFT Munich registration received",
-    body: body,
-    htmlBody: htmlBody,
-    name: "NFT Munich e.V.",
-    replyTo: REGISTRATION_EMAIL
-  });
-}
-
-function escapeHtml_(value) {
-  return String(value == null ? "" : value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
 
 function paymentReferencePart_(value) {
