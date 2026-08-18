@@ -413,7 +413,7 @@ function saveMembershipRegistration_(payload) {
     // whether their registration succeeded. The row is the part that matters in
     // real time; the PDFs are a staff convenience. So: write the row now with
     // placeholders in the PDF columns, queue the slow part, and let a
-    // time-driven trigger (see processPdfQueue_) fill them in moments later.
+    // time-driven trigger (see processPdfQueue) fill them in moments later.
     enqueuePdfGeneration_(tabName, applicationId, data);
   } finally {
     lock.releaseLock();
@@ -549,14 +549,14 @@ function enqueuePdfGeneration_(tabName, applicationId, data) {
 
 /**
  * Time-driven trigger target — set this up once in the Apps Script UI
- * (Triggers → Add Trigger → processPdfQueue_ → Time-driven → Minutes
+ * (Triggers → Add Trigger → processPdfQueue → Time-driven → Minutes
  * timer → Every minute). Processes every "Pending" row left by
  * enqueuePdfGeneration_: builds the two combined PDFs, writes their
  * links into the applicant's row, and removes the queue entry. Jobs
  * that throw are marked "Failed: <message>" and left for manual review
  * rather than retried forever.
  */
-function processPdfQueue_() {
+function processPdfQueue() {
   const spreadsheet = SpreadsheetApp.openById(DEFAULT_MEMBERSHIP_SHEET_ID);
   const queue = pendingDocsSheet_(spreadsheet);
   if (queue.getLastRow() < 2) return;
