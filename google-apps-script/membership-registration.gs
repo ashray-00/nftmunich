@@ -12,7 +12,6 @@ const PAYMENT_ACCOUNT_HOLDER = "NFT Munich e.V.";
 const SETTINGS_TAB = "Club Settings";
 const APPROVED_PLAYERS_TAB = "Approved Player Emails";
 const PENDING_REQUESTS_TAB = "Pending Player Requests";
-const PENDING_DOCS_TAB = "Pending Document Generation";
 const APPLICATION_TABS = {
   member: "Club Members",
   player: "Registered Players",
@@ -28,6 +27,7 @@ function doPost(e) {
       return json_({ status: 403, message: "Forbidden." });
     }
     if (payload.action === "uploadFile") return uploadMembershipFile_(payload);
+    if (payload.action === "uploadGeneratedDocument") return uploadGeneratedDocument_(payload);
     if (payload.action === "membershipRegistration") return saveMembershipRegistration_(payload);
     if (payload.action === "registrationInterest") return sendRegistrationInterest_(payload);
     if (payload.action === "syncApprovedPlayers") return syncApprovedPlayers_(payload);
@@ -341,6 +341,37 @@ function uploadMembershipFile_(payload) {
   return json_({ status: 200, fileUrl: file.getUrl() });
 }
 
+/**
+ * Saves a PDF built by the backend (nft-munich-server) into an existing
+ * applicant folder. Service accounts have no Drive storage quota of their
+ * own to create files directly via the Drive API, even when shared as
+ * Editor on a folder — this is a hard Drive platform limitation, not a
+ * permissions gap, and neither Shared Drives nor domain-wide delegation
+ * are available on this personal Google account. Routing the actual write
+ * through Apps Script (which runs as a real account with real quota) is
+ * the workaround. PDF generation and the Sheet-column writes stay in
+ * Python; this is the one narrow exception.
+ */
+function uploadGeneratedDocument_(payload) {
+  if (!payload.base64 || !payload.filename || !payload.folderId) {
+    return json_({ status: 400, message: "Missing file information." });
+  }
+  if (payload.mimeType !== "application/pdf" || String(payload.base64).length > 17000000) {
+    return json_({ status: 400, message: "Invalid document type or size." });
+  }
+  const folder = DriveApp.getFolderById(payload.folderId);
+  const safeFilename = safeFileName_(payload.filename);
+  const existingFiles = folder.getFilesByName(safeFilename);
+  while (existingFiles.hasNext()) {
+    existingFiles.next().setTrashed(true);
+  }
+  const bytes = Utilities.base64Decode(payload.base64);
+  const blob = Utilities.newBlob(bytes, payload.mimeType, safeFilename);
+  const file = folder.createFile(blob);
+  if (payload.description) file.setDescription(String(payload.description).slice(0, 500));
+  return json_({ status: 200, fileUrl: file.getUrl() });
+}
+
 function getOrCreateChildFolder_(parent, name) {
   const children = parent.getFoldersByName(name);
   return children.hasNext() ? children.next() : parent.createFolder(name);
@@ -404,21 +435,26 @@ function saveMembershipRegistration_(payload) {
     sheet.appendRow(row.map(safeSpreadsheetValue_));
     sheet.getRange(1, 30).setValue("Application PDF");
     sheet.getRange(1, 31, 1, 4).setValues([["Profession / field", "Estimated stay in Munich", "Interested in management", "Optional message"]]);
-    // The two combined PDFs (createDocumentsPdf_, createApplicationPdf_) are the
-    // slow part of this request — each builds a Google Doc from full-resolution
-    // uploaded images and converts it to PDF, which can take 15-20s apiece. That
-    // used to happen here, synchronously, before the row was even written —
-    // meaning the applicant's browser (and the Vercel function relaying the
-    // request) sat waiting on document generation that has nothing to do with
-    // whether their registration succeeded. The row is the part that matters in
-    // real time; the PDFs are a staff convenience. So: write the row now with
-    // placeholders in the PDF columns, queue the slow part, and let a
-    // time-driven trigger (see processPdfQueue) fill them in moments later.
-    enqueuePdfGeneration_(tabName, applicationId, data);
+    // The two combined PDFs (documents + application summary) are no longer
+    // built here — the backend (nft-munich-server) generates them natively in
+    // Python and writes the links back via the Sheets API directly, using the
+    // fee/timestamp fields returned below. The row is written now with
+    // "Generating…" placeholders in the PDF columns; the backend finds this
+    // row by applicationId and fills them in shortly after.
   } finally {
     lock.releaseLock();
   }
-  return json_({ status: 200, applicationId: applicationId, totalFee: data.totalFee });
+  return json_({
+    status: 200,
+    applicationId: applicationId,
+    totalFee: data.totalFee,
+    tabName: tabName,
+    submittedAt: data.submittedAt,
+    joiningFee: data.joiningFee,
+    annualFee: data.annualFee,
+    membershipFee: data.membershipFee,
+    playerFee: data.playerFee
+  });
 }
 
 function assertSingleApplicantFolder_(data) {
@@ -427,216 +463,6 @@ function assertSingleApplicantFolder_(data) {
   const folderIds = urls.map(function(url) { return firstParentFolder_(driveFileFromUrl_(url)).getId(); });
   if (folderIds.some(function(id) { return id !== folderIds[0]; })) {
     throw new Error("All application files must belong to the same applicant folder.");
-  }
-}
-
-function createDocumentsPdf_(data, applicationId) {
-  const items = [
-    ["ID - front", data.idFront],
-    ["ID - back", data.idBack]
-  ];
-  if (data.registrationType !== "member") {
-    items.push(["Insurance - front", data.insuranceFront]);
-    items.push(["Insurance - back", data.insuranceBack]);
-  }
-  const sourceFiles = items.map(function(item) { return driveFileFromUrl_(item[1]); });
-  const folder = firstParentFolder_(sourceFiles[0]);
-  const fullName = data.firstName + " " + data.lastName;
-  const doc = DocumentApp.create(fullName + " Documents");
-  const body = doc.getBody();
-  body.setMarginTop(42).setMarginBottom(42).setMarginLeft(42).setMarginRight(42);
-  items.forEach(function(item, index) {
-    if (index > 0) body.appendPageBreak();
-    const heading = body.appendParagraph("NFT MUNICH E.V.  |  APPLICANT DOCUMENT");
-    heading.setBold(true).setFontSize(10).setForegroundColor("#164c35");
-    body.appendHorizontalRule();
-    body.appendParagraph(item[0]).setHeading(DocumentApp.ParagraphHeading.HEADING1);
-    const meta = body.appendTable([
-      ["Full name", fullName]
-    ]);
-    styleFormTable_(meta);
-    body.appendParagraph("");
-    if (sourceFiles[index].getMimeType() === MimeType.PDF) {
-      body.appendParagraph("Uploaded PDF: " + sourceFiles[index].getName()).setBold(true);
-      body.appendParagraph(sourceFiles[index].getUrl()).setLinkUrl(sourceFiles[index].getUrl());
-    } else {
-      const image = body.appendImage(sourceFiles[index].getBlob());
-      const width = image.getWidth();
-      const height = image.getHeight();
-      const scale = Math.min(500 / width, 610 / height, 1);
-      image.setWidth(Math.round(width * scale)).setHeight(Math.round(height * scale));
-    }
-    body.appendParagraph("Document: " + item[0] + "  |  " + fullName).setFontSize(9).setForegroundColor("#666666");
-  });
-  doc.saveAndClose();
-  const tempFile = DriveApp.getFileById(doc.getId());
-  const fileBase = safeFileName_(data.firstName + "_" + data.lastName);
-  const pdf = folder.createFile(tempFile.getAs(MimeType.PDF).setName(fileBase + "_ID_Insurance.pdf"));
-  pdf.setDescription("Private combined ID and insurance document for " + fullName);
-  tempFile.setTrashed(true);
-  sourceFiles.forEach(function(file) { if (file.getMimeType() !== MimeType.PDF) file.setTrashed(true); });
-  return pdf.getUrl();
-}
-
-function createApplicationPdf_(data, applicationId, documentsPdf) {
-  const photoFile = driveFileFromUrl_(data.photo);
-  const folder = firstParentFolder_(photoFile);
-  const doc = DocumentApp.create(applicationId + " Application");
-  const body = doc.getBody();
-  body.setMarginTop(42).setMarginBottom(42).setMarginLeft(42).setMarginRight(42);
-  const title = body.appendParagraph("NFT MUNICH E.V.");
-  title.setBold(true).setFontSize(11).setForegroundColor("#164c35");
-  body.appendParagraph("MEMBERSHIP APPLICATION").setHeading(DocumentApp.ParagraphHeading.TITLE);
-  body.appendHorizontalRule();
-
-  appendFormSection_(body, "Application", [
-    ["Submitted", data.submittedAt],
-    ["Category", registrationLabel_(data.registrationType)], ["Language", String(data.language || "").toUpperCase()]
-  ]);
-  appendFormSection_(body, "Personal details", [
-    ["Full name", data.firstName + " " + data.lastName], ["Date of birth", data.birthDate],
-    ["Address", data.street + ", " + data.postalCode + " " + data.city],
-    ["Email", data.email], ["Phone / WhatsApp", data.phone]
-  ]);
-  if (data.registrationType !== "member") appendFormSection_(body, "Core Member details", [
-    ["Role", "Player"],
-    ["Position", data.position], ["Emergency contact", data.emergencyName],
-    ["Emergency phone", data.emergencyPhone], ["Profession / field", data.profession],
-    ["Estimated stay in Munich", data.estimatedStay],
-    ["Interested in management", data.managementInterest === "yes" ? "Yes" : "No"]
-  ]);
-  appendFormSection_(body, "Additional message", [["Message", data.optionalMessage]]);
-  appendFormSection_(body, "Fee", [
-    ["Fee category", data.feeCategory], ["Joining fee", data.joiningFee],
-    ["e.V. annual fee 2026", data.annualFee],
-    ["Player fee", data.playerFee], ["Total amount", data.totalFee === "" ? "Board review" : data.totalFee + " EUR"]
-  ]);
-  body.appendParagraph("Declarations and consent").setHeading(DocumentApp.ParagraphHeading.HEADING2);
-  const accepted = "✓ Accepted — " + data.submittedAt;
-  const consentTable = body.appendTable([
-    ["Declaration / confirmation", accepted],
-    ["NFT Munich e.V. statutes", accepted],
-    ["Privacy policy and data processing", accepted]
-  ]);
-  styleFormTable_(consentTable);
-  body.appendParagraph("");
-  body.appendParagraph("This document was generated from the applicant's submitted online form. The recorded date and time document the active acceptance of all mandatory declarations.")
-    .setFontSize(8).setForegroundColor("#666666");
-  doc.saveAndClose();
-  const tempFile = DriveApp.getFileById(doc.getId());
-  const fileBase = safeFileName_(applicationId + "_" + data.firstName + "_" + data.lastName);
-  const pdf = folder.createFile(tempFile.getAs(MimeType.PDF).setName(fileBase + "_Application.pdf"));
-  pdf.setDescription("Private membership application summary for " + applicationId);
-  tempFile.setTrashed(true);
-  return pdf.getUrl();
-}
-
-function pendingDocsSheet_(spreadsheet) {
-  let sheet = spreadsheet.getSheetByName(PENDING_DOCS_TAB);
-  if (!sheet) {
-    sheet = spreadsheet.insertSheet(PENDING_DOCS_TAB);
-    sheet.appendRow(["Application ID", "Tab name", "Enqueued at", "Status", "Data (JSON)"]);
-    sheet.setFrozenRows(1);
-  }
-  return sheet;
-}
-
-function enqueuePdfGeneration_(tabName, applicationId, data) {
-  const spreadsheet = SpreadsheetApp.openById(DEFAULT_MEMBERSHIP_SHEET_ID);
-  const sheet = pendingDocsSheet_(spreadsheet);
-  sheet.appendRow([applicationId, tabName, new Date(), "Pending", JSON.stringify(data)]);
-  scheduleQueueProcessing_();
-}
-
-/**
- * Schedules processPdfQueue to run almost immediately (~1s) rather than
- * waiting for the next periodic tick. A true onChange/onEdit trigger
- * would be more "event-driven" than this, but Apps Script deliberately
- * does not fire onChange/onEdit for edits a script makes to its own
- * spreadsheet (to avoid a trigger re-triggering itself forever) — so
- * that path isn't available here. This is the closest equivalent: react
- * to the actual event by scheduling work at the moment it happens,
- * instead of blind polling. The dedup check keeps concurrent
- * submissions from stacking up multiple redundant one-time triggers.
- */
-function scheduleQueueProcessing_() {
-  const alreadyScheduled = ScriptApp.getProjectTriggers().some(function(trigger) {
-    return trigger.getHandlerFunction() === "processPdfQueue";
-  });
-  if (!alreadyScheduled) {
-    ScriptApp.newTrigger("processPdfQueue").timeBased().after(1000).create();
-  }
-}
-
-/**
- * Run this once manually from the editor (select it in the function
- * dropdown next to the Run button, then click Run) before using the
- * form for real. Managing triggers (ScriptApp.newTrigger /
- * getProjectTriggers, used by scheduleQueueProcessing_ above) requires
- * a one-time permission grant. A web app running unattended can't click
- * through that consent screen itself, so the first real submission
- * would otherwise fail with a generic storage error. Functions ending
- * in "_" are hidden from the Run dropdown, which is why this one
- * doesn't have that suffix — it exists purely to be run once by hand.
- * Safe to run more than once.
- */
-function grantTriggerPermission() {
-  const existing = ScriptApp.getProjectTriggers();
-  Logger.log("Trigger permission OK. Existing triggers: " + existing.length);
-}
-
-/**
- * Processes every "Pending" row left by enqueuePdfGeneration_: builds
- * the two combined PDFs, writes their links into the applicant's row,
- * and removes the queue entry. Jobs that throw are marked
- * "Failed: <message>" and left for manual review rather than retried
- * forever. Normally runs via the near-instant one-time trigger created
- * by scheduleQueueProcessing_ — but also set this up once as a
- * low-frequency recurring trigger (Triggers → Add Trigger →
- * processPdfQueue → Time-driven → Minutes timer → Every 15 minutes) as
- * a safety net, in case a one-time trigger is ever lost.
- */
-function processPdfQueue() {
-  const spreadsheet = SpreadsheetApp.openById(DEFAULT_MEMBERSHIP_SHEET_ID);
-  const queue = pendingDocsSheet_(spreadsheet);
-  if (queue.getLastRow() < 2) return;
-  const lock = LockService.getScriptLock();
-  lock.waitLock(30000);
-  try {
-    for (let rowIndex = queue.getLastRow(); rowIndex >= 2; rowIndex--) {
-      const values = queue.getRange(rowIndex, 1, 1, 5).getValues()[0];
-      const applicationId = values[0];
-      const tabName = values[1];
-      const status = values[3];
-      if (status !== "Pending") continue;
-      try {
-        const job = JSON.parse(values[4]);
-        const documentsPdf = createDocumentsPdf_(job, applicationId);
-        const applicationPdf = createApplicationPdf_(job, applicationId, documentsPdf);
-        updateApplicationDocuments_(spreadsheet, tabName, applicationId, documentsPdf, applicationPdf);
-        queue.deleteRow(rowIndex);
-      } catch (jobError) {
-        console.error("PDF generation failed for " + applicationId, jobError);
-        queue.getRange(rowIndex, 4).setValue("Failed: " + String((jobError && jobError.message) || jobError));
-      }
-    }
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-function updateApplicationDocuments_(spreadsheet, tabName, applicationId, documentsPdf, applicationPdf) {
-  const sheet = spreadsheet.getSheetByName(tabName);
-  if (!sheet || sheet.getLastRow() < 2) return;
-  const ids = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
-  for (let index = 0; index < ids.length; index++) {
-    if (String(ids[index][0]) === String(applicationId)) {
-      const rowIndex = index + 2;
-      sheet.getRange(rowIndex, 22).setValue(safeSpreadsheetValue_(documentsPdf));
-      sheet.getRange(rowIndex, 23).setValue(safeSpreadsheetValue_(documentsPdf));
-      sheet.getRange(rowIndex, 30).setValue(safeSpreadsheetValue_(applicationPdf));
-      return;
-    }
   }
 }
 
@@ -659,28 +485,6 @@ function firstParentFolder_(file) {
   const parents = file.getParents();
   if (!parents.hasNext()) throw new Error("Applicant folder not found.");
   return parents.next();
-}
-
-function appendFormSection_(body, title, rows) {
-  body.appendParagraph(title).setHeading(DocumentApp.ParagraphHeading.HEADING2);
-  const filtered = rows.filter(function(row) { return row[1] !== "" && row[1] != null; });
-  if (filtered.length) styleFormTable_(body.appendTable(filtered));
-}
-
-function styleFormTable_(table) {
-  table.setBorderColor("#d7ddd9").setBorderWidth(1);
-  for (let rowIndex = 0; rowIndex < table.getNumRows(); rowIndex += 1) {
-    const row = table.getRow(rowIndex);
-    row.getCell(0).setBackgroundColor("#f1f5f2").setWidth(145);
-    row.getCell(0).editAsText().setBold(true).setFontSize(9).setForegroundColor("#164c35");
-    row.getCell(1).editAsText().setFontSize(9).setForegroundColor("#111111");
-  }
-  return table;
-}
-
-function registrationLabel_(type) {
-  if (type === "player") return "Core Member - Player";
-  return "Member";
 }
 
 function fileExtension_(file) {
