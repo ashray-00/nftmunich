@@ -63,7 +63,7 @@ const copy = {
     uploadHelp: "JPG, JPEG, PNG, PDF oder iPhone-Foto (HEIC), maximal 12 MB. Große Bilder werden automatisch optimiert.",
     playerFeeNote: "Der Jahresbeitrag für Spieler unterstützt die grundlegende Fußballausstattung und den Spielbetrieb, darunter Bälle, Leibchen, medizinisches Material, Freundschaftsspiele und neue Trikots für die Herren- und Damenmannschaft. Ein Teil fließt außerdem in einen Notfallfonds für den Fall, dass Studierende nach einer Verletzung im Training oder Spiel ein bis zwei Monate nicht arbeiten können.",
     payment: "Beitrag & Zahlung",
-    transferNow: "Bitte noch keine Zahlung vornehmen. Du erhältst die Bankverbindung und Zahlungsinformationen in den kommenden Wochen per E-Mail.",
+    transferNow: "Du erhältst die Bankverbindung und Zahlungsinformationen per E-Mail, nachdem du das Formular abgeschickt hast.",
     chooseFeeFirst: "Wähle oben deinen Spielerbeitrag aus. Danach erscheint hier der genaue Gesamtbetrag.",
     hardshipPayment: "Bitte noch nichts überweisen. Der Vorstand prüft deinen Härtefall und informiert dich persönlich.",
     total: "Zu zahlender Gesamtbetrag",
@@ -136,7 +136,7 @@ const copy = {
     uploadHelp: "JPG, JPEG, PNG, PDF or iPhone photo (HEIC), maximum 12 MB. Large images are optimized automatically.",
     playerFeeNote: "The annual player fee supports essential football equipment and activities, including balls, bibs, medical supplies, friendly matches and new kits for the men's and women's teams. Part of it will also fund short-term emergency support in case a student cannot work for one to two months after an injury during NFT Munich training or a match.",
     payment: "Fee & payment",
-    transferNow: "Please do not make a payment yet. You will receive the bank and payment details by email in the coming weeks.",
+    transferNow: "You will receive the bank and payment details by email after submitting the form.",
     chooseFeeFirst: "Select your player fee above. Your exact total will then appear here.",
     hardshipPayment: "Please do not transfer anything yet. The board will review your hardship request and contact you personally.",
     total: "Total amount to pay",
@@ -560,9 +560,9 @@ function ensureUploadSessionReady() {
 
 function PaymentSummary({ t, amount, hardship }: { t: (typeof copy)[Language]; amount: number | null; hardship: boolean }) {
   return <div className={styles.payment} aria-live="polite">
-    <p>{hardship ? t.hardshipPayment : amount === null ? t.chooseFeeFirst : t.transferNow}</p>
-    {!hardship && amount !== null && <>
-      <strong>{t.total}: {amount} €</strong>
+    {hardship ? <p>{t.hardshipPayment}</p> : amount === null ? <p>{t.chooseFeeFirst}</p> : <>
+      <strong>{t.total}: {amount}€</strong>
+      <p>{t.transferNow}</p>
     </>}
   </div>;
 }
