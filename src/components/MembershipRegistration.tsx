@@ -339,8 +339,15 @@ export default function MembershipRegistration() {
         "All declarations must be accepted.": { de: "Bitte bestätige alle drei Erklärungen.", en: "Please accept all three declarations." },
         "Required documents have not been uploaded.": { de: "Mindestens ein Dokument wurde nicht vollständig hochgeladen. Bitte lade die Dokumente erneut hoch.", en: "At least one document was not fully uploaded. Please upload the documents again." },
       };
-      const serverMessage = String(result.message || "");
-      setSubmissionError(messages[serverMessage]?.[language] || t.error);
+      const detail = result.detail;
+      const serverMessage = typeof detail === "string" ? detail : String(detail?.message || "");
+      const missingFields: string[] = Array.isArray(detail?.missingFields) ? detail.missingFields : [];
+      const fieldLabels = missingFields.map((key) => (t as Record<string, string>)[key]).filter(Boolean);
+      const base = messages[serverMessage]?.[language] || t.error;
+      const fieldsNote = fieldLabels.length
+        ? ` ${language === "de" ? "Fehlende Angaben" : "Missing"}: ${fieldLabels.join(", ")}.`
+        : "";
+      setSubmissionError(base + fieldsNote);
     }
     setStatus(response.ok ? "success" : "error");
     if (response.ok) window.scrollTo({ top: 0, behavior: "smooth" });
